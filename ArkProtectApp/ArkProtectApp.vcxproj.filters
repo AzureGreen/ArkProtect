@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="ProcessDlg">
+      <UniqueIdentifier>{120e714b-fe35-487b-8911-004456e4fb18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{19074092-5b64-4314-b7cf-a70a007c2b2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AppDlg">
+      <UniqueIdentifier>{ec424565-5ccc-42f5-b269-c1ce712fcb11}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ProcessCore.h">
+      <Filter>ProcessDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="Define.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="ArkProtectAppDlg.h">
+      <Filter>AppDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="ArkProtectApp.h">
+      <Filter>AppDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ProcessCore.cpp">
+      <Filter>ProcessDlg</Filter>
+    </ClCompile>
+    <ClCompile Include="ArkProtectApp.cpp">
+      <Filter>AppDlg</Filter>
+    </ClCompile>
+    <ClCompile Include="ArkProtectAppDlg.cpp">
+      <Filter>AppDlg</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ArkProtectApp.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\ArkProtectApp.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\ArkProtectApp.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\about.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\driver.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\hook.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\kernel.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\process.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
