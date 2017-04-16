@@ -84,7 +84,7 @@ namespace ArkProtect
 			}
 
 			// 开启服务
-			BOOL bOk = StartServiceW(m_ServiceHandle, NULL, NULL);
+			BOOL bOk = StartServiceW(m_ServiceHandle, 0, NULL);
 			if (!bOk)
 			{
 				if ((GetLastError() != ERROR_IO_PENDING && GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
@@ -103,23 +103,20 @@ namespace ArkProtect
 		// 卸载驱动程序
 		void UnloadNTDriver(WCHAR *wzServiceName)
 		{
-			if (m_bDriverService)
+			if (m_ServiceHandle)
 			{
 				SERVICE_STATUS ServiceStatus;
 
 				// 停止服务
 				BOOL bOk = ControlService(m_ServiceHandle, SERVICE_CONTROL_STOP, &ServiceStatus);
-				if (bOk)
+				if (bOk && m_bDriverService)
 				{
 					// 删除服务
 					bOk = DeleteService(m_ServiceHandle);
 				}
-			}
 
-			if (m_ServiceHandle)
-			{
 				CloseServiceHandle(m_ServiceHandle);
-			}
+			}		
 
 			if (m_ManagerHandle)
 			{
@@ -130,13 +127,13 @@ namespace ArkProtect
 
 		void UpdateStatusBarTip(LPCWSTR wzBuffer)
 		{
-			::SendMessage(this->AppDlg->m_hWnd, sb_Tip, NULL, (LPARAM)wzBuffer);
+			::SendMessage(this->AppDlg->m_hWnd, sb_Tip, 0, (LPARAM)wzBuffer);
 		}
 
 
 		void UpdateStatusBarDetail(LPCWSTR wzBuffer)
 		{
-			::SendMessage(this->AppDlg->m_hWnd, sb_Tip, NULL, (LPARAM)wzBuffer);
+			::SendMessage(this->AppDlg->m_hWnd, sb_Tip, 0, (LPARAM)wzBuffer);
 		}
 
 
@@ -205,8 +202,8 @@ namespace ArkProtect
 		}
 
 
-		CWnd *AppDlg = nullptr;         // 保存主窗口指针
-		CWnd *ProcessDlg = nullptr;     // 保存进程模块窗口指针
+		CWnd *AppDlg = NULL;         // 保存主窗口指针
+		CWnd *ProcessDlg = NULL;     // 保存进程模块窗口指针
 
 
 		int iDpix = 0;               // Logical pixels/inch in X

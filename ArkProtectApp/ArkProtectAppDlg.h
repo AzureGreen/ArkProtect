@@ -63,7 +63,7 @@ public:
 	
 	
 	ArkProtect::CGlobal   m_Global;
-	ArkProtect::eChildDlg m_CurrentChildDlg;    // 子对话框
-	CProcessDlg           *m_ProcessDlg;
+	ArkProtect::eChildDlg m_CurrentChildDlg = (ArkProtect::eChildDlg)(-1);    // 子对话框
+	CProcessDlg           *m_ProcessDlg = NULL;
 	
 };

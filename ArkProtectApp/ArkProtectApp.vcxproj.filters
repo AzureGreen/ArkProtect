@@ -13,14 +13,20 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="ProcessDlg">
-      <UniqueIdentifier>{120e714b-fe35-487b-8911-004456e4fb18}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Common">
       <UniqueIdentifier>{19074092-5b64-4314-b7cf-a70a007c2b2f}</UniqueIdentifier>
     </Filter>
     <Filter Include="AppDlg">
       <UniqueIdentifier>{ec424565-5ccc-42f5-b269-c1ce712fcb11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ProcessCore">
+      <UniqueIdentifier>{120e714b-fe35-487b-8911-004456e4fb18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ProcessCore\ProcessInfo">
+      <UniqueIdentifier>{cf7f3f20-e5de-4b6e-b18e-01b66ba474bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ProcessCore\ProcessInfo\ProcessModule">
+      <UniqueIdentifier>{ceff7293-d8d9-40b1-b9d3-c5ea86f1e0ac}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -28,7 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProcessCore.h">
-      <Filter>ProcessDlg</Filter>
+      <Filter>ProcessCore</Filter>
     </ClInclude>
     <ClInclude Include="Define.h">
       <Filter>Common</Filter>
@@ -52,12 +58,18 @@
       <Filter>AppDlg</Filter>
     </ClInclude>
     <ClInclude Include="ProcessDlg.h">
-      <Filter>头文件</Filter>
+      <Filter>ProcessCore</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessInfoDlg.h">
+      <Filter>ProcessCore\ProcessInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessModule.h">
+      <Filter>ProcessCore\ProcessInfo\ProcessModule</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">
-      <Filter>ProcessDlg</Filter>
+      <Filter>ProcessCore</Filter>
     </ClCompile>
     <ClCompile Include="ArkProtectApp.cpp">
       <Filter>AppDlg</Filter>
@@ -69,7 +81,13 @@
       <Filter>Common</Filter>
     </ClCompile>
     <ClCompile Include="ProcessDlg.cpp">
-      <Filter>源文件</Filter>
+      <Filter>ProcessCore</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessInfoDlg.cpp">
+      <Filter>ProcessCore\ProcessInfo</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessModule.cpp">
+      <Filter>ProcessCore\ProcessInfo\ProcessModule</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

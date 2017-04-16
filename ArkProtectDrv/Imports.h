@@ -11,4 +11,11 @@ PsGetProcessImageFileName(
 	__in PEPROCESS Process
 );
 
+
+NTKERNELAPI
+PPEB
+PsGetProcessPeb(
+	__in PEPROCESS Process
+);
+
 #endif // !CXX_Imports_H

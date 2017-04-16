@@ -23,7 +23,7 @@ namespace ArkProtect
 
 	/************************************************************************
 	*  Name : InitializeProcessList
-	*  Param: ProcessList        ProcessModule对话框的ListControl控件
+	*  Param: ProcessList           ProcessModule对话框的ListControl控件
 	*  Ret  : void
 	*  初始化ListControl的信息
 	************************************************************************/
@@ -154,9 +154,8 @@ namespace ArkProtect
 	{
 		ePeBit  PeBit = pb_Unknown;
 		HANDLE	FileHandle = NULL;
-		HANDLE	MappingHandle = NULL;
 
-		FileHandle = CreateFileW(wzFilePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+		FileHandle = CreateFileW(wzFilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (FileHandle != INVALID_HANDLE_VALUE)
 		{
 			DWORD dwReturnLength = 0;
@@ -164,7 +163,7 @@ namespace ArkProtect
 			PVOID FileBuffer = malloc(dwFileSize);
 			if (FileBuffer)
 			{
-				BOOL bOk = ReadFile(FileHandle, FileBuffer, dwFileSize, &dwReturnLength, nullptr);
+				BOOL bOk = ReadFile(FileHandle, FileBuffer, dwFileSize, &dwReturnLength, NULL);
 				if (bOk)
 				{
 					PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)FileBuffer;
@@ -182,7 +181,6 @@ namespace ArkProtect
 								PeBit = pb_64;
 							}
 						}
-
 					}
 				}
 				free(FileBuffer);
@@ -392,7 +390,9 @@ namespace ArkProtect
 			}
 
 			strCompanyName = ProcessEntry.wzCompanyName;
-			 
+			
+			//SendMessageW();
+
 			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strImageName);
 			ListCtrl->SetItemText(iItem, pc_ProcessId, strProcessId);
 			ListCtrl->SetItemText(iItem, pc_ParentProcessId, strParentProcessId);
@@ -453,7 +453,7 @@ namespace ArkProtect
 		
 		m_Process->QueryProcessInfo(ListCtrl);
 
-		m_Process->m_Global->m_bIsRequestNow = TRUE;
+		m_Process->m_Global->m_bIsRequestNow = FALSE;
 
 		return 0;
 	}

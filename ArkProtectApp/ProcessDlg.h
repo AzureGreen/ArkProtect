@@ -2,7 +2,7 @@
 #include "afxcmn.h"
 #include "Global.hpp"
 #include "ProcessCore.h"
-
+#include "ProcessInfoDlg.h"
 
 // CProcessDlg 对话框
 
@@ -24,20 +24,40 @@ protected:
 	virtual BOOL OnInitDialog();
 
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
-
-	
+	afx_msg void OnLvnItemchangedProcessList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMRClickProcessList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnProcessFreshen();
+	afx_msg void OnProcessModule();
 
 	DECLARE_MESSAGE_MAP()
 public:
 	
 	void APInitializeProcessList();
 
+	void APLoadProcessList();
+
+	void APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind ProcessInfoKind);
+
+	void AddProcessFileIcon(WCHAR * wzProcessPath);
+
+	
+
 
 	CImageList m_ProcessIconList;   // 进程图标
 	CListCtrl  m_ProcessListCtrl;   // ListControl
+
+	
 
 	ArkProtect::CGlobal      *m_Global;
 	ArkProtect::CProcessCore m_Process;
 
 	
+	static UINT32     m_SortColumn;
+	static BOOL       m_bSortOrder;  // 记录排序顺序
+	
+	
+	
 };
+
+
+int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);

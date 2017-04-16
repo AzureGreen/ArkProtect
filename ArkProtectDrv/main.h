@@ -1,13 +1,12 @@
 #ifndef CXX_main_H
 #define CXX_main_H
 #include <ntifs.h>
-
+#include "Dispatch.h"
 #include "Private.h"
 
 
 #define DEVICE_NAME  L"\\Device\\ArkProtectDeviceName"
 #define LINK_NAME    L"\\??\\ArkProtectLinkName"
-#define FILE_DEVICE_ARKPROTECT           0x8005
 
 
 NTSTATUS

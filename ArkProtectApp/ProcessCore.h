@@ -31,7 +31,7 @@ namespace ArkProtect
 
 	typedef struct _PROCESS_INFORMATION
 	{
-		UINT_PTR                  NumberOfProcesses;
+		UINT32                    NumberOfProcesses;
 		PROCESS_ENTRY_INFORMATION ProcessEntry[1];
 	} PROCESS_INFORMATION, *PPROCESS_INFORMATION;
 

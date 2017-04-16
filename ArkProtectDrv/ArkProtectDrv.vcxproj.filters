@@ -42,6 +42,9 @@
     <ClCompile Include="ProcessCore.c">
       <Filter>Dispatch\ProcessCore</Filter>
     </ClCompile>
+    <ClCompile Include="ProcessModule.c">
+      <Filter>Dispatch\ProcessCore</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Imports.h">
@@ -60,6 +63,9 @@
       <Filter>Dispatch</Filter>
     </ClInclude>
     <ClInclude Include="ProcessCore.h">
+      <Filter>Dispatch\ProcessCore</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessModule.h">
       <Filter>Dispatch\ProcessCore</Filter>
     </ClInclude>
   </ItemGroup>

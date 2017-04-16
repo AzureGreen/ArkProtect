@@ -1,5 +1,5 @@
 #ifndef CXX_Private_H
-
+#define CXX_Private_H
 #include <ntifs.h>
 
 #define MAX_PATH 260

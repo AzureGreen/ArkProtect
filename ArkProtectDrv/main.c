@@ -16,7 +16,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegisterPath)
 	RtlInitUnicodeString(&uniLinkName, LINK_NAME);
 
 	// 创建设备对象
-	Status = IoCreateDevice(DriverObject, 0, &uniDeviceName, FILE_DEVICE_ARKPROTECT, 0, FALSE, &DeviceObject);
+	Status = IoCreateDevice(DriverObject, 0, &uniDeviceName, FILE_DEVICE_UNKNOWN, 0, FALSE, &DeviceObject);
 	if (NT_SUCCESS(Status))
 	{
 		Status = APInitializeDynamicData(&g_DynamicData);			// 初始化信息
