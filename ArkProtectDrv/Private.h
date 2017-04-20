@@ -35,8 +35,8 @@ typedef struct _DYNAMIC_DATA
 
 	UINT32      ThreadListHead_EPROCESS;      // EPROCESS::ThreadListHead
 
-											  //////////////////////////////////////////////////////////////////////////
-											  // Thread
+	//////////////////////////////////////////////////////////////////////////
+	// Thread
 
 	UINT32      Priority;                   // KTHREAD::Priority
 

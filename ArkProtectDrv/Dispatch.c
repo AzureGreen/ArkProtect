@@ -100,7 +100,34 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 			break;
 		}
+		case IOCTL_ARKPROTECT_ENUMPROCESSTHREAD:
+		{
+			DbgPrint("Process Thread\r\n");
 
+			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			{
+				__try
+				{
+					ProbeForRead(InputBuffer, InputLength, sizeof(UINT32));
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+
+					Status = APEnumProcessThread(*(PUINT32)InputBuffer, OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+			}
+
+			break;
+		}
 
 		default:
 			Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;

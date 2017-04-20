@@ -177,6 +177,7 @@
     <ClInclude Include="Private.h" />
     <ClInclude Include="ProcessCore.h" />
     <ClInclude Include="ProcessModule.h" />
+    <ClInclude Include="ProcessThread.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dispatch.c" />
@@ -184,6 +185,7 @@
     <ClCompile Include="Private.c" />
     <ClCompile Include="ProcessCore.c" />
     <ClCompile Include="ProcessModule.c" />
+    <ClCompile Include="ProcessThread.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

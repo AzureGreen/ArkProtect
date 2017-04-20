@@ -28,6 +28,7 @@ protected:
 	afx_msg void OnNMRClickProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnProcessFreshen();
 	afx_msg void OnProcessModule();
+	afx_msg void OnProcessThread();
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -38,7 +39,6 @@ public:
 
 	void APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind ProcessInfoKind);
 
-	void AddProcessFileIcon(WCHAR * wzProcessPath);
 
 	
 
@@ -49,11 +49,12 @@ public:
 	
 
 	ArkProtect::CGlobal      *m_Global;
-	ArkProtect::CProcessCore m_Process;
+	ArkProtect::CProcessCore *m_Process;
 
 	
 	static UINT32     m_SortColumn;
 	static BOOL       m_bSortOrder;  // ¼ÇÂ¼ÅÅÐòË³Ðò
+	
 	
 	
 	

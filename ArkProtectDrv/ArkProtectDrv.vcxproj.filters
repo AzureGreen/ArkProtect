@@ -45,6 +45,9 @@
     <ClInclude Include="ProcessModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ProcessThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -60,6 +63,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProcessModule.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessThread.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

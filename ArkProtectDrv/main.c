@@ -101,6 +101,22 @@ APInitializeDynamicData(IN OUT PDYNAMIC_DATA DynamicData)
 			DynamicData->InheritedFromUniqueProcessId = 0x290;
 			DynamicData->ThreadListHead_EPROCESS = 0x308;
 
+			//////////////////////////////////////////////////////////////////////////
+			// EThread
+			DynamicData->Priority = 0x07b;
+			DynamicData->Teb = 0x0b8;
+			DynamicData->ContextSwitches = 0x134;
+			DynamicData->State = 0x164;
+			DynamicData->PreviousMode = 0x1f6;
+			DynamicData->Process = 0x210;
+			DynamicData->ThreadListEntry_KTHREAD = 0x2f8;
+			DynamicData->StartAddress = 0x390;    ////
+			DynamicData->Cid = 0x3b8;		////
+			DynamicData->Win32StartAddress = 0x418;    ////
+			DynamicData->ThreadListEntry_ETHREAD = 0x428;   ////
+			DynamicData->SameThreadApcFlags = 0x458;    ////
+
+
 			DynamicData->MaxUserSpaceAddress = 0x000007FFFFFFFFFF;
 
 #else

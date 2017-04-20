@@ -1,31 +1,31 @@
 #include "stdafx.h"
-#include "ProcessModule.h"
+#include "ProcessThread.h"
+
 
 namespace ArkProtect
 {
-	CProcessModule *CProcessModule::m_ProcessModule;
+	CProcessThread *CProcessThread::m_ProcessThread;
 
-	CProcessModule::CProcessModule(CGlobal *GlobalObject, PPROCESS_ENTRY_INFORMATION ProcessEntry)
+	CProcessThread::CProcessThread(CGlobal *GlobalObject, PPROCESS_ENTRY_INFORMATION ProcessEntry)
 		: m_Global(GlobalObject)
 		, m_ProcessEntry(ProcessEntry)
 	{
-		m_ProcessModule = this;
+		m_ProcessThread = this;
 	}
 
 
-	CProcessModule::~CProcessModule()
+	CProcessThread::~CProcessThread()
 	{
 	}
 
 
-
 	/************************************************************************
-	*  Name : InitializeProcessModuleList
-	*  Param: ProcessInfoList        ProcessModule对话框的ListControl控件
+	*  Name : InitializeProcessThreadList
+	*  Param: ProcessInfoList        ProcessThread对话框的ListControl控件
 	*  Ret  : void
 	*  初始化ListControl的信息
 	************************************************************************/
-	void CProcessModule::InitializeProcessModuleList(CListCtrl *ListCtrl)
+	void CProcessThread::InitializeProcessThreadList(CListCtrl *ListCtrl)
 	{
 		while (ListCtrl->DeleteColumn(0));
 		ListCtrl->DeleteAllItems();
@@ -39,96 +39,75 @@ namespace ArkProtect
 	}
 
 
-	/************************************************************************
-	*  Name : PerfectProcessModuleInfo
-	*  Param: ModuleEntry			     进程信息结构
-	*  Ret  : void
-	*  完善进程信息结构
-	************************************************************************/
-	void CProcessModule::PerfectProcessModuleInfo(PPROCESS_MODULE_ENTRY_INFORMATION ModuleEntry)
-	{
-		// 修剪模块文件路径
-		CString strFullPath = m_Global->TrimPath(ModuleEntry->wzFilePath);
-		StringCchCopyW(ModuleEntry->wzFilePath, strFullPath.GetLength() + 1, strFullPath.GetBuffer());
-		//wcsncpy_s(ModuleEntry.wzFullPath, MAX_PATH, strFullPath.GetBuffer(), strFullPath.GetLength());
 
-		CString strCompanyName = m_Global->GetFileCompanyName(ModuleEntry->wzFilePath);
-		if (strCompanyName.GetLength() == 0)
-		{
-			strCompanyName = L" ";
-		}
-
-		StringCchCopyW(ModuleEntry->wzCompanyName, strCompanyName.GetLength() + 1, strCompanyName.GetBuffer());
-	}
-	
 
 	/************************************************************************
-	*  Name : EnumProcessModule
+	*  Name : EnumProcessThread
 	*  Param: void
 	*  Ret  : BOOL
 	*  与驱动层通信，枚举进程模块信息
 	************************************************************************/
-	BOOL CProcessModule::EnumProcessModule()
+	BOOL CProcessThread::EnumProcessThread()
 	{
 		BOOL bOk = FALSE;
 
-		m_ProcessModuleEntryVector.clear();
+		m_ProcessThreadEntryVector.clear();
 
 		UINT32   Count = 0x100;
 		DWORD	 dwReturnLength = 0;
-		PPROCESS_MODULE_INFORMATION pmi = NULL;
+		PPROCESS_THREAD_INFORMATION pti = NULL;
 
 		do
 		{
 			UINT32 OutputLength = 0;
 
-			if (pmi)
+			if (pti)
 			{
-				free(pmi);
-				pmi = NULL;
+				free(pti);
+				pti = NULL;
 			}
 
-			OutputLength = sizeof(PROCESS_MODULE_INFORMATION) + Count * sizeof(PROCESS_MODULE_ENTRY_INFORMATION);
+			OutputLength = sizeof(PROCESS_THREAD_INFORMATION) + Count * sizeof(PROCESS_THREAD_ENTRY_INFORMATION);
 
-			pmi = (PPROCESS_MODULE_INFORMATION)malloc(OutputLength);
-			if (!pmi)
+			pti = (PPROCESS_THREAD_INFORMATION)malloc(OutputLength);
+			if (!pti)
 			{
 				break;
 			}
 
-			RtlZeroMemory(pmi, OutputLength);
+			RtlZeroMemory(pti, OutputLength);
 
 			bOk = DeviceIoControl(m_Global->m_DeviceHandle,
-				IOCTL_ARKPROTECT_ENUMPROCESSMODULE,
+				IOCTL_ARKPROTECT_ENUMPROCESSTHREAD,
 				&m_ProcessEntry->ProcessId,		// InputBuffer
 				sizeof(UINT32),
-				pmi,
+				pti,
 				OutputLength,
 				&dwReturnLength,
 				NULL);
 
-			Count = (UINT32)pmi->NumberOfModules + 1000;
+			Count = (UINT32)pti->NumberOfThreads + 1000;
 
 		} while (bOk == FALSE && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 
-		if (bOk && pmi)
+		if (bOk && pti)
 		{
-			for (UINT32 i = 0; i < pmi->NumberOfModules; i++)
+			for (UINT32 i = 0; i < pti->NumberOfThreads; i++)
 			{
 				// 完善进程信息结构
-				PerfectProcessModuleInfo(&pmi->ModuleEntry[i]);
-				m_ProcessModuleEntryVector.push_back(pmi->ModuleEntry[i]);
+				//PerfectProcessModuleInfo(&pmi->ModuleEntry[i]);
+				m_ProcessThreadEntryVector.push_back(pti->ThreadEntry[i]);
 			}
 			bOk = TRUE;
 		}
 
-		if (pmi)
+		if (pti)
 		{
-			free(pmi);
-			pmi = NULL;
+			free(pti);
+			pti = NULL;
 		}
 
-		if (m_ProcessModuleEntryVector.empty())
+		if (m_ProcessThreadEntryVector.empty())
 		{
 			return FALSE;
 		}
@@ -152,7 +131,7 @@ namespace ArkProtect
 			PROCESS_MODULE_ENTRY_INFORMATION ModuleEntry = m_ProcessModuleEntryVector[i];
 
 			CString strFilePath, strBaseAddress, strImageSize, strCompanyName;
-			
+
 			strFilePath = ModuleEntry.wzFilePath;
 			strBaseAddress.Format(L"0x%p", ModuleEntry.BaseAddress);
 			strImageSize.Format(L"0x%X", ModuleEntry.SizeOfImage);
@@ -177,16 +156,25 @@ namespace ArkProtect
 	}
 
 
+
+
 	/************************************************************************
-	*  Name : QueryProcessModule
+	*  Name : QueryProcessThread
 	*  Param: ListCtrl
 	*  Ret  : void
 	*  查询进程信息
 	************************************************************************/
-	void CProcessModule::QueryProcessModule(CListCtrl *ListCtrl)
+	void CProcessThread::QueryProcessThread(CListCtrl *ListCtrl)
 	{
 		ListCtrl->DeleteAllItems();
+		m_ProcessThreadEntryVector.clear();
 		m_ProcessModuleEntryVector.clear();
+
+		if (EnumProcessThread() == FALSE)
+		{
+			m_Global->UpdateStatusBarDetail(L"Process Thread Initialize failed");
+			return;
+		}
 
 		if (EnumProcessModule() == FALSE)
 		{
@@ -194,29 +182,28 @@ namespace ArkProtect
 			return;
 		}
 
-		InsertProcessModuleInfoList(ListCtrl);
+		//InsertProcessThreadInfoList(ListCtrl);
 	}
 
 
-
 	/************************************************************************
-	*  Name : QueryProcessModuleCallback
+	*  Name : QueryProcessThreadCallback
 	*  Param: lParam （ListCtrl）
 	*  Ret  : DWORD
 	*  查询进程模块的回调
 	************************************************************************/
-	DWORD CALLBACK CProcessModule::QueryProcessModuleCallback(LPARAM lParam)
+	DWORD CALLBACK CProcessThread::QueryProcessThreadCallback(LPARAM lParam)
 	{
 		CListCtrl *ListCtrl = (CListCtrl*)lParam;
 
-		m_ProcessModule->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+		m_ProcessThread->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
 
-		m_ProcessModule->m_Global->UpdateStatusBarTip(L"Process Module");
-		m_ProcessModule->m_Global->UpdateStatusBarDetail(L"Process Module is loading now...");
+		m_ProcessThread->m_Global->UpdateStatusBarTip(L"Process Thread");
+		m_ProcessThread->m_Global->UpdateStatusBarDetail(L"Process Thread is loading now...");
 
-		m_ProcessModule->QueryProcessModule(ListCtrl);
+		m_ProcessThread->QueryProcessThread(ListCtrl);
 
-		m_ProcessModule->m_Global->m_bIsRequestNow = FALSE;
+		m_ProcessThread->m_Global->m_bIsRequestNow = FALSE;
 
 		return 0;
 	}

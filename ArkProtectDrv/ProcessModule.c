@@ -215,7 +215,7 @@ APFillProcessModuleInfoByTravelLdr(IN PLIST_ENTRY LdrListEntry, IN eLdrType LdrT
 /************************************************************************
 *  Name : APEnumProcessModuleByPeb
 *  Param: EProcess			      进程结构体
-*  Param: pmi			          ring3内存
+*  Param: pmi			          
 *  Param: ModuleCount			  
 *  Ret  : NTSTATUS
 *  通过遍历peb的Ldr三根链表中的一个表（处理Wow64）
@@ -385,7 +385,7 @@ APEnumProcessModule(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 		{
 			RtlZeroMemory(pmi, OutputLength);
 
-/*			Status = APEnumProcessModuleByZwQueryVirtualMemory(EProcess, pmi, ModuleCount);
+			Status = APEnumProcessModuleByPeb(EProcess, pmi, ModuleCount);
 			if (NT_SUCCESS(Status))
 			{
 				if (ModuleCount >= pmi->NumberOfModules)
@@ -399,23 +399,6 @@ APEnumProcessModule(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 					Status = STATUS_BUFFER_TOO_SMALL;	// 给ring3返回内存不够的信息
 				}
 			}
-			else
-			{*/
-				Status = APEnumProcessModuleByPeb(EProcess, pmi, ModuleCount);
-				if (NT_SUCCESS(Status))
-				{
-					if (ModuleCount >= pmi->NumberOfModules)
-					{
-						RtlCopyMemory(OutputBuffer, pmi, OutputLength);
-						Status = STATUS_SUCCESS;
-					}
-					else
-					{
-						((PPROCESS_MODULE_INFORMATION)OutputBuffer)->NumberOfModules = pmi->NumberOfModules;    // 让Ring3知道需要多少个
-						Status = STATUS_BUFFER_TOO_SMALL;	// 给ring3返回内存不够的信息
-					}
-				}
-			//}
 
 			ExFreePool(pmi);
 			pmi = NULL;

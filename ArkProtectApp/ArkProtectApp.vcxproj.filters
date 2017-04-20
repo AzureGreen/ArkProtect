@@ -28,6 +28,9 @@
     <Filter Include="ProcessCore\ProcessInfo\ProcessModule">
       <UniqueIdentifier>{ceff7293-d8d9-40b1-b9d3-c5ea86f1e0ac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ProcessCore\ProcessInfo\ProcessThread">
+      <UniqueIdentifier>{135fba0c-def9-4a60-9676-0e3d7fe7a6b0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -66,6 +69,9 @@
     <ClInclude Include="ProcessModule.h">
       <Filter>ProcessCore\ProcessInfo\ProcessModule</Filter>
     </ClInclude>
+    <ClInclude Include="ProcessThread.h">
+      <Filter>ProcessCore\ProcessInfo\ProcessThread</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">
@@ -88,6 +94,9 @@
     </ClCompile>
     <ClCompile Include="ProcessModule.cpp">
       <Filter>ProcessCore\ProcessInfo\ProcessModule</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessThread.cpp">
+      <Filter>ProcessCore\ProcessInfo\ProcessThread</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

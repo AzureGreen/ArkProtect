@@ -3,7 +3,7 @@
 #include "Define.h"
 #include "ProcessCore.h"
 #include "ProcessModule.h"
-
+#include "ProcessThread.h"
 
 // CProcessInfoDlg 对话框
 
@@ -37,6 +37,10 @@ public:
 
 	void APLoadProcessModuleList();
 
+	void APInitializeProcessThreadList();
+
+	void APLoadProcessThreadList();
+
 
 
 	CListCtrl m_ProcessInfoListCtrl;
@@ -49,4 +53,5 @@ public:
 	ArkProtect::eProcessInfoKind            m_CurrentInfoKind = (ArkProtect::eProcessInfoKind)(-1);
 	ArkProtect::PPROCESS_ENTRY_INFORMATION  m_ProcessEntry;             // Process结构体
 	ArkProtect::CProcessModule              m_ProcessModule;            // 进程模块类对象
+	ArkProtect::CProcessThread              m_ProcessThread;            // 进程线程类对象 
 };

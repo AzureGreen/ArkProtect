@@ -1,9 +1,8 @@
 #include "stdafx.h"
 #include "ProcessCore.h"
 
-
 #include "Global.hpp"
-
+#include "ProcessDlg.h"
 
 namespace ArkProtect
 {
@@ -348,6 +347,26 @@ namespace ArkProtect
 
 
 	/************************************************************************
+	*  Name : AddProcessFileIcon
+	*  Param: wzProcessPath
+	*  Ret  : void
+	*  查询进程信息的回调
+	************************************************************************/
+	void CProcessCore::AddProcessFileIcon(WCHAR *wzProcessPath)
+	{
+		SHFILEINFO ShFileInfo = { 0 };
+
+		SHGetFileInfo(wzProcessPath, FILE_ATTRIBUTE_NORMAL,
+			&ShFileInfo, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES);
+
+		HICON  hIcon = ShFileInfo.hIcon;
+
+		((CProcessDlg*)(m_Global->m_ProcessDlg))->m_ProcessIconList.Add(hIcon);
+	}
+
+
+
+	/************************************************************************
 	*  Name : InsertProcessInfoList
 	*  Param: ListCtrl
 	*  Ret  : void
@@ -391,8 +410,12 @@ namespace ArkProtect
 
 			strCompanyName = ProcessEntry.wzCompanyName;
 			
-			//SendMessageW();
+			if (i >= 2)
+			{
+				AddProcessFileIcon(ProcessEntry.wzFilePath);     // 添加图标
+			}
 
+		
 			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strImageName);
 			ListCtrl->SetItemText(iItem, pc_ProcessId, strProcessId);
 			ListCtrl->SetItemText(iItem, pc_ParentProcessId, strParentProcessId);

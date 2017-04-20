@@ -274,7 +274,7 @@ namespace ArkProtect
 
 
 		CWnd *AppDlg = NULL;         // 保存主窗口指针
-		CWnd *ProcessDlg = NULL;     // 保存进程模块窗口指针
+		CWnd *m_ProcessDlg = NULL;     // 保存进程模块窗口指针
 
 
 		int iDpix = 0;               // Logical pixels/inch in X

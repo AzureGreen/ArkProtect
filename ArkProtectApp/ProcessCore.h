@@ -56,6 +56,8 @@ namespace ArkProtect
 
 		BOOL EnumProcessInfo();
 
+		void AddProcessFileIcon(WCHAR * wzProcessPath);
+
 		void InsertProcessInfoList(CListCtrl * ListCtrl);
 
 		void QueryProcessInfo(CListCtrl * ListCtrl);

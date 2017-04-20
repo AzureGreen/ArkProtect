@@ -17,6 +17,7 @@ CProcessInfoDlg::CProcessInfoDlg(CWnd* pParent, ArkProtect::eProcessInfoKind Pro
 	, m_WantedInfoKind(ProcessInfoKind)
 	, m_Global(GlobalObject)
 	, m_ProcessModule(GlobalObject, ProcessEntry)
+	, m_ProcessThread(GlobalObject, ProcessEntry)
 	, m_ProcessEntry(ProcessEntry)
 {
 }
@@ -106,6 +107,17 @@ void CProcessInfoDlg::APInitializeProcessInfoList()
 
 		break;
 	case ArkProtect::pik_Thread:
+
+		m_CurrentInfoKind = m_WantedInfoKind;
+
+		strWindowText.Format(L"Process Module - %s", m_ProcessEntry->wzImageName);
+
+		SetWindowText(strWindowText.GetBuffer());
+
+		APInitializeProcessThreadList();
+
+		APLoadProcessThreadList();
+
 		break;
 	case ArkProtect::pik_Handle:
 		break;
@@ -155,5 +167,42 @@ void CProcessInfoDlg::APLoadProcessModuleList()
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessModule::QueryProcessModuleCallback, &m_ProcessInfoListCtrl, 0, NULL)
+	);
+}
+
+
+/************************************************************************
+*  Name : APInitializeProcessThreadList
+*  Param: void
+*  Ret  : void
+*  初始化ListControl
+************************************************************************/
+void CProcessInfoDlg::APInitializeProcessThreadList()
+{
+	m_ProcessThread.InitializeProcessThreadList(&m_ProcessInfoListCtrl);
+}
+
+
+/************************************************************************
+*  Name : APLoadProcessThreadList
+*  Param: void
+*  Ret  : void
+*  加载进程信息到ListControl
+************************************************************************/
+void CProcessInfoDlg::APLoadProcessThreadList()
+{
+	if (m_Global->m_bIsRequestNow == TRUE)
+	{
+		return;
+	}
+
+	m_ProcessInfoListCtrl.DeleteAllItems();
+
+	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
+
+	// 加载进程信息列表
+	CloseHandle(
+		CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessThread::QueryProcessThreadCallback, &m_ProcessInfoListCtrl, 0, NULL)
 	);
 }

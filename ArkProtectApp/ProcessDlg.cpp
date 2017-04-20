@@ -19,8 +19,10 @@ BOOL CProcessDlg::m_bSortOrder;
 CProcessDlg::CProcessDlg(CWnd* pParent /*=NULL*/, ArkProtect::CGlobal *GlobalObject)
 	: CDialogEx(IDD_PROCESS_DIALOG, pParent)
 	, m_Global(GlobalObject)
-	, m_Process(GlobalObject)
 {
+	// 保存对话框指针
+	m_Global->m_ProcessDlg = this;
+	m_Process = new ArkProtect::CProcessCore(m_Global);    // 保证这里的ProcessCore里的n_Global里有m_ProcessDlg
 	m_SortColumn = 0;
 	m_bSortOrder = FALSE;
 }
@@ -44,6 +46,7 @@ BEGIN_MESSAGE_MAP(CProcessDlg, CDialogEx)
 	ON_COMMAND(ID_PROCESS_MODULE, &CProcessDlg::OnProcessModule)
 	ON_WM_SIZE()
 	
+	ON_COMMAND(ID_PROCESS_THREAD, &CProcessDlg::OnProcessThread)
 END_MESSAGE_MAP()
 
 
@@ -55,8 +58,6 @@ BOOL CProcessDlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  在此添加额外的初始化
-	// 保存对话框指针
-	m_Global->ProcessDlg = this;
 
 	// 创建Icon图标列表
 	UINT nIconSize = 20 * (UINT)(m_Global->iDpix / 96.0);
@@ -186,7 +187,6 @@ void CProcessDlg::OnProcessFreshen()
 }
 
 
-
 void CProcessDlg::OnProcessModule()
 {
 	// TODO: 在此添加命令处理程序代码
@@ -194,6 +194,15 @@ void CProcessDlg::OnProcessModule()
 	// 初始化ProcessInfoDlg，传入
 	APInitializeProcessInfoDlg(ArkProtect::pik_Module);
 
+}
+
+
+void CProcessDlg::OnProcessThread()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	// 初始化ProcessInfoDlg，传入
+	APInitializeProcessInfoDlg(ArkProtect::pik_Thread);
 }
 
 
@@ -205,7 +214,7 @@ void CProcessDlg::OnProcessModule()
 ************************************************************************/
 void CProcessDlg::APInitializeProcessList()
 {
-	m_Process.InitializeProcessList(&m_ProcessListCtrl);
+	m_Process->InitializeProcessList(&m_ProcessListCtrl);
 }
 
 
@@ -290,27 +299,6 @@ void CProcessDlg::APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind Proces
 
 
 
-
-
-/************************************************************************
-*  Name : AddProcessFileIcon
-*  Param: wzProcessPath
-*  Ret  : void
-*  查询进程信息的回调
-************************************************************************/
-void CProcessDlg::AddProcessFileIcon(WCHAR *wzProcessPath)
-{
-	SHFILEINFO ShFileInfo = { 0 };
-
-	SHGetFileInfo(wzProcessPath, FILE_ATTRIBUTE_NORMAL,
-		&ShFileInfo, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES);
-
-	HICON  hIcon = ShFileInfo.hIcon;
-
-	m_ProcessIconList.Add(hIcon);
-}
-
-
 /************************************************************************
 *  Name : APProcessListCompareFunc
 *  Param: lParam1                   第一行
@@ -378,6 +366,9 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
+
+
+
 
 
 
