@@ -25,16 +25,38 @@ namespace ArkProtect
 	*  Ret  : void
 	*  初始化ListControl的信息
 	************************************************************************/
-	void CProcessModule::InitializeProcessModuleList(CListCtrl *ProcessInfoList)
+	void CProcessModule::InitializeProcessModuleList(CListCtrl *ListCtrl)
 	{
-		ProcessInfoList->SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP);
+		ListCtrl->SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_HEADERDRAGDROP);
 
 		for (int i = 0; i < m_iColumnCount; i++)
 		{
-			ProcessInfoList->InsertColumn(i, m_ColumnStruct[i].wzTitle, LVCFMT_LEFT, (int)(m_ColumnStruct[i].nWidth*(m_Global->iDpiy / 96.0)));
+			ListCtrl->InsertColumn(i, m_ColumnStruct[i].wzTitle, LVCFMT_LEFT, (int)(m_ColumnStruct[i].nWidth*(m_Global->iDpiy / 96.0)));
 		}
 	}
 
+
+	/************************************************************************
+	*  Name : PerfectProcessModuleInfo
+	*  Param: ModuleEntry			     进程信息结构
+	*  Ret  : void
+	*  完善进程信息结构
+	************************************************************************/
+	void CProcessModule::PerfectProcessModuleInfo(PPROCESS_MODULE_ENTRY_INFORMATION ModuleEntry)
+	{
+		// 修剪模块文件路径
+		CString strFullPath = m_Global->TrimPath(ModuleEntry->wzFilePath);
+		StringCchCopyW(ModuleEntry->wzFilePath, strFullPath.GetLength() + 1, strFullPath.GetBuffer());
+		//wcsncpy_s(ModuleEntry.wzFullPath, MAX_PATH, strFullPath.GetBuffer(), strFullPath.GetLength());
+
+		CString strCompanyName = m_Global->GetFileCompanyName(ModuleEntry->wzFilePath);
+		if (strCompanyName.GetLength() == 0)
+		{
+			strCompanyName = L" ";
+		}
+
+		StringCchCopyW(ModuleEntry->wzCompanyName, strCompanyName.GetLength() + 1, strCompanyName.GetBuffer());
+	}
 	
 
 	/************************************************************************
@@ -91,7 +113,7 @@ namespace ArkProtect
 			for (UINT32 i = 0; i < pmi->NumberOfModules; i++)
 			{
 				// 完善进程信息结构
-				//PerfectProcessInfo(pmi->ModuleEntry[i]);
+				PerfectProcessModuleInfo(&pmi->ModuleEntry[i]);
 				m_ProcessModuleEntryVector.push_back(pmi->ModuleEntry[i]);
 			}
 			bOk = TRUE;
@@ -112,6 +134,45 @@ namespace ArkProtect
 	}
 
 
+	/************************************************************************
+	*  Name : InsertProcessInfoList
+	*  Param: ListCtrl
+	*  Ret  : void
+	*  向ListControl里插入进程信息
+	************************************************************************/
+	void CProcessModule::InsertProcessModuleInfoList(CListCtrl *ListCtrl)
+	{
+		UINT32 ProcessModuleNum = 0;
+		size_t Size = m_ProcessModuleEntryVector.size();
+		for (size_t i = 0; i < Size; i++)
+		{
+			PROCESS_MODULE_ENTRY_INFORMATION ModuleEntry = m_ProcessModuleEntryVector[i];
+
+			CString strFilePath, strBaseAddress, strImageSize, strCompanyName;
+			
+			strFilePath = ModuleEntry.wzFilePath;
+			strBaseAddress.Format(L"0x%p", ModuleEntry.BaseAddress);
+			strImageSize.Format(L"0x%X", ModuleEntry.SizeOfImage);
+			strCompanyName = ModuleEntry.wzCompanyName;
+
+			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strFilePath);
+			ListCtrl->SetItemText(iItem, pmc_BaseAddress, strBaseAddress);
+			ListCtrl->SetItemText(iItem, pmc_SizeOfImage, strImageSize);
+			ListCtrl->SetItemText(iItem, pmc_Company, strCompanyName);
+
+			ProcessModuleNum++;
+
+			CString strStatusContext;
+			strStatusContext.Format(L"Process Info is loading now, Count:%d", ProcessModuleNum);
+
+			m_Global->UpdateStatusBarDetail(strStatusContext);
+		}
+
+		CString strStatusContext;
+		strStatusContext.Format(L"Process Info load complete, Count:%d", Size);
+		m_Global->UpdateStatusBarDetail(strStatusContext);
+	}
+
 
 	/************************************************************************
 	*  Name : QueryProcessModule
@@ -130,7 +191,7 @@ namespace ArkProtect
 			return;
 		}
 
-	//	InsertProcessModuleList(ListCtrl);
+		InsertProcessModuleInfoList(ListCtrl);
 	}
 
 
@@ -156,8 +217,5 @@ namespace ArkProtect
 
 		return 0;
 	}
-
-
-
 
 }

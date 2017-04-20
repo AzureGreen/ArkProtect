@@ -38,10 +38,12 @@ void CProcessDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CProcessDlg, CDialogEx)
 	ON_WM_SHOWWINDOW()
-	ON_NOTIFY(LVN_ITEMCHANGED, IDC_PROCESS_LIST, &CProcessDlg::OnLvnItemchangedProcessList)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_PROCESS_LIST, &CProcessDlg::OnLvnColumnclickProcessList)
 	ON_NOTIFY(NM_RCLICK, IDC_PROCESS_LIST, &CProcessDlg::OnNMRClickProcessList)
 	ON_COMMAND(ID_PROCESS_FRESHEN, &CProcessDlg::OnProcessFreshen)
 	ON_COMMAND(ID_PROCESS_MODULE, &CProcessDlg::OnProcessModule)
+	ON_WM_SIZE()
+	
 END_MESSAGE_MAP()
 
 
@@ -66,6 +68,16 @@ BOOL CProcessDlg::OnInitDialog()
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // 异常: OCX 属性页应返回 FALSE
+}
+
+
+void CProcessDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialogEx::OnSize(nType, cx, cy);
+
+	// TODO: 在此处添加消息处理程序代码
+	m_Global->iResizeX = cx;
+	m_Global->iResizeY = cy;
 }
 
 
@@ -96,7 +108,7 @@ void CProcessDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 }
 
 
-void CProcessDlg::OnLvnItemchangedProcessList(NMHDR *pNMHDR, LRESULT *pResult)
+void CProcessDlg::OnLvnColumnclickProcessList(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
 	// TODO: 在此添加控件通知处理程序代码
@@ -120,16 +132,17 @@ void CProcessDlg::OnLvnItemchangedProcessList(NMHDR *pNMHDR, LRESULT *pResult)
 		m_bSortOrder = TRUE;
 	}
 
-/*	for (int i = 0; i < iItemCount; i++)
+	/*	for (int i = 0; i < iItemCount; i++)
 	{
-		if (_wcsnicmp(m_ProcessListCtrl.GetItemText(i, ArkProtect::pc_Company),
-			L"Microsoft Corporation",
-			wcslen(L"Microsoft Corporation")) == 0)
-		{
-			m_ProcessList.SetItemData(i, 1);
-		}
+	if (_wcsnicmp(m_ProcessListCtrl.GetItemText(i, ArkProtect::pc_Company),
+	L"Microsoft Corporation",
+	wcslen(L"Microsoft Corporation")) == 0)
+	{
+	m_ProcessList.SetItemData(i, 1);
 	}
-*/
+	}
+	*/
+
 	*pResult = 0;
 }
 
@@ -365,6 +378,11 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
+
+
+
+
+
 
 
 

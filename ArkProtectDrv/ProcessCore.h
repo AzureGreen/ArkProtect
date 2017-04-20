@@ -15,7 +15,7 @@ typedef struct _PROCESS_ENTRY_INFORMATION
 	WCHAR     wzFilePath[MAX_PATH];
 	UINT_PTR  EProcess;
 	INT32     bUserAccess;
-	WCHAR     wzCompanyName[100];
+	WCHAR     wzCompanyName[MAX_PATH];
 } PROCESS_ENTRY_INFORMATION, *PPROCESS_ENTRY_INFORMATION;
 
 typedef struct _PROCESS_INFORMATION
@@ -24,6 +24,8 @@ typedef struct _PROCESS_INFORMATION
 	PROCESS_ENTRY_INFORMATION ProcessEntry[1];
 } PROCESS_INFORMATION, *PPROCESS_INFORMATION;
 
+UINT_PTR
+APGetPsIdleProcess();
 
 UINT_PTR
 APGetObjectType(IN PVOID Object);
@@ -48,3 +50,6 @@ APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength);
 
 
 #endif // !CXX_ProcessCore_H
+
+
+

@@ -1,6 +1,8 @@
+#include <ntifs.h>
+
 #ifndef CXX_main_H
 #define CXX_main_H
-#include <ntifs.h>
+
 #include "Dispatch.h"
 #include "Private.h"
 

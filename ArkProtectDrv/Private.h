@@ -1,21 +1,26 @@
 #ifndef CXX_Private_H
 #define CXX_Private_H
+
 #include <ntifs.h>
+#include <strsafe.h>
+#include "NtStructs.h"
+#include "Imports.h"
 
 #define MAX_PATH 260
+#define MAX_DOS_DRIVES 26
 
 typedef enum _eWinVersion {
-	WINVER_7     = 0x0610,
+	WINVER_7 = 0x0610,
 	WINVER_7_SP1 = 0x0611,
-	WINVER_8     = 0x0620,
-	WINVER_81    = 0x0630,
-	WINVER_10    = 0x0A00,
+	WINVER_8 = 0x0620,
+	WINVER_81 = 0x0630,
+	WINVER_10 = 0x0A00,
 	WINVER_10_AU = 0x0A01,
 } eWinVersion;
 
 typedef struct _DYNAMIC_DATA
 {
-	eWinVersion	WinVersion;					// ϵͳ�汾
+	eWinVersion	WinVersion;
 
 	//////////////////////////////////////////////////////////////////////////
 	// Process
@@ -30,8 +35,8 @@ typedef struct _DYNAMIC_DATA
 
 	UINT32      ThreadListHead_EPROCESS;      // EPROCESS::ThreadListHead
 
-	//////////////////////////////////////////////////////////////////////////
-	// Thread
+											  //////////////////////////////////////////////////////////////////////////
+											  // Thread
 
 	UINT32      Priority;                   // KTHREAD::Priority
 
@@ -63,7 +68,7 @@ typedef struct _DYNAMIC_DATA
 
 	//////////////////////////////////////////////////////////////////////////
 
-	UINT_PTR	UserEndAddress;				// Max Address Of Ring3 Can Visit
+	UINT_PTR	MaxUserSpaceAddress;		// Max Address Of Ring3 Can Visit
 
 	UINT32		NtQueryVirtualMemoryIndex;	// NtQueryVirtualMemory Index In SSDT
 
@@ -90,5 +95,11 @@ typedef struct _DYNAMIC_DATA
 
 BOOLEAN
 APGetNtosExportVariableAddress(IN const WCHAR *wzVariableName, OUT PVOID *VariableAddress);
+
+BOOLEAN 
+APDosPathToNtPath(IN WCHAR * wzDosFullPath, OUT WCHAR * wzNtFullPath);
+
+UINT32
+APQueryDosDevice(WCHAR *DeviceName, WCHAR *TargetPath, UINT32 MaximumLength);
 
 #endif // !CXX_Private_H

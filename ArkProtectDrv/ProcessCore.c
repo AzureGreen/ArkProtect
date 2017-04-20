@@ -8,6 +8,29 @@ UINT_PTR
 (*pfnObGetObjectType)(PVOID Object);
 
 
+/************************************************************************
+*  Name : APGetPsIdleProcess
+*  Param: void
+*  Ret  : UINT_PTR			PsIdleProcess
+*  获得System Idle Process 的EProcess地址
+************************************************************************/
+UINT_PTR
+APGetPsIdleProcess()
+{
+	UINT_PTR PsIdleProcess = 0;
+	UINT_PTR PsInitialSystemProcessAddress = (UINT_PTR)&PsInitialSystemProcess;
+
+	if (PsInitialSystemProcessAddress && MmIsAddressValid((PVOID)((PUINT8)PsInitialSystemProcessAddress + 0xA0)))
+	{
+		PsIdleProcess = *(PUINT_PTR)((PUINT8)PsInitialSystemProcessAddress + 0xA0);
+		if (PsIdleProcess <= 0xffff)
+		{
+			PsIdleProcess = *(PUINT_PTR)((PUINT8)PsInitialSystemProcessAddress + 0xB0);
+		}
+	}
+	return PsIdleProcess;
+}
+
 
 /************************************************************************
 *  Name : APGetObjectType
@@ -168,7 +191,7 @@ NTSTATUS
 APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath)
 {
 	NTSTATUS	Status = STATUS_UNSUCCESSFUL;
-	
+
 	if (APIsValidProcess(EProcess))
 	{
 		/*
@@ -325,9 +348,9 @@ APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 			{
 				// Idle
 				pi->ProcessEntry[pi->NumberOfProcesses].ProcessId = 0;
-				pi->ProcessEntry[pi->NumberOfProcesses].EProcess = (UINT_PTR)PsIdleProcess;   // 全局导出
+				pi->ProcessEntry[pi->NumberOfProcesses].EProcess = (UINT_PTR)APGetPsIdleProcess();   // 全局导出
 				pi->ProcessEntry[pi->NumberOfProcesses].ParentProcessId = 0;
-				
+
 				DbgPrint("Process Id:%d\r\n", pi->ProcessEntry[pi->NumberOfProcesses].ProcessId);
 				DbgPrint("EProcess:%p\r\n", pi->ProcessEntry[pi->NumberOfProcesses].EProcess);
 				DbgPrint("EProcess:%d\r\n", pi->ProcessEntry[pi->NumberOfProcesses].ParentProcessId);
@@ -355,6 +378,7 @@ APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 					ObDereferenceObject(EProcess);
 				}
 			}
+			Status = STATUS_SUCCESS;
 		}
 		else
 		{

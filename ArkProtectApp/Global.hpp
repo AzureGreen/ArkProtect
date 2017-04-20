@@ -202,6 +202,77 @@ namespace ArkProtect
 		}
 
 
+		CString GetLongPath(CString strFilePath)
+		{
+			if (strFilePath.Find(L'~') != -1)
+			{
+				WCHAR wzLongPath[MAX_PATH] = { 0 };
+				DWORD dwReturn = GetLongPathName(strFilePath, wzLongPath, MAX_PATH);
+				if (dwReturn < MAX_PATH && dwReturn != 0)
+				{
+					strFilePath = wzLongPath;
+				}
+			}
+
+			return strFilePath;
+		}
+
+
+		CString TrimPath(WCHAR *wzFilePath)
+		{
+			CString strFilePath;
+
+			// 比如："C:\\"
+			if (wzFilePath[1] == ':' && wzFilePath[2] == '\\')
+			{
+				strFilePath = wzFilePath;
+			}
+			else if (wcslen(wzFilePath) > wcslen(L"\\SystemRoot\\") &&
+				!_wcsnicmp(wzFilePath, L"\\SystemRoot\\", wcslen(L"\\SystemRoot\\")))
+			{
+				WCHAR wzSystemDirectory[MAX_PATH] = { 0 };
+				GetWindowsDirectory(wzSystemDirectory, MAX_PATH);
+				strFilePath.Format(L"%s\\%s", wzSystemDirectory, wzFilePath + wcslen(L"\\SystemRoot\\"));
+			}
+			else if (wcslen(wzFilePath) > wcslen(L"system32\\") &&
+				!_wcsnicmp(wzFilePath, L"system32\\", wcslen(L"system32\\")))
+			{
+				WCHAR wzSystemDirectory[MAX_PATH] = { 0 };
+				GetWindowsDirectory(wzSystemDirectory, MAX_PATH);
+				strFilePath.Format(L"%s\\%s", wzSystemDirectory, wzFilePath/* + wcslen(L"system32\\")*/);
+			}
+			else if (wcslen(wzFilePath) > wcslen(L"\\??\\") &&
+				!_wcsnicmp(wzFilePath, L"\\??\\", wcslen(L"\\??\\")))
+			{
+				strFilePath = wzFilePath + wcslen(L"\\??\\");
+			}
+			else if (wcslen(wzFilePath) > wcslen(L"%ProgramFiles%") &&
+				!_wcsnicmp(wzFilePath, L"%ProgramFiles%", wcslen(L"%ProgramFiles%")))
+			{
+				WCHAR wzSystemDirectory[MAX_PATH] = { 0 };
+				if (GetWindowsDirectory(wzSystemDirectory, MAX_PATH) != 0)
+				{
+					strFilePath = wzSystemDirectory;
+					strFilePath = strFilePath.Left(strFilePath.Find('\\'));
+					strFilePath += L"\\Program Files";
+					strFilePath += wzFilePath + wcslen(L"%ProgramFiles%");
+				}
+			}
+			else
+			{
+				strFilePath = wzFilePath;
+			}
+
+			strFilePath = GetLongPath(strFilePath);
+
+			return strFilePath;
+		}
+
+
+
+		//////////////////////////////////////////////////////////////////////////
+
+
 		CWnd *AppDlg = NULL;         // 保存主窗口指针
 		CWnd *ProcessDlg = NULL;     // 保存进程模块窗口指针
 

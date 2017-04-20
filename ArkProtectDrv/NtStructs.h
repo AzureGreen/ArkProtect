@@ -1,9 +1,10 @@
 #ifndef CXX_NtStructs_H
-
+#define CXX_NtStructs_H
 #include <ntifs.h>
 
+
 //////////////////////////////////////////////////////////////////////////
-// Section相关
+// Section
 
 typedef struct _CONTROL_AREA
 {
@@ -61,7 +62,7 @@ typedef struct _SECTION_OBJECT
 
 
 //////////////////////////////////////////////////////////////////////////
-// Peb相关
+// Peb
 typedef struct _PEB_LDR_DATA32
 {
 	UINT32			Length;
@@ -159,6 +160,40 @@ typedef struct _PEB
 	UINT32 AtlThunkSListPtr32;
 	PVOID ApiSetMap;
 } PEB, *PPEB;
+
+//////////////////////////////////////////////////////////////////////////
+//
+#define SEC_IMAGE            0x1000000
+#define MEM_IMAGE            SEC_IMAGE
+/*
+typedef enum _MEMORY_INFORMATION_CLASS
+{
+MemoryBasicInformation,
+MemoryWorkingSetList,
+MemorySectionName,
+MemoryBasicVlmInformation
+} MEMORY_INFORMATION_CLASS;
+*/
+
+#define MemorySectionName 2
+
+//
+// Memory Information Structures for NtQueryVirtualMemory
+//
+typedef struct _MEMORY_SECTION_NAME
+{
+	UNICODE_STRING SectionFileName;
+	WCHAR NameBuffer[ANYSIZE_ARRAY];
+} MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
+
+
+//
+// ObjectDirectory Information Structures for NtQueryDirectoryObject
+//
+typedef struct _OBJECT_DIRECTORY_INFORMATION {
+	UNICODE_STRING Name;
+	UNICODE_STRING TypeName;
+} OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
 
 
 #endif // !CXX_NtStructs_H

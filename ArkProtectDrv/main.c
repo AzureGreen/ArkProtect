@@ -16,29 +16,38 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegisterPath)
 	RtlInitUnicodeString(&uniLinkName, LINK_NAME);
 
 	// 创建设备对象
-	Status = IoCreateDevice(DriverObject, 0, &uniDeviceName, FILE_DEVICE_UNKNOWN, 0, FALSE, &DeviceObject);
+	Status = IoCreateDevice(DriverObject, 0, &uniDeviceName, FILE_DEVICE_ARKPROTECT, 0, FALSE, &DeviceObject);
 	if (NT_SUCCESS(Status))
 	{
-		Status = APInitializeDynamicData(&g_DynamicData);			// 初始化信息
+		// 创建设备链接名
+		Status = IoCreateSymbolicLink(&uniLinkName, &uniDeviceName);
 		if (NT_SUCCESS(Status))
 		{
-			for (INT32 i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+			Status = APInitializeDynamicData(&g_DynamicData);			// 初始化信息
+			if (NT_SUCCESS(Status))
 			{
-				DriverObject->MajorFunction[i] = APDefaultPassThrough;
+				for (INT32 i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+				{
+					DriverObject->MajorFunction[i] = APDefaultPassThrough;
+				}
+
+				DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = APIoControlPassThrough;
+
+				DriverObject->DriverUnload = APUnloadDriver;
+
+				g_DriverObject = DriverObject;
+
+				DbgPrint("ArkProtect is Starting!!!");
 			}
-
-			//DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IoControlPassThrough;
-
-			DriverObject->DriverUnload = APUnloadDriver;
-
-			g_DriverObject = DriverObject;
-
-			DbgPrint("ArkProtect is Starting!!!");
+			else
+			{
+				DbgPrint("Initialize Dynamic Data Failed\r\n");
+			}
 		}
 		else
 		{
-			DbgPrint("Initialize Dynamic Data Failed\r\n");
-		}		
+			DbgPrint("Create SymbolicLink Failed\r\n");
+		}
 	}
 	else
 	{
@@ -91,6 +100,8 @@ APInitializeDynamicData(IN OUT PDYNAMIC_DATA DynamicData)
 			DynamicData->SectionObject = 0x268;
 			DynamicData->InheritedFromUniqueProcessId = 0x290;
 			DynamicData->ThreadListHead_EPROCESS = 0x308;
+
+			DynamicData->MaxUserSpaceAddress = 0x000007FFFFFFFFFF;
 
 #else
 

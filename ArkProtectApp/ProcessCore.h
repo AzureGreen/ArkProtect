@@ -26,7 +26,7 @@ namespace ArkProtect
 		WCHAR     wzFilePath[MAX_PATH];
 		UINT_PTR  EProcess;
 		BOOL      bUserAccess;
-		WCHAR     wzCompanyName[100];
+		WCHAR     wzCompanyName[MAX_PATH];
 	} PROCESS_ENTRY_INFORMATION, *PPROCESS_ENTRY_INFORMATION;
 
 	typedef struct _PROCESS_INFORMATION
@@ -52,7 +52,7 @@ namespace ArkProtect
 
 		ePeBit QueryPEFileBit(const WCHAR * wzFilePath);
 
-		void PerfectProcessInfo(PROCESS_ENTRY_INFORMATION pei);
+		void PerfectProcessInfo(PPROCESS_ENTRY_INFORMATION ProcessEntry);
 
 		BOOL EnumProcessInfo();
 
@@ -86,6 +86,7 @@ namespace ArkProtect
 
 		CGlobal             *m_Global;
 		static CProcessCore *m_Process;
+		
 	};
 
 	

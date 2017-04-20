@@ -74,8 +74,8 @@ BEGIN_MESSAGE_MAP(CArkProtectAppDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_MESSAGE(WM_ICONNOTIFY, (LRESULT(__thiscall CWnd::*)(WPARAM, LPARAM))OnIconNotify)
-	ON_MESSAGE(WM_ICONNOTIFY, (LRESULT(__thiscall CWnd::*)(WPARAM, LPARAM))OnUpdateStatusBarTip)
-	ON_MESSAGE(WM_ICONNOTIFY, (LRESULT(__thiscall CWnd::*)(WPARAM, LPARAM))OnUpdateStatusBarDetail)
+	ON_MESSAGE(WM_STATUSBARTIP, (LRESULT(__thiscall CWnd::*)(WPARAM, LPARAM))OnUpdateStatusBarTip)
+	ON_MESSAGE(WM_STATUSBARDETAIL, (LRESULT(__thiscall CWnd::*)(WPARAM, LPARAM))OnUpdateStatusBarDetail)
 	ON_COMMAND(ID_ICONNOTIFY_DISPLAY, &CArkProtectAppDlg::OnIconnotifyDisplay)
 	ON_COMMAND(ID_ICONNOTIFY_HIDE, &CArkProtectAppDlg::OnIconnotifyHide)
 	ON_COMMAND(ID_ICONNOTIFY_EXIT, &CArkProtectAppDlg::OnIconnotifyExit)
@@ -125,35 +125,36 @@ BOOL CArkProtectAppDlg::OnInitDialog()
 	// 初始化托盘
 	APInitializeTray();
 
-	CRect	Rect;
-	GetWindowRect(&Rect);
-
 	CPaintDC Dc(this);
 	m_Global.iDpix = Dc.GetDeviceCaps(LOGPIXELSX);
 	m_Global.iDpiy = Dc.GetDeviceCaps(LOGPIXELSY);
-	//Rect.bottom += (LONG)(1 + 21 * (GlobalObject.iDpiy / 96.0));
 
+	// 将对话框底部多加部分
+	CRect	Rect;
+	GetWindowRect(&Rect);
+	Rect.bottom += (LONG)(1 + 21 * (m_Global.iDpiy / 96.0));
 	MoveWindow(&Rect);
 
 	// 添加状态栏
 	m_StatusBar = new CStatusBarCtrl;
 	m_StatusBar->Create(WS_CHILD | WS_VISIBLE | SBT_OWNERDRAW, CRect(0, 0, 0, 0), this, 0);
 
-	int strPartBlock[3] = { 0 };
-	strPartBlock[1] = Rect.right - (LONG)(1 + 21 * (m_Global.iDpix / 96.0));
-	strPartBlock[0] = strPartBlock[1] - (int)(120 * (m_Global.iDpix / 96.0));
+	GetClientRect(&Rect);
 
-	m_StatusBar->SetParts(3, strPartBlock);
+	int iPartBlock[3] = { 0 };
+	iPartBlock[1] = Rect.right - (LONG)(1 + 21 * (m_Global.iDpix / 96.0));
+	iPartBlock[0] = iPartBlock[1] - (int)(120 * (m_Global.iDpix / 96.0));
+
+	m_StatusBar->SetParts(3, iPartBlock);
 	m_StatusBar->SetText(L"All Ready", 0, 0);
 
 	// 设置工具栏
-	int iLeftPops = 5;
 
-	m_ProcessButton.EnableWindow(TRUE);
+/*	m_ProcessButton.EnableWindow(TRUE);
 	m_DriverrButton.EnableWindow(TRUE);
 	m_KernelButton.EnableWindow(TRUE);
 	m_HookButton.EnableWindow(TRUE);
-
+*/
 	//	m_btnHomePage.MoveWindow(iLeftPops + (70 * 0), 0, 70, 94);
 	//	m_btnProcess.MoveWindow(iLeftPops + (70 * 1), 0, 70, 94);
 	//	m_btnModules.MoveWindow(iLeftPops + (70 * 2), 0, 70, 94);
@@ -163,6 +164,8 @@ BOOL CArkProtectAppDlg::OnInitDialog()
 	//	Rect.top = 94 + 2;
 	//	Rect.bottom -= (LONG)(1 + 21 * (GlobalObject.iDpiy / 96.0));
 
+
+	GetClientRect(&Rect);
 	Rect.top = 2;
 	Rect.bottom -= (LONG)(1 + 21 * (m_Global.iDpiy / 96.0));
 	Rect.left += 70;

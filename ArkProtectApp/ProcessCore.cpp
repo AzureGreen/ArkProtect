@@ -192,26 +192,26 @@ namespace ArkProtect
 
 
 	/************************************************************************
-	*  Name : DeployProcessInfo
-	*  Param: pei			     进程信息结构
+	*  Name : PerfectProcessInfo
+	*  Param: ProcessEntry			     进程信息结构
 	*  Ret  : void
 	*  完善进程信息结构
 	************************************************************************/
-	void CProcessCore::PerfectProcessInfo(PROCESS_ENTRY_INFORMATION pei)
+	void CProcessCore::PerfectProcessInfo(PPROCESS_ENTRY_INFORMATION ProcessEntry)
 	{
-		if (pei.ProcessId == 0)
+		if (ProcessEntry->ProcessId == 0)
 		{
 			// Idle
-			StringCchCopyW(pei.wzImageName, wcslen(L"System Idle Process") + 1, L"System Idle Process");
-			StringCchCopyW(pei.wzFilePath, wcslen(L"System Idle Process") + 1, L"System Idle Process");
-			pei.bUserAccess = FALSE;
-			pei.ParentProcessId = 0xffffffff;
-			StringCchCopyW(pei.wzCompanyName, wcslen(L" ") + 1, L" ");
+			StringCchCopyW(ProcessEntry->wzImageName, wcslen(L"System Idle Process") + 1, L"System Idle Process");
+			StringCchCopyW(ProcessEntry->wzFilePath, wcslen(L"System Idle Process") + 1, L"System Idle Process");
+			ProcessEntry->bUserAccess = FALSE;
+			ProcessEntry->ParentProcessId = 0xffffffff;
+			StringCchCopyW(ProcessEntry->wzCompanyName, wcslen(L" ") + 1, L" ");
 		}
-		else if (pei.ProcessId == 4)
+		else if (ProcessEntry->ProcessId == 4)
 		{
 			// System
-			StringCchCopyW(pei.wzImageName, wcslen(L"System") + 1, L"System");
+			StringCchCopyW(ProcessEntry->wzImageName, wcslen(L"System") + 1, L"System");
 
 			WCHAR wzFilePath[MAX_PATH] = { 0 };
 			//GetEnvironmentVariableW(L"windir", wzFilePath, MAX_PATH);   // 获得WindowsDirectory
@@ -219,44 +219,44 @@ namespace ArkProtect
 			GetSystemDirectory(wzFilePath, MAX_PATH);      // 获得System32Directory
 			StringCchCatW(wzFilePath, MAX_PATH, L"\\ntoskrnl.exe");
 
-			StringCchCopyW(pei.wzFilePath, wcslen(wzFilePath) + 1, wzFilePath);
-			pei.bUserAccess = FALSE;
-			pei.ParentProcessId = 0xffffffff;
-			StringCchCopyW(pei.wzCompanyName,
-				m_Global->GetFileCompanyName(pei.wzFilePath).GetLength() + 1,
-				m_Global->GetFileCompanyName(pei.wzFilePath).GetBuffer());
+			StringCchCopyW(ProcessEntry->wzFilePath, wcslen(wzFilePath) + 1, wzFilePath);
+			ProcessEntry->bUserAccess = FALSE;
+			ProcessEntry->ParentProcessId = 0xffffffff;
+			StringCchCopyW(ProcessEntry->wzCompanyName,
+				m_Global->GetFileCompanyName(ProcessEntry->wzFilePath).GetLength() + 1,
+				m_Global->GetFileCompanyName(ProcessEntry->wzFilePath).GetBuffer());
 		}
 		else
 		{
 			// Others
 			WCHAR *wzImageName = NULL;
-			wzImageName = wcsrchr(pei.wzFilePath, '\\');
+			wzImageName = wcsrchr(ProcessEntry->wzFilePath, '\\');
 			wzImageName++;  // 过 '\\'
 
-			StringCchCopyW(pei.wzImageName, wcslen(wzImageName) + 1, wzImageName);
+			StringCchCopyW(ProcessEntry->wzImageName, wcslen(wzImageName) + 1, wzImageName);
 
-			if (QueryProcessUserAccess(pei.ProcessId) == TRUE)
+			if (QueryProcessUserAccess(ProcessEntry->ProcessId) == TRUE)
 			{
-				pei.bUserAccess = TRUE;
+				ProcessEntry->bUserAccess = TRUE;
 			}
 			else
 			{
-				pei.bUserAccess = FALSE;
+				ProcessEntry->bUserAccess = FALSE;
 			}
 
-			CString strCompanyName = m_Global->GetFileCompanyName(pei.wzFilePath);
+			CString strCompanyName = m_Global->GetFileCompanyName(ProcessEntry->wzFilePath);
 			if (strCompanyName.GetLength() == 0)
 			{
 				strCompanyName = L" ";
 			}
 
-			StringCchCopyW(pei.wzCompanyName, strCompanyName.GetLength() + 1, strCompanyName.GetBuffer());
+			StringCchCopyW(ProcessEntry->wzCompanyName, strCompanyName.GetLength() + 1, strCompanyName.GetBuffer());
 
 #ifdef _WIN64
 			// 只需要判断32位程序
-			if (QueryPEFileBit(pei.wzFilePath) == TRUE)
+			if (QueryPEFileBit(ProcessEntry->wzFilePath) == pb_32)
 			{
-				StringCchCatW(pei.wzImageName, 100, L" *32");
+				StringCchCatW(ProcessEntry->wzImageName, 100, L" *32");
 			}
 #endif // _WIN64
 
@@ -326,7 +326,7 @@ namespace ArkProtect
 			for (UINT32 i = 0; i < pi->NumberOfProcesses; i++)
 			{
 				// 完善进程信息结构
-				PerfectProcessInfo(pi->ProcessEntry[i]);
+				PerfectProcessInfo(&pi->ProcessEntry[i]);
 				m_ProcessEntryVector.push_back(pi->ProcessEntry[i]);
 			}
 			bOk = TRUE;

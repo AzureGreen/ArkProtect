@@ -18,7 +18,8 @@ namespace ArkProtect
 	{
 		UINT_PTR	BaseAddress;
 		UINT_PTR	SizeOfImage;
-		WCHAR	    wzFullPath[MAX_PATH];
+		WCHAR	    wzFilePath[MAX_PATH];
+		WCHAR       wzCompanyName[MAX_PATH];
 	} PROCESS_MODULE_ENTRY_INFORMATION, *PPROCESS_MODULE_ENTRY_INFORMATION;
 
 	typedef struct _PROCESS_MODULE_INFORMATION
@@ -34,9 +35,13 @@ namespace ArkProtect
 	public:
 		CProcessModule(CGlobal *GlobalObject, PPROCESS_ENTRY_INFORMATION ProcessEntry);
 		~CProcessModule();
-		void InitializeProcessModuleList(CListCtrl * ProcessList);
+		void InitializeProcessModuleList(CListCtrl * ListCtrl);
+
+		void PerfectProcessModuleInfo(PPROCESS_MODULE_ENTRY_INFORMATION ModuleEntry);
 
 		BOOL EnumProcessModule();
+
+		void InsertProcessModuleInfoList(CListCtrl * ListCtrl);
 
 		void QueryProcessModule(CListCtrl * ListCtrl);
 

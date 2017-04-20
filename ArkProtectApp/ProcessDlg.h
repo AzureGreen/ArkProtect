@@ -22,9 +22,9 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
 	virtual BOOL OnInitDialog();
-
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
-	afx_msg void OnLvnItemchangedProcessList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnColumnclickProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnProcessFreshen();
 	afx_msg void OnProcessModule();
@@ -54,6 +54,8 @@ public:
 	
 	static UINT32     m_SortColumn;
 	static BOOL       m_bSortOrder;  // ¼ÇÂ¼ÅÅÐòË³Ðò
+	
+	
 	
 	
 	

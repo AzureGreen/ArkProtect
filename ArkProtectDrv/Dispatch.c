@@ -50,7 +50,7 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 				Status = STATUS_UNSUCCESSFUL;
 			}
 
-			break; 
+			break;
 		}
 		case IOCTL_ARKPROTECT_ENUMPROCESS:
 		{
