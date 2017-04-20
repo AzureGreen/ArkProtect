@@ -3,7 +3,7 @@
 #include <vector>
 #include <strsafe.h>
 #include "Define.h"
-#include "Global.hpp"
+
 
 namespace ArkProtect
 {
@@ -39,7 +39,7 @@ namespace ArkProtect
 	class CProcessCore
 	{
 	public:
-		CProcessCore(CGlobal *GlobalObject);
+		CProcessCore(class CGlobal *GlobalObject);
 		~CProcessCore();
 
 		void InitializeProcessList(CListCtrl *ProcessList);
@@ -66,8 +66,13 @@ namespace ArkProtect
 
 
 
+		//
+		// ·µ»Ø±äÁ¿Interface
+		//
+		
+		inline PPROCESS_ENTRY_INFORMATION& ProcessEntry() { return m_ProcessEntry; }
 
-
+		
 	private:
 		
 		UINT32        m_ProcessCount = 0;
@@ -83,10 +88,10 @@ namespace ArkProtect
 
 
 		std::vector<PROCESS_ENTRY_INFORMATION> m_ProcessEntryVector;
+		
+		PPROCESS_ENTRY_INFORMATION m_ProcessEntry;
 
-
-
-		CGlobal             *m_Global;
+		class CGlobal       *m_Global;
 		static CProcessCore *m_Process;
 		
 	};

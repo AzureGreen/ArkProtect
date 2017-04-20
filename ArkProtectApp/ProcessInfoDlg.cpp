@@ -12,13 +12,10 @@
 IMPLEMENT_DYNAMIC(CProcessInfoDlg, CDialogEx)
 
 CProcessInfoDlg::CProcessInfoDlg(CWnd* pParent, ArkProtect::eProcessInfoKind ProcessInfoKind,
-	ArkProtect::CGlobal *GlobalObject, ArkProtect::PPROCESS_ENTRY_INFORMATION ProcessEntry)
+	ArkProtect::CGlobal *GlobalObject)
 	: CDialogEx(IDD_PROCESS_INFO_DIALOG, pParent)
 	, m_WantedInfoKind(ProcessInfoKind)
 	, m_Global(GlobalObject)
-	, m_ProcessModule(GlobalObject, ProcessEntry)
-	, m_ProcessThread(GlobalObject, ProcessEntry)
-	, m_ProcessEntry(ProcessEntry)
 {
 }
 
@@ -49,7 +46,7 @@ BOOL CProcessInfoDlg::OnInitDialog()
 
 	// 设置对话框的图标
 	SHFILEINFO shFileInfo = { 0 };
-	SHGetFileInfo(m_ProcessEntry->wzFilePath, FILE_ATTRIBUTE_NORMAL,
+	SHGetFileInfo(m_Global->ProcessCore().ProcessEntry()->wzFilePath, FILE_ATTRIBUTE_NORMAL,
 		&shFileInfo, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES);
 
 	m_hIcon = shFileInfo.hIcon;
@@ -97,7 +94,7 @@ void CProcessInfoDlg::APInitializeProcessInfoList()
 		
 		m_CurrentInfoKind = m_WantedInfoKind;
 
-		strWindowText.Format(L"Process Module - %s", m_ProcessEntry->wzImageName);
+		strWindowText.Format(L"Process Module - %s", m_Global->ProcessCore().ProcessEntry()->wzImageName);
 
 		SetWindowText(strWindowText.GetBuffer());
 
@@ -110,7 +107,7 @@ void CProcessInfoDlg::APInitializeProcessInfoList()
 
 		m_CurrentInfoKind = m_WantedInfoKind;
 
-		strWindowText.Format(L"Process Module - %s", m_ProcessEntry->wzImageName);
+		strWindowText.Format(L"Process Module - %s", m_Global->ProcessCore().ProcessEntry()->wzImageName);
 
 		SetWindowText(strWindowText.GetBuffer());
 
@@ -142,7 +139,7 @@ void CProcessInfoDlg::APInitializeProcessInfoList()
 ************************************************************************/
 void CProcessInfoDlg::APInitializeProcessModuleList()
 {
-	m_ProcessModule.InitializeProcessModuleList(&m_ProcessInfoListCtrl);
+	m_Global->ProcessModule().InitializeProcessModuleList(&m_ProcessInfoListCtrl);
 }
 
 
@@ -179,7 +176,7 @@ void CProcessInfoDlg::APLoadProcessModuleList()
 ************************************************************************/
 void CProcessInfoDlg::APInitializeProcessThreadList()
 {
-	m_ProcessThread.InitializeProcessThreadList(&m_ProcessInfoListCtrl);
+	m_Global->ProcessThread().InitializeProcessThreadList(&m_ProcessInfoListCtrl);
 }
 
 

@@ -1,8 +1,7 @@
 #pragma once
 #include <vector>
 #include "Define.h"
-#include "Global.hpp"
-#include "ProcessCore.h"
+
 
 namespace ArkProtect
 {
@@ -33,7 +32,7 @@ namespace ArkProtect
 	class CProcessModule
 	{
 	public:
-		CProcessModule(CGlobal *GlobalObject, PPROCESS_ENTRY_INFORMATION ProcessEntry);
+		CProcessModule(class CGlobal *GlobalObject);
 		~CProcessModule();
 		void InitializeProcessModuleList(CListCtrl * ListCtrl);
 
@@ -47,11 +46,13 @@ namespace ArkProtect
 
 		static DWORD CALLBACK QueryProcessModuleCallback(LPARAM lParam);
 
-
+		//
+		// 返回变量Interface
+		//
+		inline std::vector<PROCESS_MODULE_ENTRY_INFORMATION>& ProcessModuleEntryVector() { return m_ProcessModuleEntryVector; }
 
 
 	private:
-		//UINT32        m_ProcessCount = 0;
 		int           m_iColumnCount = 4;		// 进程列表数
 		COLUMN_STRUCT m_ColumnStruct[4] = {
 			{ L"模块名称",				270 },
@@ -64,8 +65,7 @@ namespace ArkProtect
 		std::vector<PROCESS_MODULE_ENTRY_INFORMATION> m_ProcessModuleEntryVector;
 
 
-		CGlobal                    *m_Global;
-		PPROCESS_ENTRY_INFORMATION m_ProcessEntry;
+		class CGlobal         *m_Global;
 
 		static CProcessModule *m_ProcessModule;
 

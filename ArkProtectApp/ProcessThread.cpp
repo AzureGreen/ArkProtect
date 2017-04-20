@@ -1,14 +1,15 @@
 #include "stdafx.h"
 #include "ProcessThread.h"
-
+#include "Global.hpp"
+#include "ProcessModule.h"
 
 namespace ArkProtect
 {
 	CProcessThread *CProcessThread::m_ProcessThread;
 
-	CProcessThread::CProcessThread(CGlobal *GlobalObject, PPROCESS_ENTRY_INFORMATION ProcessEntry)
+	CProcessThread::CProcessThread(CGlobal *GlobalObject)
 		: m_Global(GlobalObject)
-		, m_ProcessEntry(ProcessEntry)
+		, m_ProcessModule(GlobalObject->ProcessModule())
 	{
 		m_ProcessThread = this;
 	}
@@ -79,7 +80,7 @@ namespace ArkProtect
 
 			bOk = DeviceIoControl(m_Global->m_DeviceHandle,
 				IOCTL_ARKPROTECT_ENUMPROCESSTHREAD,
-				&m_ProcessEntry->ProcessId,		// InputBuffer
+				&m_Global->ProcessCore().ProcessEntry()->ProcessId,		// InputBuffer
 				sizeof(UINT32),
 				pti,
 				OutputLength,
@@ -116,36 +117,141 @@ namespace ArkProtect
 	}
 
 
+	CString CProcessThread::GetModulePathByThreadStartAddress(UINT_PTR StartAddress)
+	{
+		CString strModulePath = L"";
+
+		size_t Size = m_ProcessModule.ProcessModuleEntryVector().size();
+		for (size_t i = 0; i < Size; i++)
+		{
+			PROCESS_MODULE_ENTRY_INFORMATION ModuleEntry = m_ProcessModule.ProcessModuleEntryVector()[i];
+			if (StartAddress >= ModuleEntry.BaseAddress && StartAddress <= (ModuleEntry.BaseAddress + ModuleEntry.SizeOfImage))
+			{
+				strModulePath = ModuleEntry.wzFilePath;
+			}	
+		}
+
+		// 如果不进入循环 就说明是内核模块
+		return strModulePath;
+	}
+
+
 	/************************************************************************
 	*  Name : InsertProcessInfoList
 	*  Param: ListCtrl
 	*  Ret  : void
 	*  向ListControl里插入进程信息
 	************************************************************************/
-	void CProcessModule::InsertProcessModuleInfoList(CListCtrl *ListCtrl)
+	void CProcessThread::InsertProcessThreadInfoList(CListCtrl *ListCtrl)
 	{
-		UINT32 ProcessModuleNum = 0;
-		size_t Size = m_ProcessModuleEntryVector.size();
+		UINT32 ProcessThreadNum = 0;
+		size_t Size = m_ProcessThreadEntryVector.size();
 		for (size_t i = 0; i < Size; i++)
 		{
-			PROCESS_MODULE_ENTRY_INFORMATION ModuleEntry = m_ProcessModuleEntryVector[i];
+			PROCESS_THREAD_ENTRY_INFORMATION ThreadEntry = m_ProcessThreadEntryVector[i];
 
-			CString strFilePath, strBaseAddress, strImageSize, strCompanyName;
+			CString strThreadId, strEThread, strTeb, strPriority, strWin32StartAddress, strContextSwitches, strState, strModulePath;
 
-			strFilePath = ModuleEntry.wzFilePath;
-			strBaseAddress.Format(L"0x%p", ModuleEntry.BaseAddress);
-			strImageSize.Format(L"0x%X", ModuleEntry.SizeOfImage);
-			strCompanyName = ModuleEntry.wzCompanyName;
+			strThreadId.Format(L"%d", ThreadEntry.ThreadId);
+			strEThread.Format(L"0x%08p", ThreadEntry.EThread);
+			if (ThreadEntry.Teb == 0)
+			{
+				strTeb = L"-";
+			}
+			else
+			{
+				strTeb.Format(L"0x%08p", ThreadEntry.Teb);
+			}
 
-			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strFilePath);
-			ListCtrl->SetItemText(iItem, pmc_BaseAddress, strBaseAddress);
-			ListCtrl->SetItemText(iItem, pmc_SizeOfImage, strImageSize);
-			ListCtrl->SetItemText(iItem, pmc_Company, strCompanyName);
+			strPriority.Format(L"%d", ThreadEntry.Priority);
+			strWin32StartAddress.Format(L"0x%08p", ThreadEntry.Win32StartAddress);
+			strContextSwitches.Format(L"%d", ThreadEntry.ContextSwitches);
 
-			ProcessModuleNum++;
+			strModulePath = GetModulePathByThreadStartAddress(ThreadEntry.Win32StartAddress);
+
+			if (strModulePath.GetLength() <= 1)
+			{
+				strModulePath = L"\\ ";
+			}
+
+			WCHAR *Temp = NULL;
+
+			Temp = wcsrchr(strModulePath.GetBuffer(), L'\\');
+
+			if (Temp != NULL)
+			{
+				Temp++;
+			}
+
+			strModulePath = Temp;
+
+			switch (ThreadEntry.State)
+			{
+			case Initialized:
+			{
+				strState = L"预置";
+				break;
+			}
+			case Ready:
+			{
+				strState = L"就绪";
+				break;
+			}
+			case Running:
+			{
+				strState = L"运行";
+				break;
+			}
+			case Standby:
+			{
+				strState = L"备用";
+				break;
+			}
+			case Terminated:
+			{
+				strState = L"终止";
+				break;
+			}
+			case Waiting:
+			{
+				strState = L"等待";
+				break;
+			}
+			case Transition:
+			{
+				strState = L"过度";
+				break;
+			}
+			case DeferredReady:
+			{
+				strState = L"延迟就绪";
+				break;
+			}
+			case GateWait:
+			{
+				strState = L"门等待";
+				break;
+			}
+			default:
+				strState = L"未知";
+				break;
+			}
+
+			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strThreadId);
+			ListCtrl->SetItemText(iItem, ptc_EThread, strEThread);
+			ListCtrl->SetItemText(iItem, ptc_Teb, strTeb);
+			ListCtrl->SetItemText(iItem, ptc_Priority, strPriority);
+			ListCtrl->SetItemText(iItem, ptc_Entrance, strWin32StartAddress);
+			ListCtrl->SetItemText(iItem, ptc_Module, strModulePath);
+			ListCtrl->SetItemText(iItem, ptc_switches, strContextSwitches);
+			ListCtrl->SetItemText(iItem, ptc_Status, strState);
+			
+			ListCtrl->SetItemData(iItem, iItem);
+
+			ProcessThreadNum++;
 
 			CString strStatusContext;
-			strStatusContext.Format(L"Process Info is loading now, Count:%d", ProcessModuleNum);
+			strStatusContext.Format(L"Process Info is loading now, Count:%d", ProcessThreadNum);
 
 			m_Global->UpdateStatusBarDetail(strStatusContext);
 		}
@@ -168,7 +274,7 @@ namespace ArkProtect
 	{
 		ListCtrl->DeleteAllItems();
 		m_ProcessThreadEntryVector.clear();
-		m_ProcessModuleEntryVector.clear();
+		m_ProcessModule.ProcessModuleEntryVector().clear();
 
 		if (EnumProcessThread() == FALSE)
 		{
@@ -176,13 +282,13 @@ namespace ArkProtect
 			return;
 		}
 
-		if (EnumProcessModule() == FALSE)
+		if (m_ProcessModule.EnumProcessModule() == FALSE)
 		{
 			m_Global->UpdateStatusBarDetail(L"Process Module Initialize failed");
 			return;
 		}
 
-		//InsertProcessThreadInfoList(ListCtrl);
+		InsertProcessThreadInfoList(ListCtrl);
 	}
 
 

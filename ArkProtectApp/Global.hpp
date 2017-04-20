@@ -4,6 +4,10 @@
 #include <winsvc.h>     // 服务需要
 #include "afxcmn.h"
 #include "Define.h"
+#include "ProcessCore.h"
+#include "ProcessModule.h"
+#include "ProcessThread.h"
+
 #pragma comment(lib, "Version.lib")      // GetFileVersionInfo 需要链接此库
 
 namespace ArkProtect 
@@ -13,7 +17,11 @@ namespace ArkProtect
 	class CGlobal
 	{
 	public:
-		CGlobal() {};
+		CGlobal() 
+		: m_ProcessCore(this)
+		, m_ProcessModule(this)
+		, m_ProcessThread(this)
+		{};
 		~CGlobal() {};
 
 		//////////////////////////////////////////////////////////////////////////
@@ -272,10 +280,19 @@ namespace ArkProtect
 
 		//////////////////////////////////////////////////////////////////////////
 
+		//
+		// 返回变量Interface
+		//
+		inline CProcessCore&     ProcessCore() { return m_ProcessCore; }
+		inline CProcessModule&   ProcessModule() { return m_ProcessModule; }
+		inline CProcessThread&   ProcessThread() { return m_ProcessThread; }
+
+
 
 		CWnd *AppDlg = NULL;         // 保存主窗口指针
 		CWnd *m_ProcessDlg = NULL;     // 保存进程模块窗口指针
 
+		
 
 		int iDpix = 0;               // Logical pixels/inch in X
 		int iDpiy = 0;               // Logical pixels/inch in Y
@@ -288,6 +305,15 @@ namespace ArkProtect
 		SC_HANDLE m_ManagerHandle = NULL;	// SCM管理器的句柄
 		SC_HANDLE m_ServiceHandle = NULL;	// NT驱动程序的服务句柄
 		BOOL      m_bDriverService = FALSE; // 指示加载驱动服务是否开启了
+
+
+	private:
+		CProcessCore       m_ProcessCore;
+		CProcessModule     m_ProcessModule;
+		CProcessThread     m_ProcessThread;
+
+
+
 	};
 }
 

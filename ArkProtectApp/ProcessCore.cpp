@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ProcessCore.h"
-
 #include "Global.hpp"
 #include "ProcessDlg.h"
 

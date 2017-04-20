@@ -1,9 +1,7 @@
 #pragma once
 #include <vector>
 #include "Define.h"
-#include "Global.hpp"
-#include "ProcessCore.h"
-#include "ProcessModule.h"
+
 
 namespace ArkProtect
 {
@@ -18,6 +16,19 @@ namespace ArkProtect
 		ptc_switches,
 		ptc_Status
 	};
+
+	typedef enum _KTHREAD_STATE 
+	{
+		Initialized,
+		Ready,
+		Running,
+		Standby,
+		Terminated,
+		Waiting,
+		Transition,
+		DeferredReady,
+		GateWait
+	} KTHREAD_STATE;
 
 	typedef struct _PROCESS_THREAD_ENTRY_INFORMATION
 	{
@@ -41,7 +52,7 @@ namespace ArkProtect
 	class CProcessThread
 	{
 	public:
-		CProcessThread(CGlobal *GlobalObject, PPROCESS_ENTRY_INFORMATION ProcessEntry);
+		CProcessThread(class CGlobal *GlobalObject);
 		~CProcessThread();
 		void InitializeProcessThreadList(CListCtrl * ListCtrl);
 
@@ -49,6 +60,10 @@ namespace ArkProtect
 
 
 		BOOL EnumProcessThread();
+
+		CString GetModulePathByThreadStartAddress(UINT_PTR StartAddress);
+
+		void InsertProcessThreadInfoList(CListCtrl * ListCtrl);
 
 		void QueryProcessThread(CListCtrl * ListCtrl);
 
@@ -73,11 +88,10 @@ namespace ArkProtect
 
 
 		std::vector<PROCESS_THREAD_ENTRY_INFORMATION> m_ProcessThreadEntryVector;
-		std::vector<PROCESS_MODULE_ENTRY_INFORMATION> m_ProcessModuleEntryVector;
 
+		class CGlobal              *m_Global;
 
-		CGlobal                    *m_Global;
-		PPROCESS_ENTRY_INFORMATION m_ProcessEntry;
+		class CProcessModule       &m_ProcessModule;
 
 		static CProcessThread      *m_ProcessThread;
 

@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "ProcessModule.h"
+#include "Global.hpp"
 
 namespace ArkProtect
 {
 	CProcessModule *CProcessModule::m_ProcessModule;
 
-	CProcessModule::CProcessModule(CGlobal *GlobalObject, PPROCESS_ENTRY_INFORMATION ProcessEntry)
+	CProcessModule::CProcessModule(CGlobal *GlobalObject)
 		: m_Global(GlobalObject)
-		, m_ProcessEntry(ProcessEntry)
 	{
 		m_ProcessModule = this;
 	}
@@ -100,7 +100,7 @@ namespace ArkProtect
 
 			bOk = DeviceIoControl(m_Global->m_DeviceHandle,
 				IOCTL_ARKPROTECT_ENUMPROCESSMODULE,
-				&m_ProcessEntry->ProcessId,		// InputBuffer
+				&m_Global->ProcessCore().ProcessEntry()->ProcessId,		// InputBuffer
 				sizeof(UINT32),
 				pmi,
 				OutputLength,

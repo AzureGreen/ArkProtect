@@ -49,8 +49,6 @@ public:
 	
 
 	ArkProtect::CGlobal      *m_Global;
-	ArkProtect::CProcessCore *m_Process;
-
 	
 	static UINT32     m_SortColumn;
 	static BOOL       m_bSortOrder;  // ¼ÇÂ¼ÅÅÐòË³Ðò

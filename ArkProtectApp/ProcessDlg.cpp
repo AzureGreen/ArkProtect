@@ -22,7 +22,6 @@ CProcessDlg::CProcessDlg(CWnd* pParent /*=NULL*/, ArkProtect::CGlobal *GlobalObj
 {
 	// 保存对话框指针
 	m_Global->m_ProcessDlg = this;
-	m_Process = new ArkProtect::CProcessCore(m_Global);    // 保证这里的ProcessCore里的n_Global里有m_ProcessDlg
 	m_SortColumn = 0;
 	m_bSortOrder = FALSE;
 }
@@ -214,7 +213,7 @@ void CProcessDlg::OnProcessThread()
 ************************************************************************/
 void CProcessDlg::APInitializeProcessList()
 {
-	m_Process->InitializeProcessList(&m_ProcessListCtrl);
+	m_Global->ProcessCore().InitializeProcessList(&m_ProcessListCtrl);
 }
 
 
@@ -292,8 +291,10 @@ void CProcessDlg::APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind Proces
 			m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_FilePath).GetLength() + 1,
 			m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_FilePath).GetBuffer());
 
-		CProcessInfoDlg *ProcessViewDlg = new CProcessInfoDlg(this, ProcessInfoKind, m_Global, &ProcessEntry);
-		ProcessViewDlg->DoModal();
+		m_Global->ProcessCore().ProcessEntry() = &ProcessEntry;
+
+		CProcessInfoDlg *ProcessInfoDlg = new CProcessInfoDlg(this, ProcessInfoKind, m_Global);
+		ProcessInfoDlg->DoModal();
 	}
 }
 
