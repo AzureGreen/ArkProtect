@@ -58,6 +58,7 @@ public:
 	
 	
 	
+	afx_msg void OnProcessHandle();
 };
 
 

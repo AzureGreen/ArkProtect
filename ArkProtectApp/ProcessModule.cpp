@@ -107,7 +107,7 @@ namespace ArkProtect
 				&dwReturnLength,
 				NULL);
 
-			Count = (UINT32)pmi->NumberOfModules + 1000;
+			Count = (UINT32)pmi->NumberOfModules + 0x20;
 
 		} while (bOk == FALSE && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 
@@ -166,13 +166,13 @@ namespace ArkProtect
 			ProcessModuleNum++;
 
 			CString strStatusContext;
-			strStatusContext.Format(L"Process Info is loading now, Count:%d", ProcessModuleNum);
+			strStatusContext.Format(L"Process Module Info is loading now, Count:%d", ProcessModuleNum);
 
 			m_Global->UpdateStatusBarDetail(strStatusContext);
 		}
 
 		CString strStatusContext;
-		strStatusContext.Format(L"Process Info load complete, Count:%d", Size);
+		strStatusContext.Format(L"Process module Info load complete, Count:%d", Size);
 		m_Global->UpdateStatusBarDetail(strStatusContext);
 	}
 

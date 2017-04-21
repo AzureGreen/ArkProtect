@@ -315,7 +315,7 @@ namespace ArkProtect
 				NULL);
 
 			// 这句配合do while循环，恰到好处，如果给的内存不足则重复枚举，如果足够则一次通过
-			Count = (UINT32)pi->NumberOfProcesses + 1000;
+			Count = (UINT32)pi->NumberOfProcesses + 0x20;
 
 		} while (bOk == FALSE && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 

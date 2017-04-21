@@ -107,7 +107,7 @@ void CProcessInfoDlg::APInitializeProcessInfoList()
 
 		m_CurrentInfoKind = m_WantedInfoKind;
 
-		strWindowText.Format(L"Process Module - %s", m_Global->ProcessCore().ProcessEntry()->wzImageName);
+		strWindowText.Format(L"Process Thread - %s", m_Global->ProcessCore().ProcessEntry()->wzImageName);
 
 		SetWindowText(strWindowText.GetBuffer());
 
@@ -117,6 +117,17 @@ void CProcessInfoDlg::APInitializeProcessInfoList()
 
 		break;
 	case ArkProtect::pik_Handle:
+
+		m_CurrentInfoKind = m_WantedInfoKind;
+
+		strWindowText.Format(L"Process Handle - %s", m_Global->ProcessCore().ProcessEntry()->wzImageName);
+
+		SetWindowText(strWindowText.GetBuffer());
+
+		APInitializeProcessHandleList();
+
+		APLoadProcessHandleList();
+
 		break;
 	case ArkProtect::pik_Window:
 		break;
@@ -201,5 +212,42 @@ void CProcessInfoDlg::APLoadProcessThreadList()
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessThread::QueryProcessThreadCallback, &m_ProcessInfoListCtrl, 0, NULL)
+	);
+}
+
+
+/************************************************************************
+*  Name : APInitializeProcessHandleList
+*  Param: void
+*  Ret  : void
+*  初始化ListControl
+************************************************************************/
+void CProcessInfoDlg::APInitializeProcessHandleList()
+{
+	m_Global->ProcessHandle().InitializeProcessHandleList(&m_ProcessInfoListCtrl);
+}
+
+
+/************************************************************************
+*  Name : APLoadProcessThreadList
+*  Param: void
+*  Ret  : void
+*  加载进程信息到ListControl
+************************************************************************/
+void CProcessInfoDlg::APLoadProcessHandleList()
+{
+	if (m_Global->m_bIsRequestNow == TRUE)
+	{
+		return;
+	}
+
+	m_ProcessInfoListCtrl.DeleteAllItems();
+
+	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
+
+	// 加载进程信息列表
+	CloseHandle(
+		CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessHandle::QueryProcessHandleCallback, &m_ProcessInfoListCtrl, 0, NULL)
 	);
 }

@@ -176,6 +176,7 @@
     <ClInclude Include="NtStructs.h" />
     <ClInclude Include="Private.h" />
     <ClInclude Include="ProcessCore.h" />
+    <ClInclude Include="ProcessHandle.h" />
     <ClInclude Include="ProcessModule.h" />
     <ClInclude Include="ProcessThread.h" />
   </ItemGroup>
@@ -184,6 +185,7 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="Private.c" />
     <ClCompile Include="ProcessCore.c" />
+    <ClCompile Include="ProcessHandle.c" />
     <ClCompile Include="ProcessModule.c" />
     <ClCompile Include="ProcessThread.c" />
   </ItemGroup>

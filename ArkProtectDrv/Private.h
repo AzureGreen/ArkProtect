@@ -66,17 +66,17 @@ typedef struct _DYNAMIC_DATA
 
 	UINT32		SizeOfObjectHeader;			// Size of ObjectHeader;
 
+	UINT32		HandleTableEntryOffset;		// HandleTableEntry Offset To TableCode
+
 	//////////////////////////////////////////////////////////////////////////
 
 	UINT_PTR	MaxUserSpaceAddress;		// Max Address Of Ring3 Can Visit
 
-	UINT32		NtQueryVirtualMemoryIndex;	// NtQueryVirtualMemory Index In SSDT
+	UINT_PTR    MinKernelSpaceAddress;		// Min Address Of Kernel Space
 
 	//////////////////////////////////////////////////////////////////////////
 
-	UINT_PTR    KernelStartAddress;			// Start Address Of System
-
-	UINT32		HandleTableEntryOffset;		// HandleTableEntry Offset To TableCode
+	UINT32		NtQueryVirtualMemoryIndex;	// NtQueryVirtualMemory Index In SSDT
 
 	UINT32      NtOpenDirectoryObjectIndex; // NtOpenDirectoryObject Index In SSDT
 

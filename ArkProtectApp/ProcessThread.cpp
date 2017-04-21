@@ -87,7 +87,7 @@ namespace ArkProtect
 				&dwReturnLength,
 				NULL);
 
-			Count = (UINT32)pti->NumberOfThreads + 1000;
+			Count = (UINT32)pti->NumberOfThreads + 0x20;
 
 		} while (bOk == FALSE && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 

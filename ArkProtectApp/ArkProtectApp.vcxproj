@@ -191,6 +191,7 @@
     <ClInclude Include="Global.hpp" />
     <ClInclude Include="ProcessCore.h" />
     <ClInclude Include="ProcessDlg.h" />
+    <ClInclude Include="ProcessHandle.h" />
     <ClInclude Include="ProcessInfoDlg.h" />
     <ClInclude Include="ProcessModule.h" />
     <ClInclude Include="ProcessThread.h" />
@@ -203,6 +204,7 @@
     <ClCompile Include="ArkProtectAppDlg.cpp" />
     <ClCompile Include="ProcessCore.cpp" />
     <ClCompile Include="ProcessDlg.cpp" />
+    <ClCompile Include="ProcessHandle.cpp" />
     <ClCompile Include="ProcessInfoDlg.cpp" />
     <ClCompile Include="ProcessModule.cpp" />
     <ClCompile Include="ProcessThread.cpp" />

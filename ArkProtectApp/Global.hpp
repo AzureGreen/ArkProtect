@@ -7,6 +7,7 @@
 #include "ProcessCore.h"
 #include "ProcessModule.h"
 #include "ProcessThread.h"
+#include "ProcessHandle.h"
 
 #pragma comment(lib, "Version.lib")      // GetFileVersionInfo 需要链接此库
 
@@ -21,6 +22,7 @@ namespace ArkProtect
 		: m_ProcessCore(this)
 		, m_ProcessModule(this)
 		, m_ProcessThread(this)
+		, m_ProcessHandle(this)
 		{};
 		~CGlobal() {};
 
@@ -286,7 +288,7 @@ namespace ArkProtect
 		inline CProcessCore&     ProcessCore() { return m_ProcessCore; }
 		inline CProcessModule&   ProcessModule() { return m_ProcessModule; }
 		inline CProcessThread&   ProcessThread() { return m_ProcessThread; }
-
+		inline CProcessHandle&   ProcessHandle() { return m_ProcessHandle; }
 
 
 		CWnd *AppDlg = NULL;         // 保存主窗口指针
@@ -311,7 +313,7 @@ namespace ArkProtect
 		CProcessCore       m_ProcessCore;
 		CProcessModule     m_ProcessModule;
 		CProcessThread     m_ProcessThread;
-
+		CProcessHandle     m_ProcessHandle;
 
 
 	};

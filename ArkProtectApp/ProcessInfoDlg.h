@@ -39,6 +39,10 @@ public:
 
 	void APLoadProcessThreadList();
 
+	void APInitializeProcessHandleList();
+
+	void APLoadProcessHandleList();
+
 
 
 	CListCtrl m_ProcessInfoListCtrl;

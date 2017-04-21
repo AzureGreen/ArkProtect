@@ -46,6 +46,7 @@ BEGIN_MESSAGE_MAP(CProcessDlg, CDialogEx)
 	ON_WM_SIZE()
 	
 	ON_COMMAND(ID_PROCESS_THREAD, &CProcessDlg::OnProcessThread)
+	ON_COMMAND(ID_PROCESS_HANDLE, &CProcessDlg::OnProcessHandle)
 END_MESSAGE_MAP()
 
 
@@ -205,6 +206,14 @@ void CProcessDlg::OnProcessThread()
 }
 
 
+void CProcessDlg::OnProcessHandle()
+{
+	// TODO: 在此添加命令处理程序代码
+	// 初始化ProcessInfoDlg，传入
+	APInitializeProcessInfoDlg(ArkProtect::pik_Handle);
+}
+
+
 /************************************************************************
 *  Name : APInitializeProcessList
 *  Param: void
@@ -258,6 +267,7 @@ void CProcessDlg::APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind Proces
 	{
 		int iItem = m_ProcessListCtrl.GetNextSelectedItem(Pos);
 
+		// 组合，构造 ProcessEntry结构
 		UINT32 ProcessId = _ttoi(m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_ProcessId).GetBuffer());
 		UINT32 ParentProcessId = _ttoi(m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_ParentProcessId).GetBuffer());
 		CString strEProcess = m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_EProcess);
@@ -367,6 +377,8 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
+
+
 
 
 

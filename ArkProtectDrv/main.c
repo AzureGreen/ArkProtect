@@ -116,9 +116,17 @@ APInitializeDynamicData(IN OUT PDYNAMIC_DATA DynamicData)
 			DynamicData->ThreadListEntry_ETHREAD = 0x428;   ////
 			DynamicData->SameThreadApcFlags = 0x458;    ////
 
+			//////////////////////////////////////////////////////////////////////////
+			// Object
+			DynamicData->SizeOfObjectHeader = 0x030;
+
+			DynamicData->HandleTableEntryOffset = 0x010;
+
+			//////////////////////////////////////////////////////////////////////////
 
 			DynamicData->MaxUserSpaceAddress = 0x000007FFFFFFFFFF;
 
+			DynamicData->MinKernelSpaceAddress = 0xFFFFF00000000000;
 #else
 
 #endif

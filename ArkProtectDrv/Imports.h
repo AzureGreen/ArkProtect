@@ -41,4 +41,13 @@ ZwQueryDirectoryObject(
 	__out_opt PULONG ReturnLength);
 
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQuerySystemInformation(
+	IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
+	OUT PVOID SystemInformation,
+	IN UINT32 SystemInformationLength,
+	OUT PUINT32 ReturnLength OPTIONAL);
+
 #endif // !CXX_Imports_H
