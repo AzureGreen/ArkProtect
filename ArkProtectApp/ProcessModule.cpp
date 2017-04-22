@@ -70,10 +70,9 @@ namespace ArkProtect
 	************************************************************************/
 	BOOL CProcessModule::EnumProcessModule()
 	{
-		BOOL bOk = FALSE;
-
 		m_ProcessModuleEntryVector.clear();
 
+		BOOL bOk = FALSE;
 		UINT32   Count = 0x100;
 		DWORD	 dwReturnLength = 0;
 		PPROCESS_MODULE_INFORMATION pmi = NULL;

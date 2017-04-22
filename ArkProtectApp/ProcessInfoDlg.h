@@ -43,6 +43,14 @@ public:
 
 	void APLoadProcessHandleList();
 
+	void APInitializeProcessWindowList();
+
+	void APLoadProcessWindowList();
+
+	void APInitializeProcessMemoryList();
+
+	void APLoadProcessMemoryList();
+
 
 
 	CListCtrl m_ProcessInfoListCtrl;

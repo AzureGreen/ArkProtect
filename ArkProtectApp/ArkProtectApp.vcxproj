@@ -193,8 +193,10 @@
     <ClInclude Include="ProcessDlg.h" />
     <ClInclude Include="ProcessHandle.h" />
     <ClInclude Include="ProcessInfoDlg.h" />
+    <ClInclude Include="ProcessMemory.h" />
     <ClInclude Include="ProcessModule.h" />
     <ClInclude Include="ProcessThread.h" />
+    <ClInclude Include="ProcessWindow.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -206,8 +208,10 @@
     <ClCompile Include="ProcessDlg.cpp" />
     <ClCompile Include="ProcessHandle.cpp" />
     <ClCompile Include="ProcessInfoDlg.cpp" />
+    <ClCompile Include="ProcessMemory.cpp" />
     <ClCompile Include="ProcessModule.cpp" />
     <ClCompile Include="ProcessThread.cpp" />
+    <ClCompile Include="ProcessWindow.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

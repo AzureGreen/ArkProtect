@@ -50,10 +50,9 @@ namespace ArkProtect
 	************************************************************************/
 	BOOL CProcessThread::EnumProcessThread()
 	{
-		BOOL bOk = FALSE;
-
 		m_ProcessThreadEntryVector.clear();
-
+		
+		BOOL bOk = FALSE;
 		UINT32   Count = 0x100;
 		DWORD	 dwReturnLength = 0;
 		PPROCESS_THREAD_INFORMATION pti = NULL;

@@ -1,5 +1,6 @@
 #ifndef CXX_ProcessCore_H
 #define CXX_ProcessCore_H
+
 #include <ntifs.h>
 #include "Private.h"
 #include "Imports.h"
@@ -14,7 +15,7 @@ typedef struct _PROCESS_ENTRY_INFORMATION
 	UINT32	  ParentProcessId;
 	WCHAR     wzFilePath[MAX_PATH];
 	UINT_PTR  EProcess;
-	INT32     bUserAccess;
+	BOOL      bUserAccess;
 	WCHAR     wzCompanyName[MAX_PATH];
 } PROCESS_ENTRY_INFORMATION, *PPROCESS_ENTRY_INFORMATION;
 

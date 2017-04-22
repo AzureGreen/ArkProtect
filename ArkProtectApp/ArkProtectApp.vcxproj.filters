@@ -34,6 +34,12 @@
     <Filter Include="ProcessCore\ProcessInfo\ProcessHandle">
       <UniqueIdentifier>{4230a277-c14a-45f9-a04a-3d3b6ad40dbf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ProcessCore\ProcessInfo\ProcessWindow">
+      <UniqueIdentifier>{9d8c098b-6d0c-43da-9981-148b8ed742cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ProcessCore\ProcessInfo\ProcessMemory">
+      <UniqueIdentifier>{8d947431-0665-4ee3-9dcd-403a5fcb9988}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -78,6 +84,12 @@
     <ClInclude Include="ProcessHandle.h">
       <Filter>ProcessCore\ProcessInfo\ProcessHandle</Filter>
     </ClInclude>
+    <ClInclude Include="ProcessWindow.h">
+      <Filter>ProcessCore\ProcessInfo\ProcessWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessMemory.h">
+      <Filter>ProcessCore\ProcessInfo\ProcessMemory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">
@@ -106,6 +118,12 @@
     </ClCompile>
     <ClCompile Include="ProcessHandle.cpp">
       <Filter>ProcessCore\ProcessInfo\ProcessHandle</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessWindow.cpp">
+      <Filter>ProcessCore\ProcessInfo\ProcessWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessMemory.cpp">
+      <Filter>ProcessCore\ProcessInfo\ProcessMemory</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

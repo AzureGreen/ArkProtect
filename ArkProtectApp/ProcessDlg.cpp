@@ -47,6 +47,8 @@ BEGIN_MESSAGE_MAP(CProcessDlg, CDialogEx)
 	
 	ON_COMMAND(ID_PROCESS_THREAD, &CProcessDlg::OnProcessThread)
 	ON_COMMAND(ID_PROCESS_HANDLE, &CProcessDlg::OnProcessHandle)
+	ON_COMMAND(ID_PROCESS_WINDOW, &CProcessDlg::OnProcessWindow)
+	ON_COMMAND(ID_PROCESS_MEMORY, &CProcessDlg::OnProcessMemory)
 END_MESSAGE_MAP()
 
 
@@ -214,6 +216,22 @@ void CProcessDlg::OnProcessHandle()
 }
 
 
+void CProcessDlg::OnProcessWindow()
+{
+	// TODO: 在此添加命令处理程序代码
+	// 初始化ProcessInfoDlg，传入
+	APInitializeProcessInfoDlg(ArkProtect::pik_Window);
+}
+
+
+void CProcessDlg::OnProcessMemory()
+{
+	// TODO: 在此添加命令处理程序代码
+	// 初始化ProcessInfoDlg，传入
+	APInitializeProcessInfoDlg(ArkProtect::pik_Memory);
+}
+
+
 /************************************************************************
 *  Name : APInitializeProcessList
 *  Param: void
@@ -377,6 +395,10 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
+
+
+
+
 
 
 

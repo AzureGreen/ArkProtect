@@ -2,11 +2,12 @@
 #define CXX_Private_H
 
 #include <ntifs.h>
+#include <windef.h>
 #include <strsafe.h>
 #include "NtStructs.h"
 #include "Imports.h"
 
-#define MAX_PATH 260
+//#define MAX_PATH 260
 #define MAX_DOS_DRIVES 26
 
 typedef enum _eWinVersion {

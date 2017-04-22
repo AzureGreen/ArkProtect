@@ -177,8 +177,11 @@
     <ClInclude Include="Private.h" />
     <ClInclude Include="ProcessCore.h" />
     <ClInclude Include="ProcessHandle.h" />
+    <ClInclude Include="ProcessMemory.h" />
     <ClInclude Include="ProcessModule.h" />
     <ClInclude Include="ProcessThread.h" />
+    <ClInclude Include="ProcessWindow.h" />
+    <ClInclude Include="ShadowSSDT.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dispatch.c" />
@@ -186,8 +189,11 @@
     <ClCompile Include="Private.c" />
     <ClCompile Include="ProcessCore.c" />
     <ClCompile Include="ProcessHandle.c" />
+    <ClCompile Include="ProcessMemory.c" />
     <ClCompile Include="ProcessModule.c" />
     <ClCompile Include="ProcessThread.c" />
+    <ClCompile Include="ProcessWindow.c" />
+    <ClCompile Include="ShadowSSDT.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -130,8 +130,30 @@ void CProcessInfoDlg::APInitializeProcessInfoList()
 
 		break;
 	case ArkProtect::pik_Window:
+
+		m_CurrentInfoKind = m_WantedInfoKind;
+
+		strWindowText.Format(L"Process Window - %s", m_Global->ProcessCore().ProcessEntry()->wzImageName);
+
+		SetWindowText(strWindowText.GetBuffer());
+
+		APInitializeProcessWindowList();
+
+		APLoadProcessWindowList();
+
 		break;
 	case ArkProtect::pik_Memory:
+
+		m_CurrentInfoKind = m_WantedInfoKind;
+
+		strWindowText.Format(L"Process Memory - %s", m_Global->ProcessCore().ProcessEntry()->wzImageName);
+
+		SetWindowText(strWindowText.GetBuffer());
+
+		APInitializeProcessMemoryList();
+
+		APLoadProcessMemoryList();
+
 		break;
 	default:
 		break;
@@ -249,5 +271,79 @@ void CProcessInfoDlg::APLoadProcessHandleList()
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessHandle::QueryProcessHandleCallback, &m_ProcessInfoListCtrl, 0, NULL)
+	);
+}
+
+
+/************************************************************************
+*  Name : APInitializeProcessWindowList
+*  Param: void
+*  Ret  : void
+*  初始化ListControl
+************************************************************************/
+void CProcessInfoDlg::APInitializeProcessWindowList()
+{
+	m_Global->ProcessWindow().InitializeProcessWindowList(&m_ProcessInfoListCtrl);
+}
+
+
+/************************************************************************
+*  Name : APLoadProcessWindowList
+*  Param: void
+*  Ret  : void
+*  加载进程信息到ListControl
+************************************************************************/
+void CProcessInfoDlg::APLoadProcessWindowList()
+{
+	if (m_Global->m_bIsRequestNow == TRUE)
+	{
+		return;
+	}
+
+	m_ProcessInfoListCtrl.DeleteAllItems();
+
+	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
+
+	// 加载进程信息列表
+	CloseHandle(
+		CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessWindow::QueryProcessWindowCallback, &m_ProcessInfoListCtrl, 0, NULL)
+	);
+}
+
+
+/************************************************************************
+*  Name : APInitializeProcessMemoryList
+*  Param: void
+*  Ret  : void
+*  初始化ListControl
+************************************************************************/
+void CProcessInfoDlg::APInitializeProcessMemoryList()
+{
+	m_Global->ProcessMemory().InitializeProcessMemoryList(&m_ProcessInfoListCtrl);
+}
+
+
+/************************************************************************
+*  Name : APLoadProcessMemoryList
+*  Param: void
+*  Ret  : void
+*  加载进程信息到ListControl
+************************************************************************/
+void CProcessInfoDlg::APLoadProcessMemoryList()
+{
+	if (m_Global->m_bIsRequestNow == TRUE)
+	{
+		return;
+	}
+
+	m_ProcessInfoListCtrl.DeleteAllItems();
+
+	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
+
+	// 加载进程信息列表
+	CloseHandle(
+		CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessMemory::QueryProcessMemoryCallback, &m_ProcessInfoListCtrl, 0, NULL)
 	);
 }

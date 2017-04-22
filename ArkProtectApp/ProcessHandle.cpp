@@ -49,8 +49,9 @@ namespace ArkProtect
 	************************************************************************/
 	BOOL CProcessHandle::EnumProcessHandle()
 	{
-		BOOL bOk = FALSE;
+		m_ProcessHandleEntryVector.clear();
 
+		BOOL bOk = FALSE;
 		UINT32   Count = 0x100;
 		DWORD	 dwReturnLength = 0;
 		PPROCESS_HANDLE_INFORMATION phi = NULL;

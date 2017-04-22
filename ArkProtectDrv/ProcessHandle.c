@@ -230,7 +230,6 @@ APEnumProcessHandleByZwQuerySystemInformation(IN UINT32 ProcessId, IN PEPROCESS 
 
 
 
-
 /************************************************************************
 *  Name : APEnumProcessModule
 *  Param: ProcessId			      ½ø³ÌId
@@ -290,10 +289,4 @@ APEnumProcessHandle(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 
 	return Status;
 }
-
-
-
-
-
-
 

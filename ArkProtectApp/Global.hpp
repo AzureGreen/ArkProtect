@@ -8,6 +8,8 @@
 #include "ProcessModule.h"
 #include "ProcessThread.h"
 #include "ProcessHandle.h"
+#include "ProcessWindow.h"
+#include "ProcessMemory.h"
 
 #pragma comment(lib, "Version.lib")      // GetFileVersionInfo 需要链接此库
 
@@ -23,6 +25,8 @@ namespace ArkProtect
 		, m_ProcessModule(this)
 		, m_ProcessThread(this)
 		, m_ProcessHandle(this)
+		, m_ProcessWindow(this)
+		, m_ProcessMemory(this)
 		{};
 		~CGlobal() {};
 
@@ -285,10 +289,12 @@ namespace ArkProtect
 		//
 		// 返回变量Interface
 		//
-		inline CProcessCore&     ProcessCore() { return m_ProcessCore; }
+		inline CProcessCore&     ProcessCore()   { return m_ProcessCore; }
 		inline CProcessModule&   ProcessModule() { return m_ProcessModule; }
 		inline CProcessThread&   ProcessThread() { return m_ProcessThread; }
 		inline CProcessHandle&   ProcessHandle() { return m_ProcessHandle; }
+		inline CProcessWindow&   ProcessWindow() { return m_ProcessWindow; }
+		inline CProcessMemory&   ProcessMemory() { return m_ProcessMemory; }
 
 
 		CWnd *AppDlg = NULL;         // 保存主窗口指针
@@ -314,8 +320,8 @@ namespace ArkProtect
 		CProcessModule     m_ProcessModule;
 		CProcessThread     m_ProcessThread;
 		CProcessHandle     m_ProcessHandle;
-
-
+		CProcessWindow     m_ProcessWindow;
+		CProcessMemory     m_ProcessMemory;
 	};
 }
 

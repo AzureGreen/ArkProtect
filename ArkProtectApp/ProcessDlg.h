@@ -59,6 +59,8 @@ public:
 	
 	
 	afx_msg void OnProcessHandle();
+	afx_msg void OnProcessWindow();
+	afx_msg void OnProcessMemory();
 };
 
 
