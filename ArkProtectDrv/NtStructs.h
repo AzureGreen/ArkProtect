@@ -22,7 +22,7 @@ typedef struct _CONTROL_AREA
 	UINT_PTR			WaitingForDeletion;
 	UINT_PTR			u2;
 	UINT64				Padding;
-	UINT_PTR			LockedPages;
+	UINT64   			LockedPages;
 	LIST_ENTRY			ViewList;
 } CONTROL_AREA, *PCONTROL_AREA;
 
@@ -162,7 +162,9 @@ typedef struct _PEB
 } PEB, *PPEB;
 
 //////////////////////////////////////////////////////////////////////////
+//
 // 内存相关
+//
 #define SEC_IMAGE            0x1000000
 #define MEM_IMAGE            SEC_IMAGE
 /*
@@ -187,6 +189,26 @@ typedef struct _MEMORY_SECTION_NAME
 } MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
 
 
+
+//////////////////////////////////////////////////////////////////////////
+//
+// 对象目录
+//
+#define NUMBER_HASH_BUCKETS 37
+typedef struct _OBJECT_DIRECTORY_ENTRY
+{
+	struct _OBJECT_DIRECTORY_ENTRY *ChainLink;
+	PVOID Object;
+	ULONG HashValue;
+} OBJECT_DIRECTORY_ENTRY, *POBJECT_DIRECTORY_ENTRY;
+
+typedef struct _OBJECT_DIRECTORY {
+	struct _OBJECT_DIRECTORY_ENTRY *HashBuckets[NUMBER_HASH_BUCKETS];
+	EX_PUSH_LOCK Lock;
+	struct _DEVICE_MAP *DeviceMap;
+	ULONG SessionId;
+} OBJECT_DIRECTORY, *POBJECT_DIRECTORY;
+
 //
 // ObjectDirectory Information Structures for NtQueryDirectoryObject
 //
@@ -198,7 +220,9 @@ typedef struct _OBJECT_DIRECTORY_INFORMATION {
 
 
 //////////////////////////////////////////////////////////////////////////
+//
 // SystemInformationClass
+//
 typedef enum _SYSTEM_INFORMATION_CLASS
 {
 	SystemBasicInformation = 0x0,
@@ -361,7 +385,9 @@ typedef enum _SYSTEM_INFORMATION_CLASS
 } SYSTEM_INFORMATION_CLASS;
 
 //////////////////////////////////////////////////////////////////////////
+//
 // 句柄相关
+//
 typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO
 {
 	UINT16	UniqueProcessId;
@@ -373,7 +399,9 @@ typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO
 	UINT32	GrantedAccess;
 } SYSTEM_HANDLE_TABLE_ENTRY_INFO, *PSYSTEM_HANDLE_TABLE_ENTRY_INFO;
 
+//
 // SystemHandleInformation
+//
 typedef struct _SYSTEM_HANDLE_INFORMATION
 {
 	UINT32	NumberOfHandles;
@@ -382,6 +410,9 @@ typedef struct _SYSTEM_HANDLE_INFORMATION
 
 #define ObjectNameInformation	1
 #define ObjectHandleFlagInformation 4
+
+
+
 
 
 #endif // !CXX_NtStructs_H

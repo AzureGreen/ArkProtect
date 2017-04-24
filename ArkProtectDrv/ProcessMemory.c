@@ -29,6 +29,16 @@ APEnumProcessMemoryByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_ME
 	{
 		UINT_PTR BaseAddress = 0;
 
+#ifdef _WIN64
+
+		// 处理Wow32位程序
+		if (PsGetProcessWow64Process(EProcess))
+		{
+			g_DynamicData.MaxUserSpaceAddress = 0x7FFFFFFF;
+		}
+
+#endif // _WIN64
+
 		while ( BaseAddress < g_DynamicData.MaxUserSpaceAddress)
 		{
 			MEMORY_BASIC_INFORMATION  mbi = { 0 };
@@ -56,7 +66,16 @@ APEnumProcessMemoryByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_ME
 			}
 			Status = STATUS_SUCCESS;
 		}
+
 		ZwClose(ProcessHandle);
+
+#ifdef _WIN64
+
+		g_DynamicData.MaxUserSpaceAddress = 0x000007FFFFFFFFFF;
+
+#endif // _WIN64
+
+
 	}
 	return Status;
 }

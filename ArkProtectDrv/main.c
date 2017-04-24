@@ -129,6 +129,42 @@ APInitializeDynamicData(IN OUT PDYNAMIC_DATA DynamicData)
 			DynamicData->MinKernelSpaceAddress = 0xFFFFF00000000000;
 #else
 
+			//////////////////////////////////////////////////////////////////////////
+			// EProcess
+			DynamicData->ThreadListHead_KPROCESS = 0x02c;
+			DynamicData->ObjectTable = 0x0f4;
+			DynamicData->SectionObject = 0x128;
+			DynamicData->InheritedFromUniqueProcessId = 0x140;
+			DynamicData->ThreadListHead_EPROCESS = 0x188;
+
+			//////////////////////////////////////////////////////////////////////////
+			// EThread
+			DynamicData->Priority = 0x057;
+			DynamicData->Teb = 0x088;
+			DynamicData->ContextSwitches = 0x064;
+			DynamicData->State = 0x068;
+			DynamicData->PreviousMode = 0x13a;
+			DynamicData->Process = 0x150;
+			DynamicData->ThreadListEntry_KTHREAD = 0x1e0;
+			DynamicData->StartAddress = 0x218;
+			DynamicData->Cid = 0x22c;
+			DynamicData->Win32StartAddress = 0x260;
+			DynamicData->ThreadListEntry_ETHREAD = 0x268;
+			DynamicData->SameThreadApcFlags = 0x288;
+
+			//////////////////////////////////////////////////////////////////////////
+			// Object
+			DynamicData->SizeOfObjectHeader = 0x018;
+
+			DynamicData->HandleTableEntryOffset = 0x008;
+
+			//////////////////////////////////////////////////////////////////////////
+
+			DynamicData->MaxUserSpaceAddress = 0x7FFFFFFF;
+
+			DynamicData->MinKernelSpaceAddress = 0x80000000;
+
+
 #endif
 			break;
 		}

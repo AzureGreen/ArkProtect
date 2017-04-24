@@ -212,8 +212,6 @@ namespace ArkProtect
 			StringCchCopyW(ProcessEntry->wzImageName, wcslen(L"System") + 1, L"System");
 
 			WCHAR wzFilePath[MAX_PATH] = { 0 };
-			//GetEnvironmentVariableW(L"windir", wzFilePath, MAX_PATH);   // 获得WindowsDirectory
-			//lstrcat(wzFilePath, L"\\System32\\ntoskrnl.exe");
 			GetSystemDirectory(wzFilePath, MAX_PATH);      // 获得System32Directory
 			StringCchCatW(wzFilePath, MAX_PATH, L"\\ntoskrnl.exe");
 
@@ -408,14 +406,12 @@ namespace ArkProtect
 			}
 
 			strCompanyName = ProcessEntry.wzCompanyName;
-			
-			if (i >= 2)
-			{
-				AddProcessFileIcon(ProcessEntry.wzFilePath);     // 添加图标
-			}
 
-		
-			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strImageName);
+			// 添加图标
+			m_Global->AddFileIcon(ProcessEntry.wzFilePath, &((CProcessDlg*)m_Global->m_ProcessDlg)->m_ProcessIconList);
+
+			int iImageCount = ((CProcessDlg*)m_Global->m_ProcessDlg)->m_ProcessIconList.GetImageCount() - 1;
+			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strImageName, iImageCount);
 			ListCtrl->SetItemText(iItem, pc_ProcessId, strProcessId);
 			ListCtrl->SetItemText(iItem, pc_ParentProcessId, strParentProcessId);
 			ListCtrl->SetItemText(iItem, pc_FilePath, strFilePath);

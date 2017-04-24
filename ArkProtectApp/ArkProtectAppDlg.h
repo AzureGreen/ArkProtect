@@ -7,6 +7,7 @@
 #include "Global.hpp"
 #include "afxcmn.h"
 #include "ProcessDlg.h"
+#include "DriverDlg.h"
 
 // CArkProtectAppDlg 对话框
 class CArkProtectAppDlg : public CDialogEx
@@ -43,6 +44,10 @@ protected:
 	afx_msg void OnDestroy();
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnStnClickedProcessStatic();
+	afx_msg void OnStnClickedDriverStatic();
+	afx_msg void OnStnClickedKernelStatic();
+	afx_msg void OnStnClickedStaticHook();
 	DECLARE_MESSAGE_MAP()
 public:
 
@@ -65,5 +70,6 @@ public:
 	ArkProtect::CGlobal   m_Global;
 	ArkProtect::eChildDlg m_CurrentChildDlg = (ArkProtect::eChildDlg)(-1);    // 子对话框
 	CProcessDlg           *m_ProcessDlg = NULL;
-	
+	CDriverDlg            *m_DriverDlg = NULL;
+
 };

@@ -29,6 +29,38 @@ APGetNtosExportVariableAddress(IN const WCHAR *wzVariableName, OUT PVOID *Variab
 	return TRUE;
 }
 
+
+/************************************************************************
+*  Name : APIsUnicodeStringValid
+*  Param: uniString		        Ä¿±êUnicodeString
+*  Ret  : BOOLEAN
+*  ÅÐ¶ÏUnicode×Ö·û´®ÊÇ·ñºÏ·¨
+************************************************************************/
+BOOLEAN
+APIsUnicodeStringValid(IN PUNICODE_STRING uniString)
+{
+	BOOLEAN bOk = FALSE;
+
+	__try
+	{
+		if (uniString->Length > 0 &&
+			uniString->Buffer		&&
+			MmIsAddressValid(uniString->Buffer) &&   // ×Ö·û´®ÆðÊ¼µØÖ·
+			MmIsAddressValid(&uniString->Buffer[uniString->Length / sizeof(WCHAR) - 1])) // ×Ö·û´®Ä©Î²µØÖ·
+		{
+			bOk = TRUE;
+		}
+
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		bOk = FALSE;
+	}
+
+	return bOk;
+}
+
+
 /*
 UINT32
 APGetLogicalDriveStringsW(UINT32 BufferLength, LPWSTR wzBuffer)

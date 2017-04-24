@@ -191,7 +191,7 @@ namespace ArkProtect
 		CString strProtect = L"";
 
 		UINT32 Size = m_VitualProtectTypeVector.size();
-		for (int i = 0; i < Size; i++)
+		for (UINT32 i = 0; i < Size; i++)
 		{
 			VIRTUAL_PROTECT_TYPE VirtualProtectType = m_VitualProtectTypeVector[i];
 			if (VirtualProtectType.Type & Protect)

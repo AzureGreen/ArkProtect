@@ -3,14 +3,14 @@
 extern DYNAMIC_DATA	g_DynamicData;
 
 /************************************************************************
-*  Name : APIsModuleInList
+*  Name : APIsProcessModuleInList
 *  Param: BaseAddress			模块基地址（OUT）
 *  Param: ModuleSize			模块大小（IN）
 *  Ret  : NTSTATUS
 *  通过FileObject获得进程完整路径
 ************************************************************************/
 BOOLEAN
-APIsModuleInList(IN UINT_PTR BaseAddress, IN UINT32 ModuleSize, IN PPROCESS_MODULE_INFORMATION pmi, IN UINT32 ModuleCount)
+APIsProcessModuleInList(IN UINT_PTR BaseAddress, IN UINT32 ModuleSize, IN PPROCESS_MODULE_INFORMATION pmi, IN UINT32 ModuleCount)
 {
 	BOOLEAN bOk = FALSE;
 	UINT32  i = 0;
@@ -101,7 +101,7 @@ APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MO
 							}
 						}
 					
-						if (!APIsModuleInList((UINT_PTR)mbi.BaseAddress, (UINT32)mbi.RegionSize, pmi, ModuleCount))
+						if (!APIsProcessModuleInList((UINT_PTR)mbi.BaseAddress, (UINT32)mbi.RegionSize, pmi, ModuleCount))
 						{
 							if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
 							{	
@@ -196,7 +196,7 @@ APFillProcessModuleInfoByTravelLdr(IN PLIST_ENTRY LdrListEntry, IN eLdrType LdrT
 		if ((PUINT8)LdrDataTableEntry > 0 && MmIsAddressValid(LdrDataTableEntry))
 		{
 			// 插入
-			if (!APIsModuleInList((UINT_PTR)LdrDataTableEntry->DllBase, LdrDataTableEntry->SizeOfImage, pmi, ModuleCount))
+			if (!APIsProcessModuleInList((UINT_PTR)LdrDataTableEntry->DllBase, LdrDataTableEntry->SizeOfImage, pmi, ModuleCount))
 			{
 				if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
 				{
@@ -236,14 +236,16 @@ APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION 
 		LARGE_INTEGER	Interval = { 0 };
 		Interval.QuadPart = -25011 * 10 * 1000;		// 250 毫秒
 
-		if (PsGetProcessWow64Process(EProcess))		// 还要处理 Wow64的问题
+#ifdef _WIN64
+		// 还要处理 Wow64的问题
+		if (PsGetProcessWow64Process(EProcess))	
 		{
 			PPEB32 Peb32 = (PPEB32)PsGetProcessWow64Process(EProcess);
 			if (Peb32 == NULL)
 			{
 				return Status;
 			}
-			
+
 			for (INT i = 0; !Peb32->Ldr && i < 10; i++)
 			{
 				// Sleep 等待加载
@@ -265,7 +267,7 @@ APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION 
 					if ((PUINT8)LdrDataTableEntry32 > 0 && MmIsAddressValid(LdrDataTableEntry32))
 					{
 						// 插入
-						if (!APIsModuleInList((UINT_PTR)LdrDataTableEntry32->DllBase, LdrDataTableEntry32->SizeOfImage, pmi, ModuleCount))
+						if (!APIsProcessModuleInList((UINT_PTR)LdrDataTableEntry32->DllBase, LdrDataTableEntry32->SizeOfImage, pmi, ModuleCount))
 						{
 							if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
 							{
@@ -285,6 +287,9 @@ APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION 
 			}
 		}
 
+#endif // _WIN64
+
+		
 		// Native process
 		Peb = PsGetProcessPeb(EProcess);
 		if (Peb == NULL)
@@ -313,7 +318,7 @@ APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION 
 				if ((PUINT8)LdrDataTableEntry > 0 && MmIsAddressValid(LdrDataTableEntry))
 				{
 					// 插入
-					if (!APIsModuleInList((UINT_PTR)LdrDataTableEntry->DllBase, LdrDataTableEntry->SizeOfImage, pmi, ModuleCount))
+					if (!APIsProcessModuleInList((UINT_PTR)LdrDataTableEntry->DllBase, LdrDataTableEntry->SizeOfImage, pmi, ModuleCount))
 					{
 						if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
 						{

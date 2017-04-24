@@ -6,6 +6,8 @@
 #include "ArkProtectApp.h"
 #include "ArkProtectAppDlg.h"
 
+#include "Global.hpp"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -39,6 +41,19 @@ CArkProtectAppApp theApp;
 
 BOOL CArkProtectAppApp::InitInstance()
 {
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		::MessageBox(NULL, L"已经运行了ArkProtect！", L"ArkProtect", MB_OK | MB_ICONERROR);
+		ExitProcess(0);
+	}
+
+	if (ArkProtect::CGlobal().QueryOSBit() == TRUE && sizeof(UINT_PTR) == sizeof(UINT32))
+	{
+		::MessageBox(NULL, L"64位操作系统不能运行32位ArkProtect", L"ArkProtect", MB_OK | MB_ICONERROR);
+		ExitProcess(0);
+	}
+
+
 	// 如果一个运行在 Windows XP 上的应用程序清单指定要
 	// 使用 ComCtl32.dll 版本 6 或更高版本来启用可视化方式，
 	//则需要 InitCommonControlsEx()。  否则，将无法创建窗口。
@@ -68,7 +83,7 @@ BOOL CArkProtectAppApp::InitInstance()
 	// 更改用于存储设置的注册表项
 	// TODO: 应适当修改该字符串，
 	// 例如修改为公司或组织名
-	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
+	SetRegistryKey(_T("ArkProtect"));
 
 	CArkProtectAppDlg dlg;
 	m_pMainWnd = &dlg;

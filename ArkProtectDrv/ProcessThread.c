@@ -4,7 +4,7 @@ extern DYNAMIC_DATA	g_DynamicData;
 
 
 /************************************************************************
-*  Name : APIsModuleInList
+*  Name : APIsThreadInList
 *  Param: BaseAddress			模块基地址（OUT）
 *  Param: ModuleSize			模块大小（IN）
 *  Ret  : NTSTATUS

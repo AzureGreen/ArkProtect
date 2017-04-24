@@ -98,6 +98,9 @@ BOOLEAN
 APGetNtosExportVariableAddress(IN const WCHAR *wzVariableName, OUT PVOID *VariableAddress);
 
 BOOLEAN 
+APIsUnicodeStringValid(IN PUNICODE_STRING uniString);
+
+BOOLEAN 
 APDosPathToNtPath(IN WCHAR * wzDosFullPath, OUT WCHAR * wzNtFullPath);
 
 UINT32

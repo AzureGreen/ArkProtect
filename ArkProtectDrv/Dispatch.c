@@ -36,18 +36,25 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		{
 			DbgPrint("Get Process Count\r\n");
 
-			__try
+			if (OutputBuffer)
 			{
-				ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT32));
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT32));
 
-				Status = APGetProcessNum(OutputBuffer);
+					Status = APGetProcessNum(OutputBuffer);
 
-				Irp->IoStatus.Status = Status;
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
 			}
-			__except (EXCEPTION_EXECUTE_HANDLER)
+			else
 			{
-				DbgPrint("Catch Exception\r\n");
-				Status = STATUS_UNSUCCESSFUL;
+				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
 			}
 
 			break;
@@ -56,18 +63,25 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		{
 			DbgPrint("Enum Process\r\n");
 
-			__try
+			if (OutputBuffer)
 			{
-				ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
 
-				Status = APEnumProcessInfo(OutputBuffer, OutputLength);
+					Status = APEnumProcessInfo(OutputBuffer, OutputLength);
 
-				Irp->IoStatus.Status = Status;
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
 			}
-			__except (EXCEPTION_EXECUTE_HANDLER)
+			else
 			{
-				DbgPrint("Catch Exception\r\n");
-				Status = STATUS_UNSUCCESSFUL;
+				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
 			}
 
 			break;
@@ -76,7 +90,7 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		{
 			DbgPrint("Process Module\r\n");
 
-			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			if (InputLength >= sizeof(UINT32) && InputBuffer && OutputBuffer)
 			{
 				__try
 				{
@@ -104,7 +118,7 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		{
 			DbgPrint("Process Thread\r\n");
 
-			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			if (InputLength >= sizeof(UINT32) && InputBuffer && OutputBuffer)
 			{
 				__try
 				{
@@ -132,7 +146,7 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		{
 			DbgPrint("Process Handle\r\n");
 
-			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			if (InputLength >= sizeof(UINT32) && InputBuffer && OutputBuffer)
 			{
 				__try
 				{
@@ -160,7 +174,7 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		{
 			DbgPrint("Process Window\r\n");
 
-			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			if (InputLength >= sizeof(UINT32) && InputBuffer && OutputBuffer)
 			{
 				__try
 				{
@@ -188,7 +202,7 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		{
 			DbgPrint("Process Memory\r\n");
 
-			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			if (InputLength >= sizeof(UINT32) && InputBuffer && OutputBuffer)
 			{
 				__try
 				{
@@ -196,6 +210,33 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
 
 					Status = APEnumProcessMemory(*(PUINT32)InputBuffer, OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+			}
+
+			break;
+		}
+		case IOCTL_ARKPROTECT_ENUMDRIVER:
+		{
+			DbgPrint("Enum Driver\r\n");
+
+			if (OutputBuffer)
+			{
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+
+					Status = APEnumDriverInfo(OutputBuffer, OutputLength);
 
 					Irp->IoStatus.Status = Status;
 				}

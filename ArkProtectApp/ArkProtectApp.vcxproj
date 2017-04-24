@@ -188,6 +188,8 @@
     <ClInclude Include="ArkProtectApp.h" />
     <ClInclude Include="ArkProtectAppDlg.h" />
     <ClInclude Include="Define.h" />
+    <ClInclude Include="DriverCore.h" />
+    <ClInclude Include="DriverDlg.h" />
     <ClInclude Include="Global.hpp" />
     <ClInclude Include="ProcessCore.h" />
     <ClInclude Include="ProcessDlg.h" />
@@ -204,6 +206,8 @@
   <ItemGroup>
     <ClCompile Include="ArkProtectApp.cpp" />
     <ClCompile Include="ArkProtectAppDlg.cpp" />
+    <ClCompile Include="DriverCore.cpp" />
+    <ClCompile Include="DriverDlg.cpp" />
     <ClCompile Include="ProcessCore.cpp" />
     <ClCompile Include="ProcessDlg.cpp" />
     <ClCompile Include="ProcessHandle.cpp" />

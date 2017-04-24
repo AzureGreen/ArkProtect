@@ -10,6 +10,8 @@
 #include "ProcessHandle.h"
 #include "ProcessWindow.h"
 #include "ProcessMemory.h"
+#include "DriverCore.h"
+
 
 #pragma comment(lib, "Version.lib")      // GetFileVersionInfo 需要链接此库
 
@@ -27,13 +29,12 @@ namespace ArkProtect
 		, m_ProcessHandle(this)
 		, m_ProcessWindow(this)
 		, m_ProcessMemory(this)
+		, m_DriverCore(this)
 		{};
 		~CGlobal() {};
 
 		//////////////////////////////////////////////////////////////////////////
 		// 通用函数
-
-
 		BOOL QueryOSBit()
 		{
 #if defined(_WIN64)
@@ -101,6 +102,7 @@ namespace ArkProtect
 			BOOL bOk = StartServiceW(m_ServiceHandle, 0, NULL);
 			if (!bOk)
 			{
+				int a = GetLastError();
 				if ((GetLastError() != ERROR_IO_PENDING && GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
 					|| GetLastError() == ERROR_IO_PENDING)
 				{
@@ -152,7 +154,6 @@ namespace ArkProtect
 
 
 		// 获得文件厂商
-
 		CString GetFileCompanyName(CString strFilePath)
 		{
 			CString strCompanyName = 0;;
@@ -283,6 +284,18 @@ namespace ArkProtect
 		}
 
 
+		// 获得文件厂商
+		void AddFileIcon(WCHAR *FilePath, CImageList *ImageList)
+		{
+			SHFILEINFO ShFileInfo = { 0 };
+
+			SHGetFileInfo(FilePath, FILE_ATTRIBUTE_NORMAL,
+				&ShFileInfo, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES);
+
+			HICON  hIcon = ShFileInfo.hIcon;
+
+			ImageList->Add(hIcon);
+		}
 
 		//////////////////////////////////////////////////////////////////////////
 
@@ -295,11 +308,12 @@ namespace ArkProtect
 		inline CProcessHandle&   ProcessHandle() { return m_ProcessHandle; }
 		inline CProcessWindow&   ProcessWindow() { return m_ProcessWindow; }
 		inline CProcessMemory&   ProcessMemory() { return m_ProcessMemory; }
+		inline CDriverCore&      DriverCore()    { return m_DriverCore; }
 
 
 		CWnd *AppDlg = NULL;         // 保存主窗口指针
 		CWnd *m_ProcessDlg = NULL;     // 保存进程模块窗口指针
-
+		CWnd *m_DriverDlg = NULL;     // 保存驱动模块窗口指针
 		
 
 		int iDpix = 0;               // Logical pixels/inch in X
@@ -316,12 +330,23 @@ namespace ArkProtect
 
 
 	private:
+		//
+		// 进程相关
+		//
 		CProcessCore       m_ProcessCore;
 		CProcessModule     m_ProcessModule;
 		CProcessThread     m_ProcessThread;
 		CProcessHandle     m_ProcessHandle;
 		CProcessWindow     m_ProcessWindow;
 		CProcessMemory     m_ProcessMemory;
+
+		//
+		// 驱动相关
+		//
+		CDriverCore        m_DriverCore;
+
+
+
 	};
 }
 

@@ -29,7 +29,9 @@ protected:
 	afx_msg void OnProcessFreshen();
 	afx_msg void OnProcessModule();
 	afx_msg void OnProcessThread();
-
+	afx_msg void OnProcessHandle();
+	afx_msg void OnProcessWindow();
+	afx_msg void OnProcessMemory();
 	DECLARE_MESSAGE_MAP()
 public:
 	
@@ -40,27 +42,15 @@ public:
 	void APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind ProcessInfoKind);
 
 
-	
-
 
 	CImageList m_ProcessIconList;   // 进程图标
 	CListCtrl  m_ProcessListCtrl;   // ListControl
-
-	
 
 	ArkProtect::CGlobal      *m_Global;
 	
 	static UINT32     m_SortColumn;
 	static BOOL       m_bSortOrder;  // 记录排序顺序
 	
-	
-	
-	
-	
-	
-	afx_msg void OnProcessHandle();
-	afx_msg void OnProcessWindow();
-	afx_msg void OnProcessMemory();
 };
 
 

@@ -40,6 +40,9 @@
     <Filter Include="ProcessCore\ProcessInfo\ProcessMemory">
       <UniqueIdentifier>{8d947431-0665-4ee3-9dcd-403a5fcb9988}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DriverCore">
+      <UniqueIdentifier>{cd71f84b-9b87-415e-bcf5-07f4a09713e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -90,6 +93,12 @@
     <ClInclude Include="ProcessMemory.h">
       <Filter>ProcessCore\ProcessInfo\ProcessMemory</Filter>
     </ClInclude>
+    <ClInclude Include="DriverDlg.h">
+      <Filter>DriverCore</Filter>
+    </ClInclude>
+    <ClInclude Include="DriverCore.h">
+      <Filter>DriverCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">
@@ -124,6 +133,12 @@
     </ClCompile>
     <ClCompile Include="ProcessMemory.cpp">
       <Filter>ProcessCore\ProcessInfo\ProcessMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="DriverDlg.cpp">
+      <Filter>DriverCore</Filter>
+    </ClCompile>
+    <ClCompile Include="DriverCore.cpp">
+      <Filter>DriverCore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

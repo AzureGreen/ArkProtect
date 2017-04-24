@@ -83,6 +83,10 @@ BEGIN_MESSAGE_MAP(CArkProtectAppDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_WM_SHOWWINDOW()
 	ON_WM_CREATE()
+	ON_STN_CLICKED(IDC_PROCESS_STATIC, &CArkProtectAppDlg::OnStnClickedProcessStatic)
+	ON_STN_CLICKED(IDC_DRIVER_STATIC, &CArkProtectAppDlg::OnStnClickedDriverStatic)
+	ON_STN_CLICKED(IDC_KERNEL_STATIC, &CArkProtectAppDlg::OnStnClickedKernelStatic)
+	ON_STN_CLICKED(IDC_STATIC_HOOK, &CArkProtectAppDlg::OnStnClickedStaticHook)
 END_MESSAGE_MAP()
 
 
@@ -325,6 +329,9 @@ void CArkProtectAppDlg::OnDestroy()
 
 	// TODO: 在此处添加消息处理程序代码
 	
+	// 关闭句柄！！！
+	CloseHandle(m_Global.m_DeviceHandle);
+
 	// 卸载驱动
 	m_Global.UnloadNTDriver(DRIVER_SERVICE_NAME);   // 释放资源
 }
@@ -339,11 +346,7 @@ void CArkProtectAppDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 	if (bShow)
 	{
 		// 启动的时候，首先显示进程模块
-		if (m_Global.m_bIsRequestNow == FALSE && m_CurrentChildDlg != ArkProtect::cd_ProcessDialog)
-		{
-			APEnableCurrentButton(m_CurrentChildDlg);
-			APShowChildWindow(ArkProtect::cd_ProcessDialog);
-		}
+		OnStnClickedProcessStatic();
 	}
 
 }
@@ -387,6 +390,44 @@ int CArkProtectAppDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 }
 
 
+void CArkProtectAppDlg::OnStnClickedProcessStatic()
+{
+	// TODO: 在此添加控件通知处理程序代码
+
+	if (m_Global.m_bIsRequestNow == FALSE && m_CurrentChildDlg != ArkProtect::cd_ProcessDialog)
+	{
+		APEnableCurrentButton(m_CurrentChildDlg);
+		APShowChildWindow(ArkProtect::cd_ProcessDialog);
+	}
+
+}
+
+
+void CArkProtectAppDlg::OnStnClickedDriverStatic()
+{
+	// TODO: 在此添加控件通知处理程序代码
+
+	if (m_Global.m_bIsRequestNow == FALSE && m_CurrentChildDlg != ArkProtect::cd_DriverDialog)
+	{
+		APEnableCurrentButton(m_CurrentChildDlg);
+		APShowChildWindow(ArkProtect::cd_DriverDialog);
+	}
+}
+
+
+void CArkProtectAppDlg::OnStnClickedKernelStatic()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CArkProtectAppDlg::OnStnClickedStaticHook()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+
 /************************************************************************
 *  Name : OnIconNotify
 *  Param: wParam
@@ -413,6 +454,10 @@ LRESULT CArkProtectAppDlg::OnUpdateStatusBarDetail(WPARAM wParam, LPARAM lParam)
 	m_StatusBar->SetText((LPCWSTR)lParam, 1, 0);
 	return TRUE;
 }
+
+
+
+
 
 
 /************************************************************************
@@ -482,35 +527,35 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 		}
 
 		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(TRUE);
-		//if (m_ModuleDlg) m_ModuleDlg->ShowWindow(FALSE);
+		if (m_DriverDlg) m_DriverDlg->ShowWindow(FALSE);
 		//if (m_KernelSysDlg) m_KernelSysDlg->ShowWindow(FALSE);
 		//if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
 
 
 		break;
 	}
-	//case ArkProtect::cd_DriverDialog:
-	//{
-	//	if (m_ModuleDlg == NULL)
-	//	{
-	//		m_ModuleDlg = new CModuleDlg(this);
+	case ArkProtect::cd_DriverDialog:
+	{
+		if (m_DriverDlg == NULL)
+		{
+			m_DriverDlg = new CDriverDlg(this, &m_Global);
 
-	//		// 绑定对话框
-	//		m_ModuleDlg->Create(IDD_DIALOG_MODULE, GetDlgItem(IDC_TAB_MAIN));
+			// 绑定对话框
+			m_DriverDlg->Create(IDD_DRIVER_DIALOG, GetDlgItem(IDC_APP_TAB));
 
-	//		// 移动窗口位置
-	//		CRect	Rect;
-	//		m_MainTab.GetClientRect(&Rect);
-	//		m_ModuleDlg->MoveWindow(&Rect);
-	//	}
+			// 移动窗口位置
+			CRect	Rect;
+			m_AppTab.GetClientRect(&Rect);
+			m_DriverDlg->MoveWindow(&Rect);
+		}
 
-	//	if (m_ModuleDlg) m_ModuleDlg->ShowWindow(TRUE);
-	//	if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
+		if (m_DriverDlg) m_DriverDlg->ShowWindow(TRUE);
+		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
 	//	if (m_KernelSysDlg) m_KernelSysDlg->ShowWindow(FALSE);
 	//	if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
 
-	//	break;
-	//}
+		break;
+	}
 	//case ArkProtect::cd_ProcessDialog:
 	//{
 	//	if (m_KernelSysDlg == NULL)
@@ -560,3 +605,4 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 		break;
 	}
 }
+

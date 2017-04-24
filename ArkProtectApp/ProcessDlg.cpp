@@ -61,13 +61,13 @@ BOOL CProcessDlg::OnInitDialog()
 
 	// TODO:  在此添加额外的初始化
 
+	// 初始化进程列表
+	APInitializeProcessList();
+
 	// 创建Icon图标列表
 	UINT nIconSize = 20 * (UINT)(m_Global->iDpix / 96.0);
 	m_ProcessIconList.Create(nIconSize, nIconSize, ILC_COLOR32 | ILC_MASK, 2, 2);
 	ListView_SetImageList(m_ProcessListCtrl.m_hWnd, m_ProcessIconList.GetSafeHandle(), LVSIL_SMALL);
-
-	// 初始化进程列表
-	APInitializeProcessList();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // 异常: OCX 属性页应返回 FALSE
@@ -268,6 +268,17 @@ void CProcessDlg::APLoadProcessList()
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::QueryProcessInfoCallback, &m_ProcessListCtrl, 0, NULL)
 	);
+
+/*	m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+
+	m_Global->UpdateStatusBarTip(L"Process Info");
+	m_Global->UpdateStatusBarDetail(L"Process Info is loading now...");
+
+	m_Global->ProcessCore().QueryProcessInfo(&m_ProcessListCtrl);
+
+	m_Global->m_bIsRequestNow = FALSE;
+	*/
+
 }
 
 
@@ -395,28 +406,5 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

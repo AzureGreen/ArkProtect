@@ -171,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dispatch.h" />
+    <ClInclude Include="DriverCore.h" />
     <ClInclude Include="Imports.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="NtStructs.h" />
@@ -185,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dispatch.c" />
+    <ClCompile Include="DriverCore.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="Private.c" />
     <ClCompile Include="ProcessCore.c" />

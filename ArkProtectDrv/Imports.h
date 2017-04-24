@@ -3,6 +3,16 @@
 #include <ntifs.h>
 
 
+//////////////////////////////////////////////////////////////////////////
+// Undocument Import
+
+extern
+POBJECT_TYPE* IoDriverObjectType;		// 驱动对象类型
+
+extern
+POBJECT_TYPE* IoDeviceObjectType;       // 设备对象类型
+
+
 NTKERNELAPI
 UCHAR *
 PsGetProcessImageFileName(PEPROCESS Process);
