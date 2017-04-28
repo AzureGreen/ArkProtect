@@ -8,7 +8,6 @@ PLDR_DATA_TABLE_ENTRY  g_PsLoadedModuleList = NULL;
 
 POBJECT_TYPE           g_DirectoryObjectType = NULL;  // 目录对象类型地址
 
-
 // 通过遍历Ldr枚举内核模块 按加载顺序来
 NTSTATUS
 APEnumDriverModuleByLdrDataTableEntry(IN PLDR_DATA_TABLE_ENTRY PsLoadedModuleList, OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
@@ -255,7 +254,6 @@ APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN
 }
 
 
-
 VOID
 APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
 {
@@ -339,6 +337,183 @@ APEnumDriverInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 			DbgPrint("Not Enough Ring3 Memory\r\n");
 			Status = STATUS_BUFFER_TOO_SMALL;
 		}
+	}
+
+	return Status;
+}
+
+
+/************************************************************************
+*  Name : APIsValidDriverObject
+*  Param: OutputBuffer			DriverObject
+*  Ret  : BOOLEAN
+*  判断一个驱动是否为真的驱动对象
+************************************************************************/
+BOOLEAN
+APIsValidDriverObject(IN PDRIVER_OBJECT DriverObject)
+{
+	BOOLEAN bOk = FALSE;
+	if (!*IoDriverObjectType ||
+		!*IoDeviceObjectType)
+	{
+		return bOk;
+	}
+
+	__try
+	{
+		if (MmIsAddressValid(DriverObject) &&
+			DriverObject->Type == 4 &&
+			DriverObject->Size >= sizeof(DRIVER_OBJECT) &&
+			(POBJECT_TYPE)APGetObjectType(DriverObject) == *IoDriverObjectType &&
+			MmIsAddressValid(DriverObject->DriverSection) &&
+			(UINT_PTR)DriverObject->DriverSection > g_DynamicData.MinKernelSpaceAddress &&
+			!(DriverObject->DriverSize & 0x1F) &&
+			DriverObject->DriverSize < g_DynamicData.MinKernelSpaceAddress &&
+			!((UINT_PTR)(DriverObject->DriverStart) & 0xFFF) &&		// 起始地址都是页对齐
+			(UINT_PTR)DriverObject->DriverStart > g_DynamicData.MinKernelSpaceAddress)
+		{
+			PDEVICE_OBJECT DeviceObject = DriverObject->DeviceObject;
+			if (DeviceObject)
+			{
+				if (MmIsAddressValid(DeviceObject) &&
+					DeviceObject->Type == 3 &&
+					DeviceObject->Size >= sizeof(DEVICE_OBJECT) &&
+					(POBJECT_TYPE)APGetObjectType(DeviceObject) == *IoDeviceObjectType)
+				{
+					bOk = TRUE;
+				}
+			}
+			else
+			{
+				bOk = TRUE;
+			}
+		}
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		DbgPrint("Catch Exception\r\n");
+		bOk = FALSE;
+	}
+
+	return bOk;
+}
+
+
+/************************************************************************
+*  Name : APDriverUnloadThreadCallback
+*  Param: lParam			    传递给线程的参数
+*  Ret  : BOOLEAN
+*  1.调用对象的卸载函数 清理所有派遣例程 2.自己完成卸载函数
+************************************************************************/
+VOID
+APDriverUnloadThreadCallback(IN PVOID lParam)
+{
+	PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)lParam;
+
+	if (DriverObject)
+	{
+		if (DriverObject->DriverUnload &&
+			MmIsAddressValid(DriverObject->DriverUnload) &&
+			(UINT_PTR)DriverObject->DriverUnload > g_DynamicData.MinKernelSpaceAddress)
+		{
+			PDRIVER_UNLOAD DriverUnloadAddress = DriverObject->DriverUnload;
+			
+			// 直接调用卸载函数
+			DriverUnloadAddress(DriverObject);
+		}
+		else
+		{
+			PDEVICE_OBJECT	NextDeviceObject = NULL;
+			PDEVICE_OBJECT  CurrentDeviceObject = NULL;
+
+			CurrentDeviceObject = DriverObject->DeviceObject;
+
+			while (CurrentDeviceObject && MmIsAddressValid(CurrentDeviceObject))	// 自己实现Unload 也就是清除设备链
+			{
+				NextDeviceObject = CurrentDeviceObject->NextDevice;
+				IoDeleteDevice(CurrentDeviceObject);
+				CurrentDeviceObject = NextDeviceObject;
+			}
+		}
+
+		DriverObject->FastIoDispatch = NULL;		// FastIO
+		RtlZeroMemory(DriverObject->MajorFunction, sizeof(DriverObject->MajorFunction));
+		DriverObject->DriverUnload = NULL;
+
+		ObMakeTemporaryObject(DriverObject);	// removes the name of the object from its parent directory
+		ObDereferenceObject(DriverObject);
+	}
+
+	PsTerminateSystemThread(STATUS_SUCCESS);
+}
+
+
+/************************************************************************
+*  Name : APUnloadDriverByCreateSystemThread
+*  Param: DriverObject
+*  Ret  : NTSTATUS
+*  创建系统线程 完成卸载函数
+************************************************************************/
+NTSTATUS
+APUnloadDriverByCreateSystemThread(IN PDRIVER_OBJECT DriverObject)
+{
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+	if (MmIsAddressValid(DriverObject))
+	{
+		HANDLE  SystemThreadHandle = NULL;		
+
+		Status = PsCreateSystemThread(&SystemThreadHandle, 0, NULL, NULL, NULL, APDriverUnloadThreadCallback, DriverObject);
+
+		// 等待线程 关闭句柄
+		if (NT_SUCCESS(Status))
+		{
+			PETHREAD EThread = NULL;
+			PUINT8   PreviousMode = 0;
+			UINT8    Temp = 0;
+
+			Status = ObReferenceObjectByHandle(SystemThreadHandle, 0, NULL, KernelMode, &EThread, NULL);
+			if (NT_SUCCESS(Status))
+			{
+				LARGE_INTEGER TimeOut;
+				TimeOut.QuadPart = -10 * 1000 * 1000 * 3;
+				Status = KeWaitForSingleObject(EThread, Executive, KernelMode, TRUE, &TimeOut); // 等待3秒
+				ObfDereferenceObject(EThread);
+			}
+
+			// 保存之前的模式，转成KernelMode
+			PreviousMode = (PUINT8)PsGetCurrentThread() + g_DynamicData.PreviousMode;
+			Temp = *PreviousMode;
+
+			NtClose(SystemThreadHandle);
+			
+			*PreviousMode = Temp;
+		}
+		else
+		{
+			DbgPrint("Create System Thread Failed\r\n");
+		}
+	}
+
+	return Status;
+}
+
+
+NTSTATUS
+APUnloadDriverObject(IN UINT_PTR InputBuffer)
+{
+	NTSTATUS       Status = STATUS_UNSUCCESSFUL;
+	PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)InputBuffer;
+
+	if (g_DriverObject == DriverObject)
+	{
+		Status = STATUS_ACCESS_DENIED;
+	}
+	else if ((UINT_PTR)DriverObject > g_DynamicData.MinKernelSpaceAddress &&
+		MmIsAddressValid(DriverObject) &&
+		APIsValidDriverObject(DriverObject))
+	{
+		Status = APUnloadDriverByCreateSystemThread(DriverObject);
 	}
 
 	return Status;

@@ -192,7 +192,6 @@ APDefaultPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 VOID
 APUnloadDriver(IN PDRIVER_OBJECT DriverObject)
 {
-
 	UNICODE_STRING  uniLinkName;
 	PDEVICE_OBJECT	NextDeviceObject = NULL;
 	PDEVICE_OBJECT  CurrentDeviceObject = NULL;

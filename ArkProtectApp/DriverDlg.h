@@ -22,8 +22,12 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
-
-	
+	afx_msg void OnNMCustomdrawDriverList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnItemchangedDriverList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMRClickDriverList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnDriverFreshen();
+	afx_msg void OnDriverDelete();
+	afx_msg void OnDriverUnload();
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -39,4 +43,7 @@ public:
 	ArkProtect::CGlobal      *m_Global;
 	
 	
+
+
+
 };

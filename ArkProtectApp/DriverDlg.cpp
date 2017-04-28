@@ -34,6 +34,12 @@ void CDriverDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDriverDlg, CDialogEx)
 	ON_WM_SIZE()
 	ON_WM_SHOWWINDOW()
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_DRIVER_LIST, &CDriverDlg::OnNMCustomdrawDriverList)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_DRIVER_LIST, &CDriverDlg::OnLvnItemchangedDriverList)
+	ON_NOTIFY(NM_RCLICK, IDC_DRIVER_LIST, &CDriverDlg::OnNMRClickDriverList)
+	ON_COMMAND(ID_DRIVER_FRESHEN, &CDriverDlg::OnDriverFreshen)
+	ON_COMMAND(ID_DRIVER_DELETE, &CDriverDlg::OnDriverDelete)
+	ON_COMMAND(ID_DRIVER_UNLOAD, &CDriverDlg::OnDriverUnload)
 END_MESSAGE_MAP()
 
 
@@ -45,7 +51,7 @@ BOOL CDriverDlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  在此添加额外的初始化
-
+		
 	// 初始化进程列表
 	APInitializeDriverList();
 
@@ -91,6 +97,109 @@ void CDriverDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 }
 
 
+void CDriverDlg::OnNMCustomdrawDriverList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+
+
+
+	*pResult = 0;
+}
+
+
+void CDriverDlg::OnLvnItemchangedDriverList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+
+
+
+	*pResult = 0;
+}
+
+
+void CDriverDlg::OnNMRClickDriverList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+
+	CMenu Menu;
+	Menu.LoadMenuW(IDR_DRIVER_MENU);
+	CMenu* SubMenu = Menu.GetSubMenu(0);	// 子菜单
+
+	CPoint Pt;
+	GetCursorPos(&Pt);         // 得到鼠标位置
+
+	int	iCount = SubMenu->GetMenuItemCount();
+
+	// 如果没有选中,除了刷新 其他全部Disable
+	if (m_DriverListCtrl.GetSelectedCount() == 0)
+	{
+		for (int i = 0; i < iCount; i++)
+		{
+			SubMenu->EnableMenuItem(i, MF_BYPOSITION | MF_DISABLED | MF_GRAYED); //菜单全部变灰
+		}
+
+		SubMenu->EnableMenuItem(ID_DRIVER_FRESHEN, MF_BYCOMMAND | MF_ENABLED);
+	}
+
+	int iIndex = m_DriverListCtrl.GetSelectionMark();
+	if (iIndex >= 0)
+	{
+		if (_wcsicmp(L"-", m_DriverListCtrl.GetItemText(iIndex, ArkProtect::dc_Object)) == 0)
+		{
+			SubMenu->EnableMenuItem(ID_DRIVER_UNLOAD, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);  // 没有Object, Unload也要变灰
+		}
+	}
+
+	SubMenu->TrackPopupMenu(TPM_LEFTALIGN, Pt.x, Pt.y, this);
+
+	*pResult = 0;
+}
+
+
+
+void CDriverDlg::OnDriverFreshen()
+{
+	// TODO: 在此添加命令处理程序代码
+	// 加载驱动模块信息列表
+	APLoadDriverList();
+
+}
+
+
+void CDriverDlg::OnDriverDelete()
+{
+	// TODO: 在此添加命令处理程序代码
+	// 删除文件
+
+}
+
+
+void CDriverDlg::OnDriverUnload()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	if (MessageBox(L"卸载驱动模块很危险，很有可能导致蓝屏\r\n您真的还要卸载吗？", L"ArkProtect", MB_ICONWARNING | MB_OKCANCEL) == IDCANCEL)
+	{
+		return;
+	}
+
+	if (m_Global->m_bIsRequestNow == TRUE)
+	{
+		return;
+	}
+
+	// 加载进程信息列表
+	CloseHandle(
+		CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CDriverCore::UnloadDriverInfoCallback, &m_DriverListCtrl, 0, NULL)
+	);
+
+}
+
+
 
 /************************************************************************
 *  Name : APInitializeDriverList
@@ -130,3 +239,12 @@ void CDriverDlg::APLoadDriverList()
 		(LPTHREAD_START_ROUTINE)ArkProtect::CDriverCore::QueryDriverInfoCallback, &m_DriverListCtrl, 0, NULL)
 	);
 }
+
+
+
+
+
+
+
+
+

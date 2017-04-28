@@ -64,6 +64,12 @@ namespace ArkProtect
 
 		static DWORD CALLBACK QueryProcessInfoCallback(LPARAM lParam);
 
+		void TerminateProcess(CListCtrl * ListCtrl, BOOL bForce);
+
+		static DWORD CALLBACK TerminateProcessCallback(LPARAM lParam);
+
+		static DWORD CALLBACK ForceTerminateProcessCallback(LPARAM lParam);
+
 
 
 		//

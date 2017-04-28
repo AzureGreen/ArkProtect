@@ -43,6 +43,18 @@ APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 
 NTSTATUS
 APEnumDriverInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength);
 
+BOOLEAN 
+APIsValidDriverObject(IN PDRIVER_OBJECT DriverObject);
+
+VOID 
+APDriverUnloadThreadCallback(IN PVOID lParam);
+
+NTSTATUS 
+APUnloadDriverByCreateSystemThread(IN PDRIVER_OBJECT DriverObject);
+
+NTSTATUS
+APUnloadDriverObject(IN UINT_PTR InputBuffer);
+
 #endif // !CXX_DriverCore_H
 
 

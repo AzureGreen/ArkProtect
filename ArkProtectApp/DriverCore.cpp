@@ -342,4 +342,65 @@ namespace ArkProtect
 	}
 
 
+	/************************************************************************
+	*  Name : UnloadDriver
+	*  Param: void
+	*  Ret  : BOOL
+	*  与驱动层通信，枚举进程及相关信息
+	************************************************************************/
+	BOOL CDriverCore::UnloadDriver(UINT_PTR DriverObject)
+	{
+		BOOL bOk = FALSE;
+		DWORD	 dwReturnLength = 0;
+		bOk = DeviceIoControl(m_Global->m_DeviceHandle,
+			IOCTL_ARKPROTECT_UNLOADRIVER,
+			&DriverObject,		// InputBuffer
+			sizeof(UINT_PTR),
+			NULL,
+			0,
+			&dwReturnLength,
+			NULL);
+
+		return bOk;
+	}
+
+
+	/************************************************************************
+	*  Name : UnloadDriverInfoCallback
+	*  Param: lParam （ListCtrl）
+	*  Ret  : DWORD
+	*  查询进程信息的回调
+	************************************************************************/
+	DWORD CALLBACK CDriverCore::UnloadDriverInfoCallback(LPARAM lParam)
+	{
+		CListCtrl *ListCtrl = (CListCtrl*)lParam;
+
+		int iIndex = ListCtrl->GetSelectionMark();
+		if (iIndex < 0)
+		{
+			return 0;
+		}
+
+		UINT_PTR DriverObject = 0;
+		CString  strObject = ListCtrl->GetItemText(iIndex, dc_Object);
+		swscanf_s(strObject.GetBuffer() + 2, L"%p", &DriverObject);
+
+		if (DriverObject == 0)
+		{
+			return 0;
+		}
+
+		m_Driver->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+
+		if (m_Driver->UnloadDriver(DriverObject))
+		{
+			// 刷新列表
+			m_Driver->QueryDriverInfo(ListCtrl);
+		}
+
+		m_Driver->m_Global->m_bIsRequestNow = FALSE;
+
+		return 0;
+	}
+
 }

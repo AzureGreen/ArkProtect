@@ -394,7 +394,27 @@ APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 }
 
 
+NTSTATUS
+APTerminateProcess(IN UINT32 ProcessId)
+{
+	NTSTATUS       Status = STATUS_UNSUCCESSFUL;
+	
+	if (ProcessId <= 4)
+	{
+		Status = STATUS_ACCESS_DENIED;
+	}
+	else
+	{
+		PEPROCESS EProcess = NULL;
 
+		Status = PsLookupProcessByProcessId((HANDLE)ProcessId, &EProcess);
+		if (NT_SUCCESS(Status) && APIsValidProcess(EProcess))
+		{
+			Status = APTerminateProcessByTravelThreadListHead(EProcess);
 
+			ObDereferenceObject(EProcess);
+		}
+	}
 
-
+	return Status;
+}

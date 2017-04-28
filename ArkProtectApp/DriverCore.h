@@ -54,7 +54,11 @@ namespace ArkProtect
 
 		void QueryDriverInfo(CListCtrl * ListCtrl);
 
+		BOOL UnloadDriver(UINT_PTR DriverObject);
+
 		static DWORD CALLBACK QueryDriverInfoCallback(LPARAM lParam);
+
+		static DWORD CALLBACK UnloadDriverInfoCallback(LPARAM lParam);
 
 
 	private:

@@ -32,6 +32,8 @@ protected:
 	afx_msg void OnProcessHandle();
 	afx_msg void OnProcessWindow();
 	afx_msg void OnProcessMemory();
+	afx_msg void OnProcessTerminate();
+	afx_msg void OnProcessForceTerminate();
 	DECLARE_MESSAGE_MAP()
 public:
 	
@@ -50,6 +52,7 @@ public:
 	
 	static UINT32     m_SortColumn;
 	static BOOL       m_bSortOrder;  // ¼ÇÂ¼ÅÅÐòË³Ðò
+	
 	
 };
 

@@ -49,6 +49,8 @@ BEGIN_MESSAGE_MAP(CProcessDlg, CDialogEx)
 	ON_COMMAND(ID_PROCESS_HANDLE, &CProcessDlg::OnProcessHandle)
 	ON_COMMAND(ID_PROCESS_WINDOW, &CProcessDlg::OnProcessWindow)
 	ON_COMMAND(ID_PROCESS_MEMORY, &CProcessDlg::OnProcessMemory)
+	ON_COMMAND(ID_PROCESS_TERMINATE, &CProcessDlg::OnProcessTerminate)
+	ON_COMMAND(ID_PROCESS_FORCE_TERMINATE, &CProcessDlg::OnProcessForceTerminate)
 END_MESSAGE_MAP()
 
 
@@ -232,6 +234,40 @@ void CProcessDlg::OnProcessMemory()
 }
 
 
+void CProcessDlg::OnProcessTerminate()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	if (m_Global->m_bIsRequestNow == TRUE)
+	{
+		return;
+	}
+
+	// 加载进程信息列表
+	CloseHandle(
+		CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::TerminateProcessCallback, &m_ProcessListCtrl, 0, NULL)
+	);
+}
+
+
+void CProcessDlg::OnProcessForceTerminate()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	if (m_Global->m_bIsRequestNow == TRUE)
+	{
+		return;
+	}
+
+	// 加载进程信息列表
+	CloseHandle(
+		CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::ForceTerminateProcessCallback, &m_ProcessListCtrl, 0, NULL)
+	);
+}
+
+
 /************************************************************************
 *  Name : APInitializeProcessList
 *  Param: void
@@ -406,5 +442,7 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
+
+
 
 

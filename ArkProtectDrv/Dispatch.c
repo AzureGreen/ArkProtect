@@ -29,8 +29,9 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		IoControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
 		switch (IoControlCode)
 		{
-			//////////////////////////////////////////////////////////////////////////
+			//
 			// ProcessCore
+			//
 
 		case IOCTL_ARKPROTECT_PROCESSNUM:
 		{
@@ -54,7 +55,7 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 			}
 			else
 			{
-				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
 			}
 
 			break;
@@ -81,7 +82,7 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 			}
 			else
 			{
-				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
 			}
 
 			break;
@@ -226,6 +227,38 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 			break;
 		}
+		case IOCTL_ARKPROTECT_TERMINATEPROCESS:
+		{
+			DbgPrint("Terminate Process\r\n");
+
+			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			{
+				__try
+				{
+					ProbeForRead(InputBuffer, InputLength, sizeof(UINT32));
+
+					Status = APTerminateProcess(*(PUINT32)InputBuffer);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+			}
+
+			break;
+		}
+
+		// 
+		// Driver
+		// 
+
 		case IOCTL_ARKPROTECT_ENUMDRIVER:
 		{
 			DbgPrint("Enum Driver\r\n");
@@ -237,6 +270,33 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
 
 					Status = APEnumDriverInfo(OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+			}
+
+			break;
+		}
+		case IOCTL_ARKPROTECT_UNLOADRIVER:
+		{
+			DbgPrint("Unload Driver\r\n");
+
+			if (InputLength >= sizeof(UINT_PTR) && InputBuffer)
+			{
+				__try
+				{
+					ProbeForRead(InputBuffer, InputLength, sizeof(UINT_PTR));
+
+					Status = APUnloadDriverObject(*(PUINT_PTR)InputBuffer);
 
 					Irp->IoStatus.Status = Status;
 				}

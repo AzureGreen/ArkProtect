@@ -41,6 +41,12 @@ APEnumProcessThreadByTravelThreadListHead(IN PEPROCESS EProcess, OUT PPROCESS_TH
 NTSTATUS 
 APEnumProcessThread(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 OutputLength);
 
+UINT_PTR 
+GetPspTerminateThreadByPointerAddress();
+
+NTSTATUS 
+APTerminateProcessByTravelThreadListHead(IN PEPROCESS EProcess);
+
 
 
 #endif // !CXX_ProcessThread_H

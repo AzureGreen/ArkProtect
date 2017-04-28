@@ -58,7 +58,7 @@ namespace ArkProtect
 			NULL);
 		if (!bOk)
 		{
-			::MessageBox(NULL, L"Get Process Count Failed", L"ArkProtect", MB_OK | MB_ICONERROR);
+			MessageBox(m_Global->m_ProcessDlg->m_hWnd, L"Get Process Count Failed", L"ArkProtect", MB_OK | MB_ICONERROR);
 		}
 
 		return ProcessNum;
@@ -476,6 +476,121 @@ namespace ArkProtect
 		return 0;
 	}
 
+	void CProcessCore::TerminateProcess(CListCtrl *ListCtrl, BOOL bForce)
+	{
+		POSITION Pos = ListCtrl->GetFirstSelectedItemPosition();
+
+		while (Pos)
+		{
+			int iItem = ListCtrl->GetNextSelectedItem(Pos);
+
+			UINT32 ProcessId = _ttoi(ListCtrl->GetItemText(iItem, pc_ProcessId).GetBuffer());
+			if (ProcessId <= 4)
+			{
+				return;
+			}
+
+			BOOL bOk = FALSE;
+
+			if (bForce)
+			{
+				// 暴力结束进程，与驱动层通信
+
+				DWORD dwReturnLength = 0;
+
+				bOk = DeviceIoControl(m_Global->m_DeviceHandle,
+					IOCTL_ARKPROTECT_TERMINATEPROCESS,
+					&ProcessId,		// InputBuffer
+					sizeof(UINT32),
+					NULL,
+					0,
+					&dwReturnLength,
+					NULL);
+
+			}
+			else
+			{
+				// 调用NTAPI
+				GrantPriviledge(SE_DEBUG_NAME, TRUE);
+
+				HANDLE ProcessHandle = OpenProcess(PROCESS_TERMINATE | PROCESS_VM_OPERATION, TRUE, ProcessId);
+
+				bOk = ::TerminateProcess(ProcessHandle, 0);
+
+				GrantPriviledge(SE_DEBUG_NAME, FALSE);
+
+				CloseHandle(ProcessHandle);
+			}
+			
+	//		if (bOk)
+			{
+				ListCtrl->DeleteItem(iItem);
+
+				// 更新Vector 删除指定的成员
+
+				size_t Size = m_ProcessEntryVector.size();
+				for (size_t i = 0; i < Size; i++)
+				{
+					if (ProcessId == m_ProcessEntryVector[i].ProcessId)
+					{
+						m_ProcessEntryVector.erase(m_ProcessEntryVector.begin() + i);
+						break;
+					}
+				}
+
+				// 更新status
+				CString strStatusContext;
+				strStatusContext.Format(L"Process Info load complete, Count:%d", Size - 1);
+				m_Global->UpdateStatusBarDetail(strStatusContext);
+
+			}
+		//	else
+			{
+				// 这儿可能会进来
+				//MessageBox(m_Global->m_ProcessDlg->m_hWnd, L"进程关闭失败。", L"ArkProtect", MB_OK | MB_ICONERROR);
+			}	
+		}
+	}
+	
+
+	/************************************************************************
+	*  Name : TerminateProcessCallback
+	*  Param: lParam （ListCtrl）
+	*  Ret  : DWORD
+	*  结束目标进程
+	************************************************************************/
+	DWORD CALLBACK CProcessCore::TerminateProcessCallback(LPARAM lParam)
+	{
+		CListCtrl *ListCtrl = (CListCtrl*)lParam;
+
+		m_Process->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+
+		m_Process->TerminateProcess(ListCtrl, FALSE);
+
+		m_Process->m_Global->m_bIsRequestNow = FALSE;
+
+		return 0;
+	}
+
+
+	/************************************************************************
+	*  Name : ForceTerminateProcessCallback
+	*  Param: lParam （ListCtrl）
+	*  Ret  : DWORD
+	*  暴力结束目标进程
+	************************************************************************/
+	DWORD CALLBACK CProcessCore::ForceTerminateProcessCallback(LPARAM lParam)
+	{
+		CListCtrl *ListCtrl = (CListCtrl*)lParam;
+
+		m_Process->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+
+		m_Process->TerminateProcess(ListCtrl, TRUE);
+
+		m_Process->m_Global->m_bIsRequestNow = FALSE;
+
+		return 0;
+	}
 }
 
 

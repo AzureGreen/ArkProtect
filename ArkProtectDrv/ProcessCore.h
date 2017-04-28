@@ -5,6 +5,8 @@
 #include "Private.h"
 #include "Imports.h"
 #include "NtStructs.h"
+#include "ProcessThread.h"
+
 
 #define MAX_PROCESS_COUNT  100000
 
@@ -48,6 +50,9 @@ APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath);
 
 NTSTATUS
 APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength);
+
+NTSTATUS 
+APTerminateProcess(IN UINT32 ProcessId);
 
 
 #endif // !CXX_ProcessCore_H

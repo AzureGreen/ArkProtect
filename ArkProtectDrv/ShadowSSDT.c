@@ -46,7 +46,7 @@ APGetKeServiceDescriptorTableShadow(OUT PUINT_PTR SSSDTAddress)
 			v3 = *(i + 2);
 			if (v1 == 0x4c && v2 == 0x8d && v3 == 0x1d)		// 硬编码  lea r11
 			{
-				memcpy(&iOffset, i + 3, 4);
+				RtlCopyMemory(&iOffset, i + 3, 4);
 				// 拿到了ShadowServiceDescriptorTable地址，他是一个数组，第一个成员是SSDT，第二个是SSSDT
 				*SSSDTAddress = iOffset + (UINT64)i + 7;
 				*SSSDTAddress += sizeof(UINT_PTR) * 4;		// 过SSDT

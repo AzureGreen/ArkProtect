@@ -2,6 +2,13 @@
 
 extern DYNAMIC_DATA	g_DynamicData;
 
+typedef
+NTSTATUS
+(*pfnPspTerminateThreadByPointer)(
+	IN PETHREAD Thread,
+	IN NTSTATUS ExitStatus,
+	IN BOOLEAN DirectTerminate);
+
 
 /************************************************************************
 *  Name : APIsThreadInList
@@ -156,7 +163,7 @@ APEnumProcessThreadByTravelThreadListHead(IN PEPROCESS EProcess, OUT PPROCESS_TH
 	
 	if (ThreadListHead && MmIsAddressValid(ThreadListHead) && MmIsAddressValid(ThreadListHead->Flink))
 	{
-		KIRQL       OldIrql = KeRaiseIrqlToDpcLevel();
+	//	KIRQL       OldIrql = KeRaiseIrqlToDpcLevel();
 		UINT_PTR    MaxCount = PAGE_SIZE * 2;
 		
 		for (PLIST_ENTRY ThreadListEntry = ThreadListHead->Flink;
@@ -167,13 +174,13 @@ APEnumProcessThreadByTravelThreadListHead(IN PEPROCESS EProcess, OUT PPROCESS_TH
 			APGetProcessThreadInfo(EThread, EProcess, pti, ThreadCount);
 		}
 
-		KeLowerIrql(OldIrql);
+	//	KeLowerIrql(OldIrql);
 	}
 
 	ThreadListHead = (PLIST_ENTRY)((PUINT8)EProcess + g_DynamicData.ThreadListHead_EPROCESS);
 	if (ThreadListHead && MmIsAddressValid(ThreadListHead) && MmIsAddressValid(ThreadListHead->Flink))
 	{
-		KIRQL       OldIrql = KeRaiseIrqlToDpcLevel();
+	//	KIRQL       OldIrql = KeRaiseIrqlToDpcLevel();
 		UINT_PTR    MaxCount = PAGE_SIZE * 2;
 
 		for (PLIST_ENTRY ThreadListEntry = ThreadListHead->Flink;
@@ -184,7 +191,7 @@ APEnumProcessThreadByTravelThreadListHead(IN PEPROCESS EProcess, OUT PPROCESS_TH
 			APGetProcessThreadInfo(EThread, EProcess, pti, ThreadCount);
 		}
 
-		KeLowerIrql(OldIrql);
+	//	KeLowerIrql(OldIrql);
 	}
 	
 	if (pti->NumberOfThreads)
@@ -252,6 +259,122 @@ APEnumProcessThread(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 	if (EProcess)
 	{
 		ObDereferenceObject(EProcess);
+	}
+
+	return Status;
+}
+
+
+/************************************************************************
+*  Name : GetPspTerminateThreadByPointerAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  通过PsTerminateSystemThread获得PspTerminateThreadByPointer函数地址
+************************************************************************/
+UINT_PTR
+GetPspTerminateThreadByPointerAddress()
+{
+	PUINT8	StartSearchAddress = (PUINT8)PsTerminateSystemThread;
+	PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
+	PUINT8	i = NULL;
+	UINT8   v1 = 0, v2 = 0;
+	INT32   iOffset = 0;    // 002320c7 偏移不会超过4字节
+
+	// 通过PsTerminateSystemThread 搜索特征码 搜索到 PspTerminateThreadByPointer
+	for (i = StartSearchAddress; i<EndSearchAddress; i++)
+	{
+		/*
+		Win7 x64
+		1: kd> u PsTerminateSystemThread
+		nt!PsTerminateSystemThread:
+		fffff800`0411d4a0 4883ec28        sub     rsp,28h
+		fffff800`0411d4a4 8bd1            mov     edx,ecx
+		fffff800`0411d4a6 65488b0c2588010000 mov   rcx,qword ptr gs:[188h]
+		fffff800`0411d4af 0fba614c0d      bt      dword ptr [rcx+4Ch],0Dh
+		fffff800`0411d4b4 0f83431d0b00    jae     nt! ?? ::NNGAKEGL::`string'+0x28580 (fffff800`041cf1fd)
+		fffff800`0411d4ba 41b001          mov     r8b,1
+		fffff800`0411d4bd e822300400      call    nt!PspTerminateThreadByPointer (fffff800`041604e4)
+		fffff800`0411d4c2 90              nop
+
+		0: kd> u fffff800`041604e4
+		nt!PspTerminateThreadByPointer:
+		fffff800`041604e4 48895c2408      mov     qword ptr [rsp+8],rbx
+		fffff800`041604e9 48896c2410      mov     qword ptr [rsp+10h],rbp
+		fffff800`041604ee 4889742418      mov     qword ptr [rsp+18h],rsi
+		fffff800`041604f3 57              push    rdi
+		fffff800`041604f4 4883ec40        sub     rsp,40h
+
+		*/
+
+		if (MmIsAddressValid(i) && MmIsAddressValid(i + 5))
+		{
+			v1 = *i;
+			v2 = *(i + 5);
+			if (v1 == 0xe8 && v2 == 0x90)		// 硬编码  e8 call 
+			{
+				RtlCopyMemory(&iOffset, i + 1, 4);
+				return (UINT_PTR)(iOffset + (UINT64)i + 5);
+			}
+		}
+	}
+
+	return 0;	
+}
+
+
+
+/************************************************************************
+*  Name : APTerminateProcessByTravelThreadListHead
+*  Param: EProcess
+*  Ret  : NTSTATUS
+*  遍历进程体的所有线程，通过PspTerminateThreadByPointer结束线程，从而结束进程
+************************************************************************/
+NTSTATUS
+APTerminateProcessByTravelThreadListHead(IN PEPROCESS EProcess)
+{
+	NTSTATUS    Status = STATUS_UNSUCCESSFUL;
+
+	pfnPspTerminateThreadByPointer PspTerminateThreadByPointer = (pfnPspTerminateThreadByPointer)GetPspTerminateThreadByPointerAddress();
+	if (PspTerminateThreadByPointer && MmIsAddressValid((PVOID)PspTerminateThreadByPointer))
+	{
+		PLIST_ENTRY ThreadListHead = (PLIST_ENTRY)((PUINT8)EProcess + g_DynamicData.ThreadListHead_KPROCESS);
+
+		if (ThreadListHead && MmIsAddressValid(ThreadListHead) && MmIsAddressValid(ThreadListHead->Flink))
+		{
+		//	KIRQL       OldIrql = KeRaiseIrqlToDpcLevel();
+			UINT_PTR    MaxCount = PAGE_SIZE * 2;
+
+			for (PLIST_ENTRY ThreadListEntry = ThreadListHead->Flink;
+				MmIsAddressValid(ThreadListEntry) && ThreadListEntry != ThreadListHead && MaxCount--;
+				ThreadListEntry = ThreadListEntry->Flink)
+			{
+				PETHREAD EThread = (PETHREAD)((PUINT8)ThreadListEntry - g_DynamicData.ThreadListEntry_KTHREAD);
+				Status = PspTerminateThreadByPointer(EThread, 0, TRUE);   // 结束线程
+			}
+
+		//	KeLowerIrql(OldIrql);
+		}
+
+		ThreadListHead = (PLIST_ENTRY)((PUINT8)EProcess + g_DynamicData.ThreadListHead_EPROCESS);
+		if (ThreadListHead && MmIsAddressValid(ThreadListHead) && MmIsAddressValid(ThreadListHead->Flink))
+		{
+		//	KIRQL       OldIrql = KeRaiseIrqlToDpcLevel();
+			UINT_PTR    MaxCount = PAGE_SIZE * 2;
+
+			for (PLIST_ENTRY ThreadListEntry = ThreadListHead->Flink;
+				MmIsAddressValid(ThreadListEntry) && ThreadListEntry != ThreadListHead && MaxCount--;
+				ThreadListEntry = ThreadListEntry->Flink)
+			{
+				PETHREAD EThread = (PETHREAD)((PUINT8)ThreadListEntry - g_DynamicData.ThreadListEntry_KTHREAD);
+				Status = PspTerminateThreadByPointer(EThread, 0, TRUE);   // 结束线程
+			}
+
+		//	KeLowerIrql(OldIrql);
+		}
+	}
+	else
+	{
+		DbgPrint("Get PspTerminateThreadByPointer Address Failed\r\n");
 	}
 
 	return Status;
