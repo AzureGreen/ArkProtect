@@ -62,9 +62,10 @@ void CArkProtectAppDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_PROCESS_STATIC, m_ProcessButton);
-	DDX_Control(pDX, IDC_DRIVER_STATIC, m_DriverrButton);
+	DDX_Control(pDX, IDC_DRIVER_STATIC, m_DriverButton);
 	DDX_Control(pDX, IDC_KERNEL_STATIC, m_KernelButton);
-	DDX_Control(pDX, IDC_STATIC_HOOK, m_HookButton);
+	DDX_Control(pDX, IDC_HOOK_STATIC, m_HookButton);
+	DDX_Control(pDX, IDC_REGISTRY_STATIC, m_RegistryButton);
 	DDX_Control(pDX, IDC_APP_TAB, m_AppTab);
 	DDX_Control(pDX, IDC_ABOUT_STATIC, m_AboutButton);
 }
@@ -86,7 +87,11 @@ BEGIN_MESSAGE_MAP(CArkProtectAppDlg, CDialogEx)
 	ON_STN_CLICKED(IDC_PROCESS_STATIC, &CArkProtectAppDlg::OnStnClickedProcessStatic)
 	ON_STN_CLICKED(IDC_DRIVER_STATIC, &CArkProtectAppDlg::OnStnClickedDriverStatic)
 	ON_STN_CLICKED(IDC_KERNEL_STATIC, &CArkProtectAppDlg::OnStnClickedKernelStatic)
-	ON_STN_CLICKED(IDC_STATIC_HOOK, &CArkProtectAppDlg::OnStnClickedStaticHook)
+	ON_STN_CLICKED(IDC_HOOK_STATIC, &CArkProtectAppDlg::OnStnClickedHookStatic)
+	ON_STN_CLICKED(IDC_REGISTRY_STATIC, &CArkProtectAppDlg::OnStnClickedRegistryStatic)
+
+
+
 END_MESSAGE_MAP()
 
 
@@ -154,11 +159,6 @@ BOOL CArkProtectAppDlg::OnInitDialog()
 
 	// 设置工具栏
 
-/*	m_ProcessButton.EnableWindow(TRUE);
-	m_DriverrButton.EnableWindow(TRUE);
-	m_KernelButton.EnableWindow(TRUE);
-	m_HookButton.EnableWindow(TRUE);
-*/
 	//	m_btnHomePage.MoveWindow(iLeftPops + (70 * 0), 0, 70, 94);
 	//	m_btnProcess.MoveWindow(iLeftPops + (70 * 1), 0, 70, 94);
 	//	m_btnModules.MoveWindow(iLeftPops + (70 * 2), 0, 70, 94);
@@ -172,7 +172,7 @@ BOOL CArkProtectAppDlg::OnInitDialog()
 	GetClientRect(&Rect);
 	Rect.top = 2;
 	Rect.bottom -= (LONG)(1 + 21 * (m_Global.iDpiy / 96.0));
-	Rect.left += 70;
+	Rect.left += 94;
 	m_AppTab.MoveWindow(Rect);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
@@ -418,12 +418,36 @@ void CArkProtectAppDlg::OnStnClickedDriverStatic()
 void CArkProtectAppDlg::OnStnClickedKernelStatic()
 {
 	// TODO: 在此添加控件通知处理程序代码
+
+	if (m_Global.m_bIsRequestNow == FALSE && m_CurrentChildDlg != ArkProtect::cd_KernelDialog)
+	{
+		APEnableCurrentButton(m_CurrentChildDlg);
+		APShowChildWindow(ArkProtect::cd_KernelDialog);
+	}
 }
 
 
-void CArkProtectAppDlg::OnStnClickedStaticHook()
+void CArkProtectAppDlg::OnStnClickedHookStatic()
 {
 	// TODO: 在此添加控件通知处理程序代码
+
+	if (m_Global.m_bIsRequestNow == FALSE && m_CurrentChildDlg != ArkProtect::cd_HookDialog)
+	{
+		APEnableCurrentButton(m_CurrentChildDlg);
+		APShowChildWindow(ArkProtect::cd_HookDialog);
+	}
+}
+
+
+void CArkProtectAppDlg::OnStnClickedRegistryStatic()
+{
+	// TODO: 在此添加控件通知处理程序代码
+
+	if (m_Global.m_bIsRequestNow == FALSE && m_CurrentChildDlg != ArkProtect::cd_RegistryDialog)
+	{
+		APEnableCurrentButton(m_CurrentChildDlg);
+		APShowChildWindow(ArkProtect::cd_RegistryDialog);
+	}
 }
 
 
@@ -477,7 +501,7 @@ void CArkProtectAppDlg::APEnableCurrentButton(ArkProtect::eChildDlg CurrentChild
 	}
 	case ArkProtect::cd_DriverDialog:
 	{
-		m_DriverrButton.EnableWindow(TRUE);
+		m_DriverButton.EnableWindow(TRUE);
 		break;
 	}
 	case ArkProtect::cd_KernelDialog:
@@ -488,6 +512,11 @@ void CArkProtectAppDlg::APEnableCurrentButton(ArkProtect::eChildDlg CurrentChild
 	case ArkProtect::cd_HookDialog:
 	{
 		m_HookButton.EnableWindow(TRUE);
+		break;
+	}
+	case ArkProtect::cd_RegistryDialog:
+	{
+	 	m_RegistryButton.EnableWindow(TRUE);
 		break;
 	}
 	case ArkProtect::cd_AboutDialog:
@@ -528,9 +557,9 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 
 		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(TRUE);
 		if (m_DriverDlg) m_DriverDlg->ShowWindow(FALSE);
-		//if (m_KernelSysDlg) m_KernelSysDlg->ShowWindow(FALSE);
+		if (m_KernelDlg) m_KernelDlg->ShowWindow(FALSE);
 		//if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
-
+		if (m_RegistryDlg) m_RegistryDlg->ShowWindow(FALSE);
 
 		break;
 	}
@@ -551,35 +580,37 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 
 		if (m_DriverDlg) m_DriverDlg->ShowWindow(TRUE);
 		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
-	//	if (m_KernelSysDlg) m_KernelSysDlg->ShowWindow(FALSE);
+		if (m_KernelDlg) m_KernelDlg->ShowWindow(FALSE);
 	//	if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
+		if (m_RegistryDlg) m_RegistryDlg->ShowWindow(FALSE);
 
 		break;
 	}
-	//case ArkProtect::cd_ProcessDialog:
-	//{
-	//	if (m_KernelSysDlg == NULL)
-	//	{
-	//		m_KernelSysDlg = new CKernelSysDlg(this);
+	case ArkProtect::cd_KernelDialog:
+	{
+		if (m_KernelDlg == NULL)
+		{
+			m_KernelDlg = new CKernelDlg(this, &m_Global);
 
-	//		// 绑定对话框
-	//		m_KernelSysDlg->Create(IDD_DIALOG_KERNELSYS, GetDlgItem(IDC_TAB_MAIN));
+			// 绑定对话框
+			m_KernelDlg->Create(IDD_KERNEL_DIALOG, GetDlgItem(IDC_APP_TAB));
 
-	//		// 移动窗口位置
-	//		CRect	Rect;
-	//		m_MainTab.GetClientRect(&Rect);
-	//		m_KernelSysDlg->MoveWindow(&Rect);
-	//	}
+			// 移动窗口位置
+			CRect	Rect;
+			m_AppTab.GetClientRect(&Rect);
+			m_KernelDlg->MoveWindow(&Rect);
+		}
 
-	//	if (m_KernelSysDlg) m_KernelSysDlg->ShowWindow(TRUE);
-	//	if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
-	//	if (m_ModuleDlg) m_ModuleDlg->ShowWindow(FALSE);
+		if (m_KernelDlg) m_KernelDlg->ShowWindow(TRUE);
+		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
+		if (m_DriverDlg) m_DriverDlg->ShowWindow(FALSE);
 	//	if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
+		if (m_RegistryDlg) m_RegistryDlg->ShowWindow(FALSE);
 
-	//	break;
-	//}
-	//case ArkProtect::cd_ProcessDialog:
-	//{
+		break;
+	}
+	case ArkProtect::cd_HookDialog:
+	{
 	//	if (m_KrnlHookDlg == NULL)
 	//	{
 	//		m_KrnlHookDlg = new CKrnlHookDlg(this);
@@ -598,11 +629,42 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 	//	if (m_ModuleDlg) m_ModuleDlg->ShowWindow(FALSE);
 	//	if (m_KernelSysDlg) m_KernelSysDlg->ShowWindow(FALSE);
 
-	//	break;
-	//}
+
+	//	MessageBox(0, 0, 0);
+		break;
+	}
+	case ArkProtect::cd_RegistryDialog:
+	{
+		if (m_RegistryDlg == NULL)
+		{
+			m_RegistryDlg = new CRegistryDlg(this, &m_Global);
+
+			// 绑定对话框
+			m_RegistryDlg->Create(IDD_REGISTRY_DIALOG, GetDlgItem(IDC_APP_TAB));
+
+			// 移动窗口位置
+			CRect	Rect;
+			m_AppTab.GetClientRect(&Rect);
+			m_RegistryDlg->MoveWindow(&Rect);
+		}
+
+		if (m_RegistryDlg) m_RegistryDlg->ShowWindow(TRUE);
+		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
+		if (m_DriverDlg) m_DriverDlg->ShowWindow(FALSE);
+		if (m_KernelDlg) m_KernelDlg->ShowWindow(FALSE);
+		//if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
+
+
+		break;
+	}
 
 	default:
 		break;
 	}
 }
+
+
+
+
+
 

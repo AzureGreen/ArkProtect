@@ -43,6 +43,18 @@
     <Filter Include="DriverCore">
       <UniqueIdentifier>{cd71f84b-9b87-415e-bcf5-07f4a09713e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RegistryCore">
+      <UniqueIdentifier>{cc66328b-100e-4029-a701-aec1466f4141}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KernelCore">
+      <UniqueIdentifier>{41c8d97a-52dd-48d6-a68a-19f7900a06e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KernelCore\Callback">
+      <UniqueIdentifier>{24adf36e-f151-45a2-9b0b-41fe160797ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KernelCore\FilterDriver">
+      <UniqueIdentifier>{7c2a2a2a-c97f-439c-9dc2-0da29854e01c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -99,6 +111,21 @@
     <ClInclude Include="DriverCore.h">
       <Filter>DriverCore</Filter>
     </ClInclude>
+    <ClInclude Include="RegistryDlg.h">
+      <Filter>RegistryCore</Filter>
+    </ClInclude>
+    <ClInclude Include="KernelDlg.h">
+      <Filter>KernelCore</Filter>
+    </ClInclude>
+    <ClInclude Include="RegistryCore.h">
+      <Filter>RegistryCore</Filter>
+    </ClInclude>
+    <ClInclude Include="SystemCallback.h">
+      <Filter>KernelCore\Callback</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterDriver.h">
+      <Filter>KernelCore\FilterDriver</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">
@@ -140,6 +167,21 @@
     <ClCompile Include="DriverCore.cpp">
       <Filter>DriverCore</Filter>
     </ClCompile>
+    <ClCompile Include="RegistryDlg.cpp">
+      <Filter>RegistryCore</Filter>
+    </ClCompile>
+    <ClCompile Include="KernelDlg.cpp">
+      <Filter>KernelCore</Filter>
+    </ClCompile>
+    <ClCompile Include="RegistryCore.cpp">
+      <Filter>RegistryCore</Filter>
+    </ClCompile>
+    <ClCompile Include="SystemCallback.cpp">
+      <Filter>KernelCore\Callback</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterDriver.cpp">
+      <Filter>KernelCore\FilterDriver</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ArkProtectApp.rc">
@@ -168,6 +210,33 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="res\process.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\bitmap1.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\bitmap2.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\registry.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\icon1.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Registry\Icon\CloseDir.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Registry\Icon\Computer.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Registry\Icon\OpenDir.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Registry\Icon\REG_DWORD.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\Registry\Icon\REG_SZ.ico">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

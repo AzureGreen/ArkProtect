@@ -55,6 +55,9 @@ APUnloadDriverByCreateSystemThread(IN PDRIVER_OBJECT DriverObject);
 NTSTATUS
 APUnloadDriverObject(IN UINT_PTR InputBuffer);
 
+VOID 
+APGetDeviceObjectNameInfo(IN PDEVICE_OBJECT DeviceObject, OUT PWCHAR DeviceName);
+
 #endif // !CXX_DriverCore_H
 
 

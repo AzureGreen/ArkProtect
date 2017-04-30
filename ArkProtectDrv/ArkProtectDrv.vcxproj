@@ -172,6 +172,7 @@
   <ItemGroup>
     <ClInclude Include="Dispatch.h" />
     <ClInclude Include="DriverCore.h" />
+    <ClInclude Include="FilterDriver.h" />
     <ClInclude Include="Imports.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="NtStructs.h" />
@@ -183,10 +184,12 @@
     <ClInclude Include="ProcessThread.h" />
     <ClInclude Include="ProcessWindow.h" />
     <ClInclude Include="ShadowSSDT.h" />
+    <ClInclude Include="SystemCallback.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dispatch.c" />
     <ClCompile Include="DriverCore.c" />
+    <ClCompile Include="FilterDriver.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="Private.c" />
     <ClCompile Include="ProcessCore.c" />
@@ -196,6 +199,7 @@
     <ClCompile Include="ProcessThread.c" />
     <ClCompile Include="ProcessWindow.c" />
     <ClCompile Include="ShadowSSDT.c" />
+    <ClCompile Include="SystemCallback.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

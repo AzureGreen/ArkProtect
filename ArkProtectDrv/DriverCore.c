@@ -8,7 +8,15 @@ PLDR_DATA_TABLE_ENTRY  g_PsLoadedModuleList = NULL;
 
 POBJECT_TYPE           g_DirectoryObjectType = NULL;  // 目录对象类型地址
 
-// 通过遍历Ldr枚举内核模块 按加载顺序来
+
+/************************************************************************
+*  Name : APEnumDriverModuleByLdrDataTableEntry
+*  Param: PsLoadedModuleList   内核模块加载List
+*  Param: di                   Ring3Buffer
+*  Param: DriverCount
+*  Ret  : NTSTATUS
+*  通过遍历Ldr枚举内核模块 按加载顺序来
+************************************************************************/
 NTSTATUS
 APEnumDriverModuleByLdrDataTableEntry(IN PLDR_DATA_TABLE_ENTRY PsLoadedModuleList, OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
 {
@@ -66,7 +74,14 @@ APEnumDriverModuleByLdrDataTableEntry(IN PLDR_DATA_TABLE_ENTRY PsLoadedModuleLis
 }
 
 
-// 查看传入的对象是否已经存在结构体中，如果在 则继续完善信息，如果不在，则返回false，留给母程序处理
+/************************************************************************
+*  Name : APIsDriverInList
+*  Param: di
+*  Param: DriverObject         驱动对象
+*  Param: DriverCount
+*  Ret  : VOID
+*  查看传入的对象是否已经存在结构体中，如果在 则继续完善信息，如果不在，则返回false，留给母程序处理
+************************************************************************/
 BOOLEAN
 APIsDriverInList(IN PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN UINT32 DriverCount)
 {
@@ -125,6 +140,14 @@ APIsDriverInList(IN PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN U
 }
 
 
+/************************************************************************
+*  Name : APEnumDriverModuleByTravelDirectoryObject
+*  Param: di
+*  Param: DriverObject         驱动对象
+*  Param: DriverCount
+*  Ret  : VOID
+*  插入驱动对象信息
+************************************************************************/
 VOID
 APInsertDriverToList(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN UINT32 DriverCount)
 {
@@ -162,8 +185,14 @@ APInsertDriverToList(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject,
 }
 
 
-
-// 遍历哈希目录 --> 目录上每个链表 --> 1.目录 递归  2.驱动对象 插入  3.设备对象 遍历设备栈 插入驱动对象
+/************************************************************************
+*  Name : APEnumDriverModuleByTravelDirectoryObject
+*  Param: DirectoryObject         目录对象
+*  Param: di
+*  Param: DriverCount
+*  Ret  : VOID
+*  遍历哈希目录 --> 目录上每个链表 --> 1.目录 递归  2.驱动对象 插入  3.设备对象 遍历设备栈 插入驱动对象
+************************************************************************/
 VOID
 APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
 {
@@ -254,6 +283,13 @@ APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN
 }
 
 
+/************************************************************************
+*  Name : APEnumDriverModuleByTravelDirectoryObject
+*  Param: di
+*  Param: DriverCount
+*  Ret  : VOID
+*  通过遍历目录对象来遍历系统内的驱动对象
+************************************************************************/
 VOID
 APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
 {
@@ -298,10 +334,6 @@ APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 
 
 	*PreviousMode = Temp;
 }
-
-
-
-
 
 
 /************************************************************************
@@ -499,6 +531,12 @@ APUnloadDriverByCreateSystemThread(IN PDRIVER_OBJECT DriverObject)
 }
 
 
+/************************************************************************
+*  Name : APUnloadDriverObject
+*  Param: InputBuffer
+*  Ret  : NTSTATUS
+*  卸载驱动对象
+************************************************************************/
 NTSTATUS
 APUnloadDriverObject(IN UINT_PTR InputBuffer)
 {
@@ -517,4 +555,68 @@ APUnloadDriverObject(IN UINT_PTR InputBuffer)
 	}
 
 	return Status;
+}
+
+
+/************************************************************************
+*  Name : APGetDeviceObjectNameInfo
+*  Param: DeviceObject
+*  Param: DeviceName
+*  Ret  : NTSTATUS
+*  通过对象头的NameInfoOffset获得设备对象名称信息
+************************************************************************/
+VOID
+APGetDeviceObjectNameInfo(IN PDEVICE_OBJECT DeviceObject, OUT PWCHAR DeviceName)
+{
+	if (DeviceObject && MmIsAddressValid((PVOID)DeviceObject))
+	{
+		//POBJECT_HEADER DeviceObjectHeader = (POBJECT_HEADER)((PUINT8)DeviceObject - g_DynamicData.SizeOfObjectHeader);  // 得到对象头  
+		//if (DeviceObjectHeader && MmIsAddressValid((PVOID)DeviceObjectHeader))
+		//{
+		//	POBJECT_HEADER_NAME_INFO ObjectHeaderNameInfo = NULL;
+		//	
+		//	if (DeviceObjectHeader->NameInfoOffset)
+		//	{
+		//		ObjectHeaderNameInfo = (POBJECT_HEADER_NAME_INFO)((PUINT8)DeviceObjectHeader - DeviceObjectHeader->NameInfoOffset);
+		//		if (ObjectHeaderNameInfo && MmIsAddressValid((PVOID)ObjectHeaderNameInfo))
+		//		{
+		//			StringCchCopyW(NameBuffer, ObjectHeaderNameInfo->Name.Length / sizeof(WCHAR) + 1, (WCHAR*)ObjectHeaderNameInfo->Name.Buffer);
+		//		}
+		//	}
+		//	else
+		//	{
+		//	}
+		//}
+		//else
+		//{
+		//	DbgPrint("DeviceObject ObjectHeader Invalid\r\n");
+		//}
+
+		NTSTATUS Status = STATUS_UNSUCCESSFUL;
+		UINT32   ReturnLength = 0;
+
+		Status = IoGetDeviceProperty(DeviceObject, DevicePropertyPhysicalDeviceObjectName, ReturnLength, NULL, &ReturnLength);
+		if (ReturnLength)
+		{
+			PVOID NameBuffer = NULL;
+
+			NameBuffer = ExAllocatePool(PagedPool, ReturnLength);
+			if (NameBuffer)
+			{
+				RtlZeroMemory(NameBuffer, ReturnLength);
+
+				Status = IoGetDeviceProperty(DeviceObject, DevicePropertyPhysicalDeviceObjectName, ReturnLength, NameBuffer, &ReturnLength);
+				if (NT_SUCCESS(Status))
+				{
+					RtlCopyMemory(DeviceName, NameBuffer, ReturnLength);
+				}
+
+				ExFreePool(NameBuffer);
+			}
+		}
+		else
+		{
+			DbgPrint("DevicePropertyPhysicalDeviceObjectName ReturnLength Invalid\r\n");
+		}
+	}
 }

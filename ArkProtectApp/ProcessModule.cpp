@@ -197,7 +197,6 @@ namespace ArkProtect
 	}
 
 
-
 	/************************************************************************
 	*  Name : QueryProcessModuleCallback
 	*  Param: lParam £¨ListCtrl£©

@@ -34,9 +34,17 @@ namespace ArkProtect
 	//
 	// Kernel
 	//
+#define IOCTL_ARKPROTECT_ENUMSYSCALLBACK   (UINT32)CTL_CODE(FILE_DEVICE_ARKPROTECT, 0x821, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ARKPROTECT_ENUMFILTERDRIVER  (UINT32)CTL_CODE(FILE_DEVICE_ARKPROTECT, 0x822, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+
+
 
 	//
 	// Hook
+	//
+
+	//
+	// Registry
 	//
 
 
@@ -48,6 +56,7 @@ namespace ArkProtect
 		cd_DriverDialog,       // 驱动模块对话框
 		cd_KernelDialog,       // 内核模块对话框
 		cd_HookDialog,         // 内核钩子对话框
+		cd_RegistryDialog,     // 注册表对话框
 		cd_AboutDialog         // 关于信息对话框
 	};
 
@@ -66,6 +75,7 @@ namespace ArkProtect
 		pb_Unknown
 	};
 
+	// 查看进程信息的种类
 	enum eProcessInfoKind
 	{
 		pik_Module,
@@ -73,6 +83,16 @@ namespace ArkProtect
 		pik_Handle,
 		pik_Window,
 		pik_Memory
+	};
+
+	// 查看内核模块项
+	enum eKernelItem
+	{
+		ki_SysCallback,
+		ki_FilterDriver,
+		ki_IoTimer,
+		ki_DpcTimer,
+		ki_SysThread		
 	};
 
 	//////////////////////////////////////////////////////////////////////////

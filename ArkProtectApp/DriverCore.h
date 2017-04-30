@@ -60,6 +60,14 @@ namespace ArkProtect
 
 		static DWORD CALLBACK UnloadDriverInfoCallback(LPARAM lParam);
 
+		CString GetDriverPathByAddress(UINT_PTR Address);
+
+
+		//
+		// 返回变量Interface
+		//
+		inline std::vector<DRIVER_ENTRY_INFORMATION>& DriverEntryVector() { return m_DriverEntryVector; }
+
 
 	private:
 
@@ -75,7 +83,6 @@ namespace ArkProtect
 			{ L"启动入口",		125 },
 			{ L"加载顺序",		65 },
 			{ L"文件厂商",		120 } };
-
 
 
 		std::vector<DRIVER_ENTRY_INFORMATION> m_DriverEntryVector;

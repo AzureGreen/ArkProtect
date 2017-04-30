@@ -158,10 +158,9 @@ namespace ArkProtect
 	************************************************************************/
 	BOOL CDriverCore::EnumDriverInfo()
 	{
-		BOOL bOk = FALSE;
-
 		m_DriverEntryVector.clear();
 
+		BOOL bOk = FALSE;
 		UINT32   Count = 0x100;
 		DWORD	 dwReturnLength = 0;
 		PDRIVER_INFORMATION di = NULL;
@@ -403,4 +402,32 @@ namespace ArkProtect
 		return 0;
 	}
 
+
+	/************************************************************************
+	*  Name : GetDriverPathByAddress
+	*  Param: Address                  地址
+	*  Ret  : CString
+	*  通过地址所在地址范围，获得驱动路径
+	************************************************************************/
+	CString CDriverCore::GetDriverPathByAddress(UINT_PTR Address)
+	{
+		CString strPath = L"";
+
+		size_t Size = m_DriverEntryVector.size();
+
+		for (int i = 0; i < Size; i++)
+		{
+			DRIVER_ENTRY_INFORMATION DriverEntry = m_DriverEntryVector[i];
+
+			UINT_PTR BaseAddress = DriverEntry.BaseAddress;
+			UINT_PTR EndAddress = DriverEntry.BaseAddress + DriverEntry.Size;
+
+			if (Address >= BaseAddress && Address <= EndAddress)
+			{
+				strPath = DriverEntry.wzDriverPath;
+				break;
+			}
+		}
+		return strPath;
+	}
 }

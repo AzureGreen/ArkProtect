@@ -87,7 +87,7 @@ void CDriverDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 
 		// 更新父窗口信息 CurrentChildDlg 并 禁用当前子窗口的button
 		((CArkProtectAppDlg*)(m_Global->AppDlg))->m_CurrentChildDlg = ArkProtect::cd_DriverDialog;
-		((CArkProtectAppDlg*)(m_Global->AppDlg))->m_DriverrButton.EnableWindow(FALSE);
+		((CArkProtectAppDlg*)(m_Global->AppDlg))->m_DriverButton.EnableWindow(FALSE);
 
 		// 加载进程信息列表
 		APLoadDriverList();

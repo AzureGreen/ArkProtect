@@ -394,6 +394,12 @@ APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 }
 
 
+/************************************************************************
+*  Name : APTerminateProcess
+*  Param: ProcessId
+*  Ret  : NTSTATUS
+*  ½áÊø½ø³Ì
+************************************************************************/
 NTSTATUS
 APTerminateProcess(IN UINT32 ProcessId)
 {

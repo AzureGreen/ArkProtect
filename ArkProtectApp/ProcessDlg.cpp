@@ -304,17 +304,6 @@ void CProcessDlg::APLoadProcessList()
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::QueryProcessInfoCallback, &m_ProcessListCtrl, 0, NULL)
 	);
-
-/*	m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
-
-	m_Global->UpdateStatusBarTip(L"Process Info");
-	m_Global->UpdateStatusBarDetail(L"Process Info is loading now...");
-
-	m_Global->ProcessCore().QueryProcessInfo(&m_ProcessListCtrl);
-
-	m_Global->m_bIsRequestNow = FALSE;
-	*/
-
 }
 
 

@@ -187,10 +187,13 @@
   <ItemGroup>
     <ClInclude Include="ArkProtectApp.h" />
     <ClInclude Include="ArkProtectAppDlg.h" />
+    <ClInclude Include="FilterDriver.h" />
+    <ClInclude Include="SystemCallback.h" />
     <ClInclude Include="Define.h" />
     <ClInclude Include="DriverCore.h" />
     <ClInclude Include="DriverDlg.h" />
     <ClInclude Include="Global.hpp" />
+    <ClInclude Include="KernelDlg.h" />
     <ClInclude Include="ProcessCore.h" />
     <ClInclude Include="ProcessDlg.h" />
     <ClInclude Include="ProcessHandle.h" />
@@ -199,6 +202,8 @@
     <ClInclude Include="ProcessModule.h" />
     <ClInclude Include="ProcessThread.h" />
     <ClInclude Include="ProcessWindow.h" />
+    <ClInclude Include="RegistryCore.h" />
+    <ClInclude Include="RegistryDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -206,8 +211,11 @@
   <ItemGroup>
     <ClCompile Include="ArkProtectApp.cpp" />
     <ClCompile Include="ArkProtectAppDlg.cpp" />
+    <ClCompile Include="FilterDriver.cpp" />
+    <ClCompile Include="SystemCallback.cpp" />
     <ClCompile Include="DriverCore.cpp" />
     <ClCompile Include="DriverDlg.cpp" />
+    <ClCompile Include="KernelDlg.cpp" />
     <ClCompile Include="ProcessCore.cpp" />
     <ClCompile Include="ProcessDlg.cpp" />
     <ClCompile Include="ProcessHandle.cpp" />
@@ -216,6 +224,8 @@
     <ClCompile Include="ProcessModule.cpp" />
     <ClCompile Include="ProcessThread.cpp" />
     <ClCompile Include="ProcessWindow.cpp" />
+    <ClCompile Include="RegistryCore.cpp" />
+    <ClCompile Include="RegistryDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -232,10 +242,19 @@
   <ItemGroup>
     <Image Include="res\about.bmp" />
     <Image Include="res\ArkProtectApp.ico" />
+    <Image Include="res\bitmap1.bmp" />
+    <Image Include="res\bitmap2.bmp" />
     <Image Include="res\driver.bmp" />
     <Image Include="res\hook.bmp" />
+    <Image Include="res\icon1.ico" />
     <Image Include="res\kernel.bmp" />
     <Image Include="res\process.bmp" />
+    <Image Include="res\registry.bmp" />
+    <Image Include="res\Registry\Icon\CloseDir.ico" />
+    <Image Include="res\Registry\Icon\Computer.ico" />
+    <Image Include="res\Registry\Icon\OpenDir.ico" />
+    <Image Include="res\Registry\Icon\REG_DWORD.ico" />
+    <Image Include="res\Registry\Icon\REG_SZ.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

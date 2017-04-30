@@ -45,13 +45,13 @@ public:
 
 
 
-	CImageList m_ProcessIconList;   // 进程图标
-	CListCtrl  m_ProcessListCtrl;   // ListControl
+	CImageList          m_ProcessIconList;   // 进程图标
+	CListCtrl           m_ProcessListCtrl;   // ListControl
 
-	ArkProtect::CGlobal      *m_Global;
+	ArkProtect::CGlobal *m_Global;
 	
-	static UINT32     m_SortColumn;
-	static BOOL       m_bSortOrder;  // 记录排序顺序
+	static UINT32       m_SortColumn;
+	static BOOL         m_bSortOrder;  // 记录排序顺序
 	
 	
 };

@@ -9,7 +9,8 @@
 #include "ProcessWindow.h"
 #include "ProcessMemory.h"
 #include "DriverCore.h"
-
+#include "SystemCallback.h"
+#include "FilterDriver.h"
 
 // Method_Neither
 /*
@@ -42,6 +43,9 @@
 	//
 	// Kernel
 	//
+#define IOCTL_ARKPROTECT_ENUMSYSCALLBACK   (UINT32)CTL_CODE(FILE_DEVICE_ARKPROTECT, 0x821, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ARKPROTECT_ENUMFILTERDRIVER  (UINT32)CTL_CODE(FILE_DEVICE_ARKPROTECT, 0x822, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+
 
 	//
 	// Hook

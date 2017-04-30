@@ -63,6 +63,12 @@
     <ClInclude Include="DriverCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SystemCallback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterDriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -96,6 +102,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DriverCore.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SystemCallback.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterDriver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

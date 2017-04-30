@@ -148,7 +148,8 @@ APGetProcessHandleInfo(IN PEPROCESS EProcess, IN HANDLE Handle, IN PVOID Object,
 
 		if (MmIsAddressValid((PUINT8)Object - g_DynamicData.SizeOfObjectHeader))
 		{
-			phi->HandleEntry[phi->NumberOfHandles].ReferenceCount = (UINT32)*(PUINT_PTR)((PUINT8)Object - g_DynamicData.SizeOfObjectHeader);
+			//phi->HandleEntry[phi->NumberOfHandles].ReferenceCount = (UINT32)*(PUINT_PTR)((PUINT8)Object - g_DynamicData.SizeOfObjectHeader);
+			phi->HandleEntry[phi->NumberOfHandles].ReferenceCount = (UINT32)((POBJECT_HEADER)((PUINT8)Object - g_DynamicData.SizeOfObjectHeader))->PointerCount;
 		}
 		else
 		{

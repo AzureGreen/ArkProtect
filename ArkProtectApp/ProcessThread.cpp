@@ -94,8 +94,6 @@ namespace ArkProtect
 		{
 			for (UINT32 i = 0; i < pti->NumberOfThreads; i++)
 			{
-				// 完善进程信息结构
-				//PerfectProcessModuleInfo(&pmi->ModuleEntry[i]);
 				m_ProcessThreadEntryVector.push_back(pti->ThreadEntry[i]);
 			}
 			bOk = TRUE;

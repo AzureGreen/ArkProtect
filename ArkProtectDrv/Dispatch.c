@@ -314,6 +314,65 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 			break;
 		}
 
+		//
+		// KernelCore
+		//
+		case IOCTL_ARKPROTECT_ENUMSYSCALLBACK:
+		{
+			DbgPrint("Enum Callback\r\n");
+
+			if (OutputBuffer)
+			{
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+
+					Status = APEnumSystemCallback(OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+			}
+
+			break;
+		}
+		case IOCTL_ARKPROTECT_ENUMFILTERDRIVER:
+		{
+			DbgPrint("Enum FilterDriver\r\n");
+
+			if (OutputBuffer)
+			{
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+
+					Status = APEnumFilterDriver(OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+			}
+
+			break;
+		}
+
+
 
 		default:
 			Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;

@@ -272,14 +272,16 @@ namespace ArkProtect
 
 		m_ProcessEntryVector.clear();
 
+		// 略微有点影响效率，所以取消这个试探
 		// 首先我们试探一下有多少个进程
-		UINT32 ProcessNum = GetProcessNum();
+/*		UINT32 ProcessNum = GetProcessNum();
 		if (ProcessNum == 0)
 		{
 			return FALSE;
 		}
 
-		UINT32   Count = ProcessNum + 0x100;
+		UINT32   Count = ProcessNum + 0x100;*/
+		UINT32   Count = 0x100;
 		DWORD	 dwReturnLength = 0;
 		PPROCESS_INFORMATION pi = NULL;
 
@@ -476,6 +478,14 @@ namespace ArkProtect
 		return 0;
 	}
 
+
+	/************************************************************************
+	*  Name : TerminateProcess
+	*  Param: lParam （ListCtrl）
+	*  Param: bForce                是否暴力
+	*  Ret  : DWORD
+	*  调用API：TerminateProcess 或者 驱动删除
+	************************************************************************/
 	void CProcessCore::TerminateProcess(CListCtrl *ListCtrl, BOOL bForce)
 	{
 		POSITION Pos = ListCtrl->GetFirstSelectedItemPosition();
@@ -510,7 +520,7 @@ namespace ArkProtect
 			}
 			else
 			{
-				// 调用NTAPI
+				// 调用API
 				GrantPriviledge(SE_DEBUG_NAME, TRUE);
 
 				HANDLE ProcessHandle = OpenProcess(PROCESS_TERMINATE | PROCESS_VM_OPERATION, TRUE, ProcessId);

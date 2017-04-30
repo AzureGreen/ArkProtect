@@ -217,7 +217,45 @@ typedef struct _OBJECT_DIRECTORY_INFORMATION {
 	UNICODE_STRING TypeName;
 } OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
 
+//
+// ObjectHeader Structure
+//
+typedef struct _OBJECT_HEADER {
+	LONG_PTR PointerCount;
+	union {
+		LONG_PTR HandleCount;
+		PVOID NextToFree;
+	};
+	POBJECT_TYPE Type;
+	UCHAR NameInfoOffset;
+	UCHAR HandleInfoOffset;
+	UCHAR QuotaInfoOffset;
+	UCHAR Flags;
 
+	union {
+		struct OBJECT_CREATE_INFORMATION *ObjectCreateInfo;
+		PVOID QuotaBlockCharged;
+	};
+
+	PSECURITY_DESCRIPTOR SecurityDescriptor;
+	QUAD Body;
+} OBJECT_HEADER, *POBJECT_HEADER;
+
+//
+// ObjectHeader NameInfo
+//
+typedef struct _OBJECT_HEADER_NAME_INFO {
+	POBJECT_DIRECTORY Directory;
+	UNICODE_STRING Name;
+	ULONG QueryReferences;
+#if DBG
+	ULONG Reserved2;
+	LONG DbgDereferenceCount;
+#ifdef _WIN64
+	ULONG64  Reserved3;   // Win64 requires these structures to be 16 byte aligned.
+#endif
+#endif
+} OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
 
 //////////////////////////////////////////////////////////////////////////
 //

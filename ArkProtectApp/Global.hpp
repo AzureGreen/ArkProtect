@@ -11,7 +11,12 @@
 #include "ProcessWindow.h"
 #include "ProcessMemory.h"
 #include "DriverCore.h"
+#include "SystemCallback.h"
+#include "FilterDriver.h"
 
+
+
+#include "RegistryCore.h"
 
 #pragma comment(lib, "Version.lib")      // GetFileVersionInfo 需要链接此库
 
@@ -30,6 +35,9 @@ namespace ArkProtect
 		, m_ProcessWindow(this)
 		, m_ProcessMemory(this)
 		, m_DriverCore(this)
+		, m_RegistryCore(this)
+		, m_SystemCallback(this)
+		, m_FilterDriver(this)
 		{};
 		~CGlobal() {};
 
@@ -309,11 +317,18 @@ namespace ArkProtect
 		inline CProcessWindow&   ProcessWindow() { return m_ProcessWindow; }
 		inline CProcessMemory&   ProcessMemory() { return m_ProcessMemory; }
 		inline CDriverCore&      DriverCore()    { return m_DriverCore; }
+		inline CSystemCallback&  SystemCallback(){ return m_SystemCallback; }
+		inline CFilterDriver&    FilterDriver()  { return m_FilterDriver; }
+
+		inline CRegistryCore&    RegistryCore()  { return m_RegistryCore; }
 
 
-		CWnd *AppDlg = NULL;         // 保存主窗口指针
+		CWnd *AppDlg = NULL;           // 保存主窗口指针
 		CWnd *m_ProcessDlg = NULL;     // 保存进程模块窗口指针
-		CWnd *m_DriverDlg = NULL;     // 保存驱动模块窗口指针
+		CWnd *m_DriverDlg = NULL;      // 保存驱动模块窗口指针
+		CWnd *m_KernelDlg = NULL;      // 保存内核模块窗口指针
+
+		CWnd *m_RegistryDlg = NULL;    // 保存注册表模块窗口指针
 		
 
 		int iDpix = 0;               // Logical pixels/inch in X
@@ -346,6 +361,17 @@ namespace ArkProtect
 		CDriverCore        m_DriverCore;
 
 
+		//
+		// 内核相关
+		//
+		CSystemCallback    m_SystemCallback;
+		CFilterDriver      m_FilterDriver;
+
+
+		//
+		// 注册表相关
+		//
+		CRegistryCore      m_RegistryCore;
 
 	};
 }
