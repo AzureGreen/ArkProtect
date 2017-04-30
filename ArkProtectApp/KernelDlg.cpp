@@ -50,9 +50,9 @@ BOOL CKernelDlg::OnInitDialog()
 
 	APInitializeKernelItemList();
 
-	UINT nIconSize = 20 * (UINT)(m_Global->iDpix / 96.0);
-	m_KernelIconList.Create(nIconSize, nIconSize, ILC_COLOR32 | ILC_MASK, 2, 2);
-	ListView_SetImageList(m_KernelListCtrl.m_hWnd, m_KernelIconList.GetSafeHandle(), LVSIL_SMALL);
+//	UINT nIconSize = 20 * (UINT)(m_Global->iDpix / 96.0);
+//	m_KernelIconList.Create(nIconSize, nIconSize, ILC_COLOR32 | ILC_MASK, 2, 2);
+//	ListView_SetImageList(m_KernelListCtrl.m_hWnd, m_KernelIconList.GetSafeHandle(), LVSIL_SMALL);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // 异常: OCX 属性页应返回 FALSE
@@ -180,57 +180,49 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 			(LPTHREAD_START_ROUTINE)ArkProtect::CFilterDriver::QueryFilterDriverCallback, &m_KernelListCtrl, 0, NULL)
 		);
 
-/*		if (g_bIsChecking == TRUE || g_CurrentKernelSysSel == PH_KERNELSYS_COLUMN_IOTIMER)
-		{
-			m_KernelSysListBox.SetCurSel(g_CurrentKernelSysSel);
-			break;
-		}
-
-		g_CurrentKernelSysSel = iCurSel;
-
-		PhInitIoTimerList(&m_KernelSysListCtrl);
-
-		CloseHandle(
-			CreateThread(NULL, 0,
-			(LPTHREAD_START_ROUTINE)PhQuerySysIoTimerCallback, &m_KernelSysListCtrl, 0, NULL)
-		);
 		break;
 	}
 	case ArkProtect::ki_IoTimer:
 	{
-		if (g_bIsChecking == TRUE || g_CurrentKernelSysSel == PH_KERNELSYS_COLUMN_DPCTIMER)
+		if (m_Global->m_bIsRequestNow == TRUE || m_iCurSel == ArkProtect::ki_IoTimer)
 		{
-			m_KernelSysListBox.SetCurSel(g_CurrentKernelSysSel);
+			m_KernelListBox.SetCurSel(m_iCurSel);
 			break;
 		}
 
-		g_CurrentKernelSysSel = iCurSel;
+		m_iCurSel = iCurSel;
 
-		PhInitDpcTimerList(&m_KernelSysListCtrl);
+		// 初始化ListCtrl
+		m_Global->IoTimer().InitializeIoTimerList(&m_KernelListCtrl);
 
+		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
-			(LPTHREAD_START_ROUTINE)PhQuerySysDpcTimerCallback, &m_KernelSysListCtrl, 0, NULL)
+			(LPTHREAD_START_ROUTINE)ArkProtect::CIoTimer::QueryIoTimerCallback, &m_KernelListCtrl, 0, NULL)
 		);
+
 		break;
 	}
 	case ArkProtect::ki_DpcTimer:
 	{
-		if (g_bIsChecking == TRUE || g_CurrentKernelSysSel == PH_KERNELSYS_COLUMN_SYSTHREAD)
+		if (m_Global->m_bIsRequestNow == TRUE || m_iCurSel == ArkProtect::ki_DpcTimer)
 		{
-			m_KernelSysListBox.SetCurSel(g_CurrentKernelSysSel);
+			m_KernelListBox.SetCurSel(m_iCurSel);
 			break;
 		}
 
-		g_CurrentKernelSysSel = iCurSel;
+		m_iCurSel = iCurSel;
 
-		PhInitSystemThreadList(&m_KernelSysListCtrl);
+		// 初始化ListCtrl
+		m_Global->DpcTimer().InitializeDpcTimerList(&m_KernelListCtrl);
 
+		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
-			(LPTHREAD_START_ROUTINE)PhQuerySystemThreadCallback, &m_KernelSysListCtrl, 0, NULL)
+			(LPTHREAD_START_ROUTINE)ArkProtect::CDpcTimer::QueryDpcTimerCallback, &m_KernelListCtrl, 0, NULL)
 		);
-		break;
+
+/*		break;
 	}
 	case ArkProtect::ki_SysThread:
 	{

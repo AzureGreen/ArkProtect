@@ -69,6 +69,12 @@
     <ClInclude Include="FilterDriver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IoTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DpcTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -108,6 +114,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FilterDriver.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IoTimer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DpcTimer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

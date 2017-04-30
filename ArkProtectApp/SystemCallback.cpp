@@ -207,7 +207,7 @@ namespace ArkProtect
 			ListCtrl->SetItemData(iItem, iItem);
 
 			CString strStatusContext;
-			strStatusContext.Format(L"系统回调正在加载  驱动加载：%d，注册表：%d，进程创建：%d，线程创建：%d，关机：%d，其他：%d",
+			strStatusContext.Format(L"系统回调正在加载  驱动加载：%d，注册表：%d，进程创建：%d，线程创建：%d，关机：%d，错误检测：%d",
 				m_NotifyLoadImage,
 				m_NotifyCmpCallback,
 				m_NotifyCreateProcess,
@@ -219,7 +219,7 @@ namespace ArkProtect
 		}
 
 		CString strStatusContext;
-		strStatusContext.Format(L"系统回调加载完成  驱动加载：%d，注册表：%d，进程创建：%d，线程创建：%d，关机：%d，其他：%d",
+		strStatusContext.Format(L"系统回调加载完成  驱动加载：%d，注册表：%d，进程创建：%d，线程创建：%d，关机：%d，错误检测：%d",
 			m_NotifyLoadImage,
 			m_NotifyCmpCallback,
 			m_NotifyCreateProcess,
@@ -244,13 +244,13 @@ namespace ArkProtect
 
 		if (EnumSystemCallback() == FALSE)
 		{
-			m_Global->UpdateStatusBarDetail(L"Process Module Initialize failed");
+			m_Global->UpdateStatusBarDetail(L"System Callback Initialize failed");
 			return;
 		}
 
 		if (m_DriverCore.EnumDriverInfo() == FALSE)
 		{
-			m_Global->UpdateStatusBarDetail(L"Process Module Initialize failed");
+			m_Global->UpdateStatusBarDetail(L"System Callback Initialize failed");
 			return;
 		}
 

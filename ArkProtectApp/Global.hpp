@@ -13,8 +13,8 @@
 #include "DriverCore.h"
 #include "SystemCallback.h"
 #include "FilterDriver.h"
-
-
+#include "IoTimer.h"
+#include "DpcTimer.h"
 
 #include "RegistryCore.h"
 
@@ -38,11 +38,15 @@ namespace ArkProtect
 		, m_RegistryCore(this)
 		, m_SystemCallback(this)
 		, m_FilterDriver(this)
+		, m_IoTimer(this)
+		, m_DpcTimer(this)
 		{};
 		~CGlobal() {};
 
 		//////////////////////////////////////////////////////////////////////////
+		//
 		// 通用函数
+		//
 		BOOL QueryOSBit()
 		{
 #if defined(_WIN64)
@@ -319,6 +323,8 @@ namespace ArkProtect
 		inline CDriverCore&      DriverCore()    { return m_DriverCore; }
 		inline CSystemCallback&  SystemCallback(){ return m_SystemCallback; }
 		inline CFilterDriver&    FilterDriver()  { return m_FilterDriver; }
+		inline CIoTimer&         IoTimer()       { return m_IoTimer; }
+		inline CDpcTimer&        DpcTimer()      { return m_DpcTimer; }
 
 		inline CRegistryCore&    RegistryCore()  { return m_RegistryCore; }
 
@@ -366,7 +372,8 @@ namespace ArkProtect
 		//
 		CSystemCallback    m_SystemCallback;
 		CFilterDriver      m_FilterDriver;
-
+		CIoTimer           m_IoTimer;
+		CDpcTimer          m_DpcTimer;
 
 		//
 		// 注册表相关

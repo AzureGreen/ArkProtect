@@ -371,7 +371,60 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 			break;
 		}
+		case IOCTL_ARKPROTECT_ENUMDPCTIMER:
+		{
+			DbgPrint("Enum DpcTimer\r\n");
 
+			if (OutputBuffer)
+			{
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+
+					Status = APEnumDpcTimer(OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+			}
+
+			break;
+		}
+		case IOCTL_ARKPROTECT_ENUMIOTIMER:
+		{
+			DbgPrint("Enum IoTimer\r\n");
+
+			if (OutputBuffer)
+			{
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+
+					Status = APEnumIoTimer(OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+			}
+
+			break;
+		}
 
 
 		default:

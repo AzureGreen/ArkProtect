@@ -171,9 +171,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dispatch.h" />
+    <ClInclude Include="DpcTimer.h" />
     <ClInclude Include="DriverCore.h" />
     <ClInclude Include="FilterDriver.h" />
     <ClInclude Include="Imports.h" />
+    <ClInclude Include="IoTimer.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="NtStructs.h" />
     <ClInclude Include="Private.h" />
@@ -188,8 +190,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dispatch.c" />
+    <ClCompile Include="DpcTimer.c" />
     <ClCompile Include="DriverCore.c" />
     <ClCompile Include="FilterDriver.c" />
+    <ClCompile Include="IoTimer.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="Private.c" />
     <ClCompile Include="ProcessCore.c" />

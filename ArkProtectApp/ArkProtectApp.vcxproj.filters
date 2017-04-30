@@ -55,6 +55,12 @@
     <Filter Include="KernelCore\FilterDriver">
       <UniqueIdentifier>{7c2a2a2a-c97f-439c-9dc2-0da29854e01c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="KernelCore\IoTimer">
+      <UniqueIdentifier>{d1f0eaef-4375-479d-8a26-37680252e8e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KernelCore\DpcTimer">
+      <UniqueIdentifier>{74d4ce30-e6cf-42b1-9038-d1c33cc86b93}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -126,6 +132,12 @@
     <ClInclude Include="FilterDriver.h">
       <Filter>KernelCore\FilterDriver</Filter>
     </ClInclude>
+    <ClInclude Include="IoTimer.h">
+      <Filter>KernelCore\IoTimer</Filter>
+    </ClInclude>
+    <ClInclude Include="DpcTimer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">
@@ -181,6 +193,12 @@
     </ClCompile>
     <ClCompile Include="FilterDriver.cpp">
       <Filter>KernelCore\FilterDriver</Filter>
+    </ClCompile>
+    <ClCompile Include="IoTimer.cpp">
+      <Filter>KernelCore\IoTimer</Filter>
+    </ClCompile>
+    <ClCompile Include="DpcTimer.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

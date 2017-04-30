@@ -4,8 +4,9 @@
 
 
 //////////////////////////////////////////////////////////////////////////
+//
 // Section
-
+//
 typedef struct _CONTROL_AREA
 {
 	struct _SEGMENT*	Segment;
@@ -62,7 +63,9 @@ typedef struct _SECTION_OBJECT
 
 
 //////////////////////////////////////////////////////////////////////////
+//
 // Peb
+//
 typedef struct _PEB_LDR_DATA32
 {
 	UINT32			Length;
@@ -449,7 +452,35 @@ typedef struct _SYSTEM_HANDLE_INFORMATION
 #define ObjectNameInformation	1
 #define ObjectHandleFlagInformation 4
 
+//////////////////////////////////////////////////////////////////////////
+//
+// IoTimer
+//
+typedef struct _IO_TIMER
+{
+	INT16				Type;
+	INT16				TimerFlag;
+#ifdef _WIN64
+	UINT32				Unknown;
+#endif
+	LIST_ENTRY			TimerList;
+	PVOID				TimerRoutine;
+	PVOID				Context;
+	PDEVICE_OBJECT		DeviceObject;
+} IO_TIMER, *PIO_TIMER;
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Dpc
+//
+typedef struct _KTIMER_TABLE_ENTRY
+{
+	UINT64			Lock;
+	LIST_ENTRY		Entry;
+	ULARGE_INTEGER	Time;
+} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
+
+//////////////////////////////////////////////////////////////////////////
 
 
 
