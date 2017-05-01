@@ -19,8 +19,17 @@ namespace ArkProtect
 	{
 	}
 
+
+	/************************************************************************
+	*  Name : InitializeVirtualMemoryProtectVector
+	*  Param: void        
+	*  Ret  : void
+	*  初始化虚拟内存页面保护属性Vector的信息
+	************************************************************************/
 	void CProcessMemory::InitializeVirtualMemoryProtectVector()
 	{
+		m_VitualProtectTypeVector.clear();
+
 		/*
 		#define PAGE_NOACCESS          0x01
 		#define PAGE_READONLY          0x02
@@ -45,47 +54,47 @@ namespace ArkProtect
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"Read") + 1, L"Read");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_READWRITE;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"ReadWrite") + 1, L"ReadWrite");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_WRITECOPY;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"WriteCopy") + 1, L"WriteCopy");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_EXECUTE;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"Execute") + 1, L"Execute");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_EXECUTE_READ;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"ReadExecute") + 1, L"ReadExecute");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_EXECUTE_READWRITE;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"ReadWriteExecute") + 1, L"ReadWriteExecute");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_EXECUTE_WRITECOPY;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"WriteCopyExecute") + 1, L"WriteCopyExecute");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_GUARD;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"Guard") + 1, L"Guard");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_NOCACHE;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"No Cache") + 1, L"No Cache");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);
 
-		ZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
+		RtlZeroMemory(&VitualProtectType, sizeof(VIRTUAL_PROTECT_TYPE));
 		VitualProtectType.Type = PAGE_WRITECOMBINE;
 		StringCchCopyW(VitualProtectType.wzTypeName, wcslen(L"WriteCombine") + 1, L"WriteCombine");
 		m_VitualProtectTypeVector.push_back(VitualProtectType);

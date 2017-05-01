@@ -61,6 +61,9 @@
     <Filter Include="KernelCore\DpcTimer">
       <UniqueIdentifier>{74d4ce30-e6cf-42b1-9038-d1c33cc86b93}</UniqueIdentifier>
     </Filter>
+    <Filter Include="KernelCore\SystemThread">
+      <UniqueIdentifier>{544950f4-4da1-43e4-90e6-6983156ddd2e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -136,7 +139,10 @@
       <Filter>KernelCore\IoTimer</Filter>
     </ClInclude>
     <ClInclude Include="DpcTimer.h">
-      <Filter>头文件</Filter>
+      <Filter>KernelCore\DpcTimer</Filter>
+    </ClInclude>
+    <ClInclude Include="SystemThread.h">
+      <Filter>KernelCore\SystemThread</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -198,7 +204,10 @@
       <Filter>KernelCore\IoTimer</Filter>
     </ClCompile>
     <ClCompile Include="DpcTimer.cpp">
-      <Filter>源文件</Filter>
+      <Filter>KernelCore\DpcTimer</Filter>
+    </ClCompile>
+    <ClCompile Include="SystemThread.cpp">
+      <Filter>KernelCore\SystemThread</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -2,6 +2,7 @@
 
 DYNAMIC_DATA	g_DynamicData = { 0 };
 PDRIVER_OBJECT  g_DriverObject = NULL;      // 保存全局驱动对象
+PEPROCESS       g_SystemEProcess = NULL;    // 保存全局系统进程
 
 NTSTATUS
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegisterPath)
@@ -36,6 +37,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegisterPath)
 				DriverObject->DriverUnload = APUnloadDriver;
 
 				g_DriverObject = DriverObject;
+
+				g_SystemEProcess = PsGetCurrentProcess();   // 保存系统进程体结构
 
 				DbgPrint("ArkProtect is Starting!!!");
 			}

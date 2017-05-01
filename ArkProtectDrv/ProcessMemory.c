@@ -98,6 +98,7 @@ APEnumProcessMemory(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 {
 	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
 
+	PPROCESS_MEMORY_INFORMATION pmi = (PPROCESS_MEMORY_INFORMATION)OutputBuffer;
 	UINT32    ModuleCount = (OutputLength - sizeof(PROCESS_MEMORY_INFORMATION)) / sizeof(PROCESS_MEMORY_ENTRY_INFORMATION);
 	PEPROCESS EProcess = NULL;
 
@@ -112,28 +113,17 @@ APEnumProcessMemory(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 
 	if (NT_SUCCESS(Status) && APIsValidProcess(EProcess))
 	{
-		PPROCESS_MEMORY_INFORMATION pmi = (PPROCESS_MEMORY_INFORMATION)ExAllocatePool(PagedPool, OutputLength);
-		if (pmi)
+		Status = APEnumProcessMemoryByZwQueryVirtualMemory(EProcess, pmi, ModuleCount);
+		if (NT_SUCCESS(Status))
 		{
-			RtlZeroMemory(pmi, OutputLength);
-
-			Status = APEnumProcessMemoryByZwQueryVirtualMemory(EProcess, pmi, ModuleCount);
-			if (NT_SUCCESS(Status))
+			if (ModuleCount >= pmi->NumberOfMemories)
 			{
-				if (ModuleCount >= pmi->NumberOfMemories)
-				{
-					RtlCopyMemory(OutputBuffer, pmi, OutputLength);
-					Status = STATUS_SUCCESS;
-				}
-				else
-				{
-					((PPROCESS_MEMORY_INFORMATION)OutputBuffer)->NumberOfMemories = pmi->NumberOfMemories;    // 让Ring3知道需要多少个
-					Status = STATUS_BUFFER_TOO_SMALL;	// 给ring3返回内存不够的信息
-				}
+				Status = STATUS_SUCCESS;
 			}
-
-			ExFreePool(pmi);
-			pmi = NULL;
+			else
+			{
+				Status = STATUS_BUFFER_TOO_SMALL;	// 给ring3返回内存不够的信息
+			}
 		}
 	}
 

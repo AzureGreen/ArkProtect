@@ -222,24 +222,27 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 			(LPTHREAD_START_ROUTINE)ArkProtect::CDpcTimer::QueryDpcTimerCallback, &m_KernelListCtrl, 0, NULL)
 		);
 
-/*		break;
+		break;
 	}
 	case ArkProtect::ki_SysThread:
 	{
-		if (g_bIsChecking == TRUE || g_CurrentKernelSysSel == PH_KERNELSYS_COLUMN_FILTERDRIVER)
+		if (m_Global->m_bIsRequestNow == TRUE || m_iCurSel == ArkProtect::ki_SysThread)
 		{
-			m_KernelSysListBox.SetCurSel(g_CurrentKernelSysSel);
+			m_KernelListBox.SetCurSel(m_iCurSel);
 			break;
 		}
 
-		g_CurrentKernelSysSel = iCurSel;
+		m_iCurSel = iCurSel;
 
-		PhInitFilterDriverList(&m_KernelSysListCtrl);
+		// 初始化ListCtrl
+		m_Global->DpcTimer().InitializeDpcTimerList(&m_KernelListCtrl);
 
+		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
-			(LPTHREAD_START_ROUTINE)PhQueryFilterDriverCallback, &m_KernelSysListCtrl, 0, NULL)
-		);*/
+			(LPTHREAD_START_ROUTINE)ArkProtect::CDpcTimer::QueryDpcTimerCallback, &m_KernelListCtrl, 0, NULL)
+		);
+
 		break;
 	}
 

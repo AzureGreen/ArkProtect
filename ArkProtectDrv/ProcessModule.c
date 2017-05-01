@@ -385,6 +385,7 @@ APEnumProcessModule(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 
 	if (NT_SUCCESS(Status) && APIsValidProcess(EProcess))
 	{
+		// 因为之后需要Attach到目标进程空间（私有内存），所以需要申请内核空间的内存（共用的内存）
 		PPROCESS_MODULE_INFORMATION pmi = (PPROCESS_MODULE_INFORMATION)ExAllocatePool(PagedPool, OutputLength);
 		if (pmi)
 		{

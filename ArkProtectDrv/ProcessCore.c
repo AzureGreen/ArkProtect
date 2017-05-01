@@ -334,17 +334,15 @@ NTSTATUS
 APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 {
 	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
-	UINT32    ProcessId = 0;
-	UINT32    ProcessNum = 0;
 
 	PEPROCESS EProcess = NULL;
 	PPROCESS_INFORMATION pi = (PPROCESS_INFORMATION)OutputBuffer;
-	UINT32 NumberOfProcesses = (OutputLength - sizeof(PROCESS_INFORMATION)) / sizeof(PROCESS_ENTRY_INFORMATION);
+	UINT32 ProcessesCount = (OutputLength - sizeof(PROCESS_INFORMATION)) / sizeof(PROCESS_ENTRY_INFORMATION);
 
 	// 通过暴力id来枚举进程
 	for (UINT32 ProcessId = 0; ProcessId < MAX_PROCESS_COUNT; ProcessId += 4)
 	{
-		if (NumberOfProcesses > pi->NumberOfProcesses)
+		if (ProcessesCount > pi->NumberOfProcesses)
 		{
 			if (ProcessId == 0)
 			{
