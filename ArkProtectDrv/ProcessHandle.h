@@ -5,7 +5,7 @@
 #include <strsafe.h>
 #include "Private.h"
 #include "ProcessCore.h"
-
+#include "ProcessThread.h"
 
 
 typedef struct _PROCESS_HANDLE_ENTRY_INFORMATION

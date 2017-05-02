@@ -141,7 +141,7 @@ APIsDriverInList(IN PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN U
 
 
 /************************************************************************
-*  Name : APEnumDriverModuleByTravelDirectoryObject
+*  Name : APGetDriverInfo
 *  Param: di
 *  Param: DriverObject         驱动对象
 *  Param: DriverCount
@@ -149,7 +149,7 @@ APIsDriverInList(IN PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN U
 *  插入驱动对象信息
 ************************************************************************/
 VOID
-APInsertDriverToList(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN UINT32 DriverCount)
+APGetDriverInfo(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN UINT32 DriverCount)
 {
 	if (!di || !DriverObject || !MmIsAddressValid(DriverObject))
 	{
@@ -186,7 +186,7 @@ APInsertDriverToList(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject,
 
 
 /************************************************************************
-*  Name : APEnumDriverModuleByTravelDirectoryObject
+*  Name : APIterateDirectoryObject
 *  Param: DirectoryObject         目录对象
 *  Param: di
 *  Param: DriverCount
@@ -194,7 +194,7 @@ APInsertDriverToList(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject,
 *  遍历哈希目录 --> 目录上每个链表 --> 1.目录 递归  2.驱动对象 插入  3.设备对象 遍历设备栈 插入驱动对象
 ************************************************************************/
 VOID
-APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
+APIterateDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
 {
 	if (di	&& DirectoryObject && MmIsAddressValid(DirectoryObject))
 	{
@@ -219,7 +219,7 @@ APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN
 						// 如果是目录，那么继续递归遍历
 						if (ObjectType == g_DirectoryObjectType)
 						{
-							APTravelDirectoryObject(ObjectDirectoryEntry->Object, di, DriverCount);
+							APIterateDirectoryObject(ObjectDirectoryEntry->Object, di, DriverCount);
 						}
 
 						// 如果是驱动对象
@@ -229,7 +229,7 @@ APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN
 
 							if (!APIsDriverInList(di, (PDRIVER_OBJECT)ObjectDirectoryEntry->Object, DriverCount))
 							{
-								APInsertDriverToList(di, (PDRIVER_OBJECT)ObjectDirectoryEntry->Object, DriverCount);
+								APGetDriverInfo(di, (PDRIVER_OBJECT)ObjectDirectoryEntry->Object, DriverCount);
 							}
 
 							// 遍历设备栈(指向不同的驱动对象)(设备链指向同一驱动对象)
@@ -239,7 +239,7 @@ APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN
 							{
 								if (!APIsDriverInList(di, DeviceObject->DriverObject, DriverCount))
 								{
-									APInsertDriverToList(di, DeviceObject->DriverObject, DriverCount);
+									APGetDriverInfo(di, DeviceObject->DriverObject, DriverCount);
 								}
 							}
 						}
@@ -251,7 +251,7 @@ APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN
 
 							if (!APIsDriverInList(di, ((PDEVICE_OBJECT)ObjectDirectoryEntry->Object)->DriverObject, DriverCount))
 							{
-								APInsertDriverToList(di, ((PDEVICE_OBJECT)ObjectDirectoryEntry->Object)->DriverObject, DriverCount);
+								APGetDriverInfo(di, ((PDEVICE_OBJECT)ObjectDirectoryEntry->Object)->DriverObject, DriverCount);
 							}
 
 							// 遍历设备栈
@@ -261,7 +261,7 @@ APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN
 							{
 								if (!APIsDriverInList(di, DeviceObject->DriverObject, DriverCount))
 								{
-									APInsertDriverToList(di, DeviceObject->DriverObject, DriverCount);
+									APGetDriverInfo(di, DeviceObject->DriverObject, DriverCount);
 								}
 							}
 						}
@@ -284,14 +284,14 @@ APTravelDirectoryObject(IN PVOID DirectoryObject, OUT PDRIVER_INFORMATION di, IN
 
 
 /************************************************************************
-*  Name : APEnumDriverModuleByTravelDirectoryObject
+*  Name : APEnumDriverModuleByIterateDirectoryObject
 *  Param: di
 *  Param: DriverCount
 *  Ret  : VOID
 *  通过遍历目录对象来遍历系统内的驱动对象
 ************************************************************************/
 VOID
-APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
+APEnumDriverModuleByIterateDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 	HANDLE   DirectoryHandle = NULL;
@@ -302,13 +302,11 @@ APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 
 	OBJECT_ATTRIBUTES oa = { 0 };
 
 	// 保存之前的模式，转成KernelMode
-	PUINT8		PreviousMode = (PUINT8)PsGetCurrentThread() + g_DynamicData.PreviousMode;
-	UINT8		Temp = *PreviousMode;
+	PETHREAD EThread = PsGetCurrentThread();
+	UINT8    PreviousMode = APChangeThreadMode(EThread, KernelMode);
 
 	RtlInitUnicodeString(&uniDirectory, wzDirectory);
 	InitializeObjectAttributes(&oa, &uniDirectory, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-
-	*PreviousMode = KernelMode;
 
 	Status = ZwOpenDirectoryObject(&DirectoryHandle, 0, &oa);
 	if (NT_SUCCESS(Status))
@@ -321,7 +319,7 @@ APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 
 		{
 			g_DirectoryObjectType = (POBJECT_TYPE)APGetObjectType(DirectoryObject);		// 全局保存目录对象类型 便于后续比较
 
-			APTravelDirectoryObject(DirectoryObject, di, DriverCount);
+			APIterateDirectoryObject(DirectoryObject, di, DriverCount);
 			ObDereferenceObject(DirectoryObject);
 		}
 
@@ -332,7 +330,7 @@ APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 
 		DbgPrint("ZwOpenDirectoryObject Failed\r\n");
 	}
 
-	*PreviousMode = Temp;
+	APChangeThreadMode(EThread, PreviousMode);
 }
 
 
@@ -358,7 +356,7 @@ APEnumDriverInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 	Status = APEnumDriverModuleByLdrDataTableEntry(g_PsLoadedModuleList, di, DriverCount);
 	if (NT_SUCCESS(Status))
 	{
-		APEnumDriverModuleByTravelDirectoryObject(di, DriverCount);
+		APEnumDriverModuleByIterateDirectoryObject(di, DriverCount);
 
 		if (DriverCount >= di->NumberOfDrivers)
 		{
@@ -500,9 +498,8 @@ APUnloadDriverByCreateSystemThread(IN PDRIVER_OBJECT DriverObject)
 		// 等待线程 关闭句柄
 		if (NT_SUCCESS(Status))
 		{
-			PETHREAD EThread = NULL;
-			PUINT8   PreviousMode = 0;
-			UINT8    Temp = 0;
+			PETHREAD EThread = PsGetCurrentThread();
+			UINT8   PreviousMode = 0;
 
 			Status = ObReferenceObjectByHandle(SystemThreadHandle, 0, NULL, KernelMode, &EThread, NULL);
 			if (NT_SUCCESS(Status))
@@ -514,12 +511,11 @@ APUnloadDriverByCreateSystemThread(IN PDRIVER_OBJECT DriverObject)
 			}
 
 			// 保存之前的模式，转成KernelMode
-			PreviousMode = (PUINT8)PsGetCurrentThread() + g_DynamicData.PreviousMode;
-			Temp = *PreviousMode;
+			PreviousMode = APChangeThreadMode(EThread, KernelMode);
 
 			NtClose(SystemThreadHandle);
 			
-			*PreviousMode = Temp;
+			APChangeThreadMode(EThread, PreviousMode);
 		}
 		else
 		{

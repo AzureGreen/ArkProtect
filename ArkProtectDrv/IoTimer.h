@@ -27,7 +27,7 @@ UINT_PTR
 APGetIopTimerQueueHead();
 
 NTSTATUS
-APEnumIoTimerByTravelIopTimerQueueHead(OUT PIO_TIMER_INFORMATION iti, IN UINT32 IoTimerCount);
+APEnumIoTimerByIterateIopTimerQueueHead(OUT PIO_TIMER_INFORMATION iti, IN UINT32 IoTimerCount);
 
 NTSTATUS
 APEnumIoTimer(OUT PVOID OutputBuffer, IN UINT32 OutputLength);

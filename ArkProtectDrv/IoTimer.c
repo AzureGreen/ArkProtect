@@ -52,14 +52,14 @@ APGetIopTimerQueueHead()
 
 
 /************************************************************************
-*  Name : APEnumIoTimerByTravelIopTimerQueueHead
+*  Name : APEnumIoTimerByIterateIopTimerQueueHead
 *  Param: iti
 *  Param: IoTimerCount
 *  Ret  : NTSTATUS
 *  通过遍历IopTimerQueueHead枚举IoTimer对象信息
 ************************************************************************/
 NTSTATUS
-APEnumIoTimerByTravelIopTimerQueueHead(OUT PIO_TIMER_INFORMATION iti, IN UINT32 IoTimerCount)
+APEnumIoTimerByIterateIopTimerQueueHead(OUT PIO_TIMER_INFORMATION iti, IN UINT32 IoTimerCount)
 {
 	NTSTATUS    Status = STATUS_UNSUCCESSFUL;
 	PLIST_ENTRY IopTimerQueueHead = (PLIST_ENTRY)APGetIopTimerQueueHead();
@@ -133,7 +133,7 @@ APEnumIoTimer(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 
 	if (IoTimerCount && iti)
 	{
-		Status = APEnumIoTimerByTravelIopTimerQueueHead(iti, IoTimerCount);
+		Status = APEnumIoTimerByIterateIopTimerQueueHead(iti, IoTimerCount);
 	}
 
 	return Status;

@@ -26,7 +26,10 @@ typedef struct _PROCESS_THREAD_INFORMATION
 } PROCESS_THREAD_INFORMATION, *PPROCESS_THREAD_INFORMATION;
 
 
-BOOLEAN 
+UINT8 
+APChangeThreadMode(IN PETHREAD EThread, IN UINT8 WantedMode);
+
+BOOLEAN
 APIsThreadInList(IN PETHREAD EThread, IN PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
 
 UINT_PTR 
@@ -35,17 +38,35 @@ APGetThreadStartAddress(IN PETHREAD EThread);
 VOID 
 APGetProcessThreadInfo(IN PETHREAD EThread, IN PEPROCESS EProcess, OUT PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
 
+UINT_PTR
+APGetPspCidTableAddress();
+
+VOID
+APEnumProcessThreadByIterateFirstLevelHandleTable(IN UINT_PTR TableCode, IN PEPROCESS EProcess,
+	OUT PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
+
+VOID
+APEnumProcessThreadByIterateSecondLevelHandleTable(IN UINT_PTR TableCode, IN PEPROCESS EProcess,
+	OUT PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
+
+VOID
+APEnumProcessThreadByIterateThirdLevelHandleTable(IN UINT_PTR TableCode, IN PEPROCESS EProcess,
+	OUT PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
+
 NTSTATUS
-APEnumProcessThreadByTravelThreadListHead(IN PEPROCESS EProcess, OUT PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
+APEnumProcessThreadByIteratePspCidTable(IN PEPROCESS EProcess, OUT PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
+
+NTSTATUS
+APEnumProcessThreadByIterateThreadListHead(IN PEPROCESS EProcess, OUT PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
 
 NTSTATUS 
 APEnumProcessThread(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 OutputLength);
 
 UINT_PTR 
-GetPspTerminateThreadByPointerAddress();
+APGetPspTerminateThreadByPointerAddress();
 
 NTSTATUS 
-APTerminateProcessByTravelThreadListHead(IN PEPROCESS EProcess);
+APTerminateProcessByIterateThreadListHead(IN PEPROCESS EProcess);
 
 
 

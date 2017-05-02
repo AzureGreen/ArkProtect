@@ -414,7 +414,7 @@ APTerminateProcess(IN UINT32 ProcessId)
 		Status = PsLookupProcessByProcessId((HANDLE)ProcessId, &EProcess);
 		if (NT_SUCCESS(Status) && APIsValidProcess(EProcess))
 		{
-			Status = APTerminateProcessByTravelThreadListHead(EProcess);
+			Status = APTerminateProcessByIterateThreadListHead(EProcess);
 
 			ObDereferenceObject(EProcess);
 		}

@@ -454,6 +454,113 @@ typedef struct _SYSTEM_HANDLE_INFORMATION
 
 //////////////////////////////////////////////////////////////////////////
 //
+// HandleTable
+//
+
+/*
+	Win7 x64
+	2: kd> dt _HANDLE_TABLE_ENTRY
+	nt!_HANDLE_TABLE_ENTRY
+	+0x000 Object           : Ptr64 Void
+	+0x000 ObAttributes     : Uint4B
+	+0x000 InfoTable        : Ptr64 _HANDLE_TABLE_ENTRY_INFO
+	+0x000 Value            : Uint8B
+	+0x008 GrantedAccess    : Uint4B
+	+0x008 GrantedAccessIndex : Uint2B
+	+0x00a CreatorBackTraceIndex : Uint2B
+	+0x008 NextFreeTableEntry : Uint4B
+*/
+
+typedef struct _HANDLE_TABLE_ENTRY
+{
+	union
+	{
+		PVOID		Object;
+		UINT32		ObAttributes;
+		PVOID		InfoTable;
+		UINT_PTR		Value;
+	};
+	union
+	{
+		union
+		{
+			UINT32 GrantedAccess;
+			struct
+			{
+				UINT16 GrantedAccessIndex;
+				UINT16 CreatorBackTraceIndex;
+			};
+		};
+		UINT32 NextFreeTableEntry;
+	};
+} HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
+
+/*
+	Win7 x86
+	0: kd> dt _HANDLE_TABLE
+	nt!_HANDLE_TABLE
+	+0x000 TableCode        : Uint4B
+	+0x004 QuotaProcess     : Ptr32 _EPROCESS
+	+0x008 UniqueProcessId  : Ptr32 Void
+	+0x00c HandleLock       : _EX_PUSH_LOCK
+	+0x010 HandleTableList  : _LIST_ENTRY
+	+0x018 HandleContentionEvent : _EX_PUSH_LOCK
+	+0x01c DebugInfo        : Ptr32 _HANDLE_TRACE_DEBUG_INFO
+	+0x020 ExtraInfoPages   : Int4B
+	+0x024 Flags            : Uint4B
+	+0x024 StrictFIFO       : Pos 0, 1 Bit
+	+0x028 FirstFreeHandle  : Uint4B
+	+0x02c LastFreeHandleEntry : Ptr32 _HANDLE_TABLE_ENTRY
+	+0x030 HandleCount      : Uint4B
+	+0x034 NextHandleNeedingPool : Uint4B
+	+0x038 HandleCountHighWatermark : Uint4B
+*/
+
+/*
+	Win7 x64
+	2: kd> dt _HANDLE_TABLE
+	nt!_HANDLE_TABLE
+	+0x000 TableCode        : Uint8B
+	+0x008 QuotaProcess     : Ptr64 _EPROCESS
+	+0x010 UniqueProcessId  : Ptr64 Void
+	+0x018 HandleLock       : _EX_PUSH_LOCK
+	+0x020 HandleTableList  : _LIST_ENTRY
+	+0x030 HandleContentionEvent : _EX_PUSH_LOCK
+	+0x038 DebugInfo        : Ptr64 _HANDLE_TRACE_DEBUG_INFO
+	+0x040 ExtraInfoPages   : Int4B
+	+0x044 Flags            : Uint4B
+	+0x044 StrictFIFO       : Pos 0, 1 Bit
+	+0x048 FirstFreeHandle  : Uint4B
+	+0x050 LastFreeHandleEntry : Ptr64 _HANDLE_TABLE_ENTRY
+	+0x058 HandleCount      : Uint4B
+	+0x05c NextHandleNeedingPool : Uint4B
+	+0x060 HandleCountHighWatermark : Uint4B
+*/
+
+typedef struct _HANDLE_TABLE
+{
+	UINT_PTR			TableCode;			     // +00	4	+00	 8
+	PEPROCESS			QuotaProcess;			 // +04	4	+08	 8
+	HANDLE				UniqueProcessId;		 // +08	4	+10	 8
+	PVOID				HandleLock;			     // +0c	4	+18	 8
+	LIST_ENTRY			HandleTableList;		 // +10	4	+20  16
+	PVOID				HandleContentionEvent;	 // +18	8	+30  8
+	PVOID				DebugInfo;			     // +1c	4	+38  8
+	INT32				ExtraInfoPages;		     // +20	4	+40  4
+	UINT32				Flags;				     // +24	4	+44  4
+	UINT32				FirstFreeHandle;		 // +28	4	+48  4
+#ifdef _WIN64
+	UINT32				Padding;				 // +4c  4
+#endif // _WIN64
+	PHANDLE_TABLE_ENTRY	LastFreeHandleEntry;	 // +2c	4	+50  8
+	UINT32				HandleCount;			 // +30	4	+58  4
+	UINT32				NextHandleNeedingPool;	 // +34	4	+5c  4
+	UINT32				HandleCountHighWatermark;// +38	4	+60  4
+} HANDLE_TABLE, *PHANDLE_TABLE;
+
+
+//////////////////////////////////////////////////////////////////////////
+//
 // IoTimer
 //
 typedef struct _IO_TIMER

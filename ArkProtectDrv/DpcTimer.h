@@ -24,7 +24,7 @@ PKDPC
 APTransTimerDPCEx(IN PKTIMER Timer, IN UINT64 KiWaitNeverAddress, IN UINT64 KiWaitAlwaysAddress);
 
 NTSTATUS
-APEnumDpcTimerByTravelKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT32 DpcTimerCount);
+APEnumDpcTimerByIterateKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT32 DpcTimerCount);
 
 NTSTATUS
 APEnumDpcTimer(OUT PVOID OutputBuffer, IN UINT32 OutputLength);

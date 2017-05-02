@@ -22,12 +22,10 @@ APGetHandleType(IN HANDLE Handle, OUT PWCHAR wzHandleType)
 		UINT32   ReturnLength = 0;
 
 		// 保存之前的模式，转成KernelMode
-		PUINT8		PreviousMode = (PUINT8)PsGetCurrentThread() + g_DynamicData.PreviousMode;
-		UINT8		Temp = *PreviousMode;
+		PETHREAD EThread = PsGetCurrentThread();
+		UINT8    PreviousMode = APChangeThreadMode(EThread, KernelMode);
 
 		RtlZeroMemory(Buffer, PAGE_SIZE);
-
-		*PreviousMode = KernelMode;
 
 		__try
 		{
@@ -59,7 +57,7 @@ APGetHandleType(IN HANDLE Handle, OUT PWCHAR wzHandleType)
 			wzHandleType = NULL;
 		}
 
-		*PreviousMode = Temp;
+		APChangeThreadMode(EThread, PreviousMode);
 
 		ExFreePool(Buffer);
 	}
@@ -83,12 +81,10 @@ APGetHandleName(IN HANDLE Handle, OUT PWCHAR wzHandleName)
 		UINT32   ReturnLength = 0;
 
 		// 保存之前的模式，转成KernelMode
-		PUINT8		PreviousMode = (PUINT8)PsGetCurrentThread() + g_DynamicData.PreviousMode;
-		UINT8		Temp = *PreviousMode;
+		PETHREAD EThread = PsGetCurrentThread();
+		UINT8    PreviousMode = APChangeThreadMode(EThread, KernelMode);
 
 		RtlZeroMemory(Buffer, PAGE_SIZE);
-
-		*PreviousMode = KernelMode;
 
 		__try
 		{
@@ -120,7 +116,7 @@ APGetHandleName(IN HANDLE Handle, OUT PWCHAR wzHandleName)
 			wzHandleName = NULL;
 		}
 
-		*PreviousMode = Temp;
+		APChangeThreadMode(EThread, PreviousMode);
 
 		ExFreePool(Buffer);
 	}
@@ -183,10 +179,8 @@ APEnumProcessHandleByZwQuerySystemInformation(IN UINT32 ProcessId, IN PEPROCESS 
 	UINT32   ReturnLength = PAGE_SIZE;
 
 	// 保存之前的模式，转成KernelMode
-	PUINT8		PreviousMode = (PUINT8)PsGetCurrentThread() + g_DynamicData.PreviousMode;
-	UINT8		Temp = *PreviousMode;
-
-	*PreviousMode = KernelMode;
+	PETHREAD EThread = PsGetCurrentThread();
+	UINT8    PreviousMode = APChangeThreadMode(EThread, KernelMode);
 
 	do
 	{
@@ -218,7 +212,7 @@ APEnumProcessHandleByZwQuerySystemInformation(IN UINT32 ProcessId, IN PEPROCESS 
 		}
 	} while (Status == STATUS_INFO_LENGTH_MISMATCH);
 
-	*PreviousMode = Temp;
+	APChangeThreadMode(EThread, PreviousMode);
 
 	// 枚举到了东西
 	if (phi->NumberOfHandles)

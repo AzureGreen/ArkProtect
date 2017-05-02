@@ -7,7 +7,7 @@ UINT32 g_FileSystemStartCount = 0;
 
 
 /************************************************************************
-*  Name : APInsertFilterDriverToList
+*  Name : APGetFilterDriverInfo
 *  Param: HighDeviceObject              上层设备对象
 *  Param: LowDriverObject               下层驱动对象
 *  Param: fdi                           Ring3Buffer
@@ -17,7 +17,7 @@ UINT32 g_FileSystemStartCount = 0;
 *  与驱动层通信，枚举进程模块信息
 ************************************************************************/
 NTSTATUS 
-APInsertFilterDriverToList(IN PDEVICE_OBJECT HighDeviceObject, IN PDRIVER_OBJECT LowDriverObject, OUT PFILTER_DRIVER_INFORMATION fdi,
+APGetFilterDriverInfo(IN PDEVICE_OBJECT HighDeviceObject, IN PDRIVER_OBJECT LowDriverObject, OUT PFILTER_DRIVER_INFORMATION fdi,
 	IN UINT32 FilterDriverCount, IN eFilterType FilterType)
 {
 	if (HighDeviceObject && MmIsAddressValid((PVOID)HighDeviceObject)
@@ -150,7 +150,7 @@ APGetFilterDriverByDriverName(IN WCHAR *wzDriverName, OUT  PFILTER_DRIVER_INFORM
 			{
 				// HighDeviceObject --> 去挂载的驱动（上层）
 				// LowDriverObject --> 被挂载的驱动（下层）
-				Status = APInsertFilterDriverToList(HighDeviceObject, LowDriverObject, fdi, FilterDriverCount, FilterType);
+				Status = APGetFilterDriverInfo(HighDeviceObject, LowDriverObject, fdi, FilterDriverCount, FilterType);
 				LowDriverObject = HighDeviceObject->DriverObject;
 			}
 

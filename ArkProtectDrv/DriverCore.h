@@ -6,7 +6,7 @@
 #include "Imports.h"
 #include "NtStructs.h"
 #include "ProcessCore.h"
-
+#include "ProcessThread.h"
 
 typedef struct _DRIVER_ENTRY_INFORMATION
 {
@@ -35,10 +35,10 @@ BOOLEAN
 APIsDriverInList(IN PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN UINT32 DriverCount);
 
 VOID 
-APInsertDriverToList(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN UINT32 DriverCount);
+APGetDriverInfo(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN UINT32 DriverCount);
 
 VOID
-APEnumDriverModuleByTravelDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount);
+APEnumDriverModuleByIterateDirectoryObject(OUT PDRIVER_INFORMATION di, IN UINT32 DriverCount);
 
 NTSTATUS
 APEnumDriverInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength);

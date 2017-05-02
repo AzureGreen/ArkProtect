@@ -157,14 +157,14 @@ APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MO
 
 
 /************************************************************************
-*  Name : APFillProcessModuleInfoByTravelLdr
+*  Name : APFillProcessModuleInfoByIterateLdr
 *  Param: LdrListEntry			模块基地址（OUT）
 *  Param: ModuleSize			模块大小（IN）
 *  Ret  : NTSTATUS
 *  通过FileObject获得进程完整路径
 ************************************************************************/
 VOID
-APFillProcessModuleInfoByTravelLdr(IN PLIST_ENTRY LdrListEntry, IN eLdrType LdrType, OUT PPROCESS_MODULE_INFORMATION pmi, IN UINT32 ModuleCount)
+APFillProcessModuleInfoByIterateLdr(IN PLIST_ENTRY LdrListEntry, IN eLdrType LdrType, OUT PPROCESS_MODULE_INFORMATION pmi, IN UINT32 ModuleCount)
 {
 
 	for (PLIST_ENTRY TravelListEntry = LdrListEntry->Flink;
@@ -332,9 +332,9 @@ APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION 
 			}
 
 			// 枚举三根链表
-//			APFillProcessModuleInfoByTravelLdr((PLIST_ENTRY)&(LdrData->InLoadOrderModuleList), lt_InLoadOrderModuleList, pmi, ModuleCount);
-//			APFillProcessModuleInfoByTravelLdr((PLIST_ENTRY)&(LdrData->InMemoryOrderModuleList), lt_InMemoryOrderModuleList, pmi, ModuleCount);
-//			APFillProcessModuleInfoByTravelLdr((PLIST_ENTRY)&(LdrData->InInitializationOrderModuleList), lt_InInitializationOrderModuleList, pmi, ModuleCount);
+//			APFillProcessModuleInfoByIterateLdr((PLIST_ENTRY)&(LdrData->InLoadOrderModuleList), lt_InLoadOrderModuleList, pmi, ModuleCount);
+//			APFillProcessModuleInfoByIterateLdr((PLIST_ENTRY)&(LdrData->InMemoryOrderModuleList), lt_InMemoryOrderModuleList, pmi, ModuleCount);
+//			APFillProcessModuleInfoByIterateLdr((PLIST_ENTRY)&(LdrData->InInitializationOrderModuleList), lt_InInitializationOrderModuleList, pmi, ModuleCount);
 			// 枚举到了东西
 			if (pmi->NumberOfModules)
 			{

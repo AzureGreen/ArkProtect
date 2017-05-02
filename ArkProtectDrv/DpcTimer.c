@@ -110,14 +110,14 @@ APTransTimerDPCEx(IN PKTIMER Timer, IN UINT64 KiWaitNeverAddress, IN UINT64 KiWa
 
 
 /************************************************************************
-*  Name : APEnumDpcTimerByTravelKTimerTableEntry
+*  Name : APEnumDpcTimerByIterateKTimerTableEntry
 *  Param: dti
 *  Param: DpcTimerCount
 *  Ret  : NTSTATUS
 *  通过遍历KTIMER_TABLE_ENTRY数组里面ListEntry枚举DpcTimer对象信息
 ************************************************************************/
 NTSTATUS
-APEnumDpcTimerByTravelKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT32 DpcTimerCount)
+APEnumDpcTimerByIterateKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT32 DpcTimerCount)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 	UINT32   CpuNumber = KeNumberProcessors;	// 全局变量 CPU个数
@@ -244,7 +244,7 @@ APEnumDpcTimer(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 
 	if (DpcTimerCount && dti)
 	{
-		Status = APEnumDpcTimerByTravelKTimerTableEntry(dti, DpcTimerCount);
+		Status = APEnumDpcTimerByIterateKTimerTableEntry(dti, DpcTimerCount);
 	}
 	
 	return Status;

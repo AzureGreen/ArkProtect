@@ -41,7 +41,7 @@ typedef struct _FILTER_DRIVER_INFORMATION
 
 
 NTSTATUS 
-APInsertFilterDriverToList(IN PDEVICE_OBJECT AttachDeviceObject, IN PDRIVER_OBJECT AttachedDriverObject, OUT PFILTER_DRIVER_INFORMATION fdi, IN UINT32 FilterDriverCount, IN eFilterType FilterType);
+APGetFilterDriverInfo(IN PDEVICE_OBJECT AttachDeviceObject, IN PDRIVER_OBJECT AttachedDriverObject, OUT PFILTER_DRIVER_INFORMATION fdi, IN UINT32 FilterDriverCount, IN eFilterType FilterType);
 
 NTSTATUS
 APGetFilterDriverByDriverName(IN WCHAR * wzDriverName, OUT PFILTER_DRIVER_INFORMATION fdi, IN UINT32 FilterDriverCount, IN eFilterType FilterType);
