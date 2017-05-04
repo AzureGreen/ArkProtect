@@ -3,7 +3,7 @@
 
 #include <ntifs.h>
 #include <windef.h>
-#include <strsafe.h>
+#include <ntstrsafe.h>
 #include "NtStructs.h"
 #include "Imports.h"
 
@@ -24,7 +24,9 @@ typedef struct _DYNAMIC_DATA
 	eWinVersion	WinVersion;
 
 	//////////////////////////////////////////////////////////////////////////
+	//
 	// Process
+	//
 
 	UINT32      ThreadListHead_KPROCESS;    // KPROCESS::ThreadListHead
 
@@ -37,7 +39,9 @@ typedef struct _DYNAMIC_DATA
 	UINT32      ThreadListHead_EPROCESS;      // EPROCESS::ThreadListHead
 
 	//////////////////////////////////////////////////////////////////////////
+	//
 	// Thread
+	//
 
 	UINT32      Priority;                   // KTHREAD::Priority
 
@@ -91,6 +95,8 @@ typedef struct _DYNAMIC_DATA
 
 	UINT32      NtUserQueryWindowIndex;     // NtUserQueryWindow Index In SSSDT
 
+	PLDR_DATA_TABLE_ENTRY  PsLoadedModuleList; // Module Load List
+
 } DYNAMIC_DATA, *PDYNAMIC_DATA;
 
 
@@ -99,6 +105,9 @@ APGetNtosExportVariableAddress(IN const WCHAR *wzVariableName, OUT PVOID *Variab
 
 BOOLEAN 
 APIsUnicodeStringValid(IN PUNICODE_STRING uniString);
+
+VOID 
+APCharToWchar(IN CHAR * szString, OUT WCHAR * wzString);
 
 BOOLEAN 
 APDosPathToNtPath(IN WCHAR * wzDosFullPath, OUT WCHAR * wzNtFullPath);

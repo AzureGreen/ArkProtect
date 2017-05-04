@@ -189,7 +189,9 @@
     <ClInclude Include="ArkProtectAppDlg.h" />
     <ClInclude Include="DpcTimer.h" />
     <ClInclude Include="FilterDriver.h" />
+    <ClInclude Include="HookDlg.h" />
     <ClInclude Include="IoTimer.h" />
+    <ClInclude Include="SsdtHook.h" />
     <ClInclude Include="SystemCallback.h" />
     <ClInclude Include="Define.h" />
     <ClInclude Include="DriverCore.h" />
@@ -216,7 +218,9 @@
     <ClCompile Include="ArkProtectAppDlg.cpp" />
     <ClCompile Include="DpcTimer.cpp" />
     <ClCompile Include="FilterDriver.cpp" />
+    <ClCompile Include="HookDlg.cpp" />
     <ClCompile Include="IoTimer.cpp" />
+    <ClCompile Include="SsdtHook.cpp" />
     <ClCompile Include="SystemCallback.cpp" />
     <ClCompile Include="DriverCore.cpp" />
     <ClCompile Include="DriverDlg.cpp" />

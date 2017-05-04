@@ -1,5 +1,7 @@
 #include "main.h"
 
+extern PVOID    g_ImageBuffer;
+
 DYNAMIC_DATA	g_DynamicData = { 0 };
 PDRIVER_OBJECT  g_DriverObject = NULL;      // 保存全局驱动对象
 PEPROCESS       g_SystemEProcess = NULL;    // 保存全局系统进程
@@ -24,28 +26,22 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegisterPath)
 		Status = IoCreateSymbolicLink(&uniLinkName, &uniDeviceName);
 		if (NT_SUCCESS(Status))
 		{
+			for (INT32 i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+			{
+				DriverObject->MajorFunction[i] = APDefaultPassThrough;
+			}
+
+			DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = APIoControlPassThrough;
+
+			DriverObject->DriverUnload = APUnloadDriver;
+
+			g_DriverObject = DriverObject;
+
+			g_SystemEProcess = PsGetCurrentProcess();   // 保存系统进程体结构
+
 			Status = APInitializeDynamicData(&g_DynamicData);			// 初始化信息
-			if (NT_SUCCESS(Status))
-			{
-				for (INT32 i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
-				{
-					DriverObject->MajorFunction[i] = APDefaultPassThrough;
-				}
 
-				DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = APIoControlPassThrough;
-
-				DriverObject->DriverUnload = APUnloadDriver;
-
-				g_DriverObject = DriverObject;
-
-				g_SystemEProcess = PsGetCurrentProcess();   // 保存系统进程体结构
-
-				DbgPrint("ArkProtect is Starting!!!");
-			}
-			else
-			{
-				DbgPrint("Initialize Dynamic Data Failed\r\n");
-			}
+			DbgPrint("ArkProtect is Starting!!!");
 		}
 		else
 		{
@@ -177,6 +173,9 @@ APInitializeDynamicData(IN OUT PDYNAMIC_DATA DynamicData)
 
 	}
 
+	g_DynamicData.PsLoadedModuleList = (PLDR_DATA_TABLE_ENTRY)((PLDR_DATA_TABLE_ENTRY)g_DriverObject->DriverSection)->InLoadOrderLinks.Flink;  // 拿到Ldr链表首单元（空头节点）
+
+
 	return Status;
 }
 
@@ -207,6 +206,12 @@ APUnloadDriver(IN PDRIVER_OBJECT DriverObject)
 		NextDeviceObject = CurrentDeviceObject->NextDevice;
 		IoDeleteDevice(CurrentDeviceObject);
 		CurrentDeviceObject = NextDeviceObject;
+	}
+
+	if (g_ImageBuffer)
+	{
+		ExFreePool(g_ImageBuffer);
+		g_ImageBuffer = NULL;
 	}
 
 	DbgPrint("ArkProtect is stopped!!!");

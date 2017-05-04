@@ -15,6 +15,7 @@
 #include "FilterDriver.h"
 #include "IoTimer.h"
 #include "DpcTimer.h"
+#include "SsdtHook.h"
 
 #include "RegistryCore.h"
 
@@ -40,6 +41,7 @@ namespace ArkProtect
 		, m_FilterDriver(this)
 		, m_IoTimer(this)
 		, m_DpcTimer(this)
+		, m_SsdtHook(this)
 		{};
 		~CGlobal() {};
 
@@ -325,6 +327,7 @@ namespace ArkProtect
 		inline CFilterDriver&    FilterDriver()  { return m_FilterDriver; }
 		inline CIoTimer&         IoTimer()       { return m_IoTimer; }
 		inline CDpcTimer&        DpcTimer()      { return m_DpcTimer; }
+		inline CSsdtHook&        SsdtHook()      { return m_SsdtHook; }
 
 		inline CRegistryCore&    RegistryCore()  { return m_RegistryCore; }
 
@@ -333,7 +336,7 @@ namespace ArkProtect
 		CWnd *m_ProcessDlg = NULL;     // 保存进程模块窗口指针
 		CWnd *m_DriverDlg = NULL;      // 保存驱动模块窗口指针
 		CWnd *m_KernelDlg = NULL;      // 保存内核模块窗口指针
-
+		CWnd *m_HookDlg = NULL;        // 保存内核钩子窗口指针
 		CWnd *m_RegistryDlg = NULL;    // 保存注册表模块窗口指针
 		
 
@@ -374,6 +377,11 @@ namespace ArkProtect
 		CFilterDriver      m_FilterDriver;
 		CIoTimer           m_IoTimer;
 		CDpcTimer          m_DpcTimer;
+
+		//
+		// 钩子相关
+		//
+		CSsdtHook          m_SsdtHook;
 
 		//
 		// 注册表相关

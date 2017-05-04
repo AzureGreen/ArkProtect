@@ -50,10 +50,6 @@ BOOL CKernelDlg::OnInitDialog()
 
 	APInitializeKernelItemList();
 
-//	UINT nIconSize = 20 * (UINT)(m_Global->iDpix / 96.0);
-//	m_KernelIconList.Create(nIconSize, nIconSize, ILC_COLOR32 | ILC_MASK, 2, 2);
-//	ListView_SetImageList(m_KernelListCtrl.m_hWnd, m_KernelIconList.GetSafeHandle(), LVSIL_SMALL);
-
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // 异常: OCX 属性页应返回 FALSE
 }
@@ -235,12 +231,14 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 		m_iCurSel = iCurSel;
 
 		// 初始化ListCtrl
-		m_Global->DpcTimer().InitializeDpcTimerList(&m_KernelListCtrl);
+		m_Global->ProcessThread().InitializeProcessThreadList(&m_KernelListCtrl);
+
+		m_Global->ProcessCore().ProcessEntry()->ProcessId = 4;
 
 		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
-			(LPTHREAD_START_ROUTINE)ArkProtect::CDpcTimer::QueryDpcTimerCallback, &m_KernelListCtrl, 0, NULL)
+			(LPTHREAD_START_ROUTINE)ArkProtect::CProcessThread::QueryProcessThreadCallback, &m_KernelListCtrl, 0, NULL)
 		);
 
 		break;

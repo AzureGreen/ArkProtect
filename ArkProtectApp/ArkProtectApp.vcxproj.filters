@@ -64,6 +64,12 @@
     <Filter Include="KernelCore\SystemThread">
       <UniqueIdentifier>{544950f4-4da1-43e4-90e6-6983156ddd2e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="KernelHook">
+      <UniqueIdentifier>{a63808b7-b3b3-460c-804a-21f92ae1a205}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KernelHook\SsdtHook">
+      <UniqueIdentifier>{900ba43b-bbc7-4d54-8119-bb82739276c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -144,6 +150,12 @@
     <ClInclude Include="SystemThread.h">
       <Filter>KernelCore\SystemThread</Filter>
     </ClInclude>
+    <ClInclude Include="HookDlg.h">
+      <Filter>KernelHook</Filter>
+    </ClInclude>
+    <ClInclude Include="SsdtHook.h">
+      <Filter>KernelHook\SsdtHook</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">
@@ -208,6 +220,12 @@
     </ClCompile>
     <ClCompile Include="SystemThread.cpp">
       <Filter>KernelCore\SystemThread</Filter>
+    </ClCompile>
+    <ClCompile Include="HookDlg.cpp">
+      <Filter>KernelHook</Filter>
+    </ClCompile>
+    <ClCompile Include="SsdtHook.cpp">
+      <Filter>KernelHook\SsdtHook</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

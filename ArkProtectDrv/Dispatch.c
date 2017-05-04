@@ -425,7 +425,33 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 			break;
 		}
+		case IOCTL_ARKPROTECT_ENUMSSDTHOOK:
+		{
+			DbgPrint("Enum SsdtHook\r\n");
 
+			if (OutputBuffer)
+			{
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+
+					Status = APEnumSsdtHook(OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+			}
+
+			break;
+		}
 
 		default:
 			Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;

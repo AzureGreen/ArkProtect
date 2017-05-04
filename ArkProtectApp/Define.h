@@ -39,11 +39,10 @@ namespace ArkProtect
 #define IOCTL_ARKPROTECT_ENUMIOTIMER       (UINT32)CTL_CODE(FILE_DEVICE_ARKPROTECT, 0x823, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 #define IOCTL_ARKPROTECT_ENUMDPCTIMER      (UINT32)CTL_CODE(FILE_DEVICE_ARKPROTECT, 0x824, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
-
-
 	//
 	// Hook
 	//
+#define IOCTL_ARKPROTECT_ENUMSSDTHOOK      (UINT32)CTL_CODE(FILE_DEVICE_ARKPROTECT, 0x825, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
 	//
 	// Registry
@@ -95,6 +94,16 @@ namespace ArkProtect
 		ki_IoTimer,
 		ki_DpcTimer,
 		ki_SysThread		
+	};
+
+	// 查看内核钩子项
+	enum eHookItem
+	{
+		hi_Ssdt,
+		hi_Sssdt,
+		hi_NtkrnlFunc,
+		hi_NtkrnlIAT,
+		hi_NtkrnlEAT
 	};
 
 	//////////////////////////////////////////////////////////////////////////

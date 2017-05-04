@@ -61,6 +61,34 @@ APIsUnicodeStringValid(IN PUNICODE_STRING uniString)
 }
 
 
+/************************************************************************
+*  Name : APCharToWchar
+*  Param: szString		        µ¥×Ö×Ö·û´®
+*  Param: wzString		        Ë«×Ö×Ö·û´®
+*  Ret  : VOID
+*  µ¥×Ö×ªË«×Ö
+************************************************************************/
+VOID
+APCharToWchar(IN CHAR* szString, OUT WCHAR* wzString)
+{
+	if (szString && wzString)
+	{
+		NTSTATUS          Status = STATUS_UNSUCCESSFUL;
+		ANSI_STRING       ansiString = { 0 };
+		UNICODE_STRING    uniString = { 0 };
+
+		// µ¥×Ö×ªË«×Ö
+		RtlInitAnsiString(&ansiString, szString);
+		Status = RtlAnsiStringToUnicodeString(&uniString, &ansiString, TRUE);
+		if (NT_SUCCESS(Status))
+		{
+			RtlCopyMemory(wzString, uniString.Buffer, uniString.Length);
+			RtlFreeUnicodeString(&uniString);
+		}
+	}
+}
+
+
 /*
 UINT32
 APGetLogicalDriveStringsW(UINT32 BufferLength, LPWSTR wzBuffer)
@@ -187,8 +215,8 @@ APDosPathToNtPath(IN WCHAR *wzDosFullPath, OUT WCHAR *wzNtFullPath)
 				{
 					//wcscpy(wzNtFullPath, wzNtDriveHead);
 					//wcscat(wzNtFullPath, wzDosFullPath + DosDriveHeadLength);
-					StringCchCopyW(wzNtFullPath, wcslen(wzNtDriveHead), wzNtDriveHead);
-					StringCchCatW(wzNtFullPath, wcslen(wzDosFullPath + DosDriveHeadLength) + 1, wzDosFullPath + DosDriveHeadLength);
+					RtlStringCchCopyW(wzNtFullPath, wcslen(wzNtDriveHead), wzNtDriveHead);
+					RtlStringCchCatW(wzNtFullPath, wcslen(wzDosFullPath + DosDriveHeadLength) + 1, wzDosFullPath + DosDriveHeadLength);
 					return TRUE;
 				}
 			}
@@ -278,7 +306,7 @@ APQueryDosDevice(WCHAR *DeviceName, WCHAR *TargetPath, UINT32 MaximumLength)
 							ucchReturned = 0;
 							break;
 						}
-						StringCchCopyW(Pos, odi->Name.Length, odi->Name.Buffer);
+						RtlStringCchCopyW(Pos, odi->Name.Length, odi->Name.Buffer);
 						Pos += NameLength;
 						*Pos++ = UNICODE_NULL;
 						ucchReturned += NameLength + 1;

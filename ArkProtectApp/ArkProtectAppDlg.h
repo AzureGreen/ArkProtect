@@ -9,6 +9,7 @@
 #include "ProcessDlg.h"
 #include "DriverDlg.h"
 #include "KernelDlg.h"
+#include "HookDlg.h"
 #include "RegistryDlg.h"
 
 // CArkProtectAppDlg ¶Ô»°¿ò
@@ -79,7 +80,7 @@ public:
 	CProcessDlg           *m_ProcessDlg = NULL;
 	CDriverDlg            *m_DriverDlg = NULL;
 	CKernelDlg            *m_KernelDlg = NULL;
-
+	CHookDlg              *m_HookDlg = NULL;
 	CRegistryDlg          *m_RegistryDlg = NULL;
 
 	

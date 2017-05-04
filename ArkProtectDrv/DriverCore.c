@@ -4,8 +4,6 @@
 extern PDRIVER_OBJECT  g_DriverObject;      // 保存全局驱动对象
 extern DYNAMIC_DATA	   g_DynamicData;
 
-PLDR_DATA_TABLE_ENTRY  g_PsLoadedModuleList = NULL;
-
 POBJECT_TYPE           g_DirectoryObjectType = NULL;  // 目录对象类型地址
 
 
@@ -45,11 +43,11 @@ APEnumDriverModuleByLdrDataTableEntry(IN PLDR_DATA_TABLE_ENTRY PsLoadedModuleLis
 
 						if (APIsUnicodeStringValid(&(TravelEntry->FullDllName)))
 						{
-							StringCchCopyW(di->DriverEntry[di->NumberOfDrivers].wzDriverPath, TravelEntry->FullDllName.Length / sizeof(WCHAR) + 1, (WCHAR*)TravelEntry->FullDllName.Buffer);
+							RtlStringCchCopyW(di->DriverEntry[di->NumberOfDrivers].wzDriverPath, TravelEntry->FullDllName.Length / sizeof(WCHAR) + 1, (WCHAR*)TravelEntry->FullDllName.Buffer);
 						}
 						else if (APIsUnicodeStringValid(&(TravelEntry->BaseDllName)))
 						{
-							StringCchCopyW(di->DriverEntry[di->NumberOfDrivers].wzDriverPath, TravelEntry->BaseDllName.Length / sizeof(WCHAR) + 1, (WCHAR*)TravelEntry->BaseDllName.Buffer);
+							RtlStringCchCopyW(di->DriverEntry[di->NumberOfDrivers].wzDriverPath, TravelEntry->BaseDllName.Length / sizeof(WCHAR) + 1, (WCHAR*)TravelEntry->BaseDllName.Buffer);
 						}
 					}
 					di->NumberOfDrivers++;
@@ -116,7 +114,7 @@ APIsDriverInList(IN PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN U
 						di->DriverEntry[i].DirverStartAddress = (UINT_PTR)LdrDataTableEntry->EntryPoint;
 
 						// 获得服务名
-						StringCchCopyW(di->DriverEntry[i].wzServiceName, DriverObject->DriverExtension->ServiceKeyName.Length / sizeof(WCHAR) + 1,
+						RtlStringCchCopyW(di->DriverEntry[i].wzServiceName, DriverObject->DriverExtension->ServiceKeyName.Length / sizeof(WCHAR) + 1,
 							DriverObject->DriverExtension->ServiceKeyName.Buffer);
 					}
 
@@ -172,11 +170,11 @@ APGetDriverInfo(OUT PDRIVER_INFORMATION di, IN PDRIVER_OBJECT DriverObject, IN U
 
 				if (APIsUnicodeStringValid(&(LdrDataTableEntry->FullDllName)))
 				{
-					StringCchCopyW(di->DriverEntry[di->NumberOfDrivers].wzDriverPath, LdrDataTableEntry->FullDllName.Length / sizeof(WCHAR) + 1, (WCHAR*)LdrDataTableEntry->FullDllName.Buffer);
+					RtlStringCchCopyW(di->DriverEntry[di->NumberOfDrivers].wzDriverPath, LdrDataTableEntry->FullDllName.Length / sizeof(WCHAR) + 1, (WCHAR*)LdrDataTableEntry->FullDllName.Buffer);
 				}
 				else if (APIsUnicodeStringValid(&(LdrDataTableEntry->BaseDllName)))
 				{
-					StringCchCopyW(di->DriverEntry[di->NumberOfDrivers].wzDriverPath, LdrDataTableEntry->BaseDllName.Length / sizeof(WCHAR) + 1, (WCHAR*)LdrDataTableEntry->BaseDllName.Buffer);
+					RtlStringCchCopyW(di->DriverEntry[di->NumberOfDrivers].wzDriverPath, LdrDataTableEntry->BaseDllName.Length / sizeof(WCHAR) + 1, (WCHAR*)LdrDataTableEntry->BaseDllName.Buffer);
 				}
 			}
 			di->NumberOfDrivers++;
@@ -350,10 +348,7 @@ APEnumDriverInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 	PDRIVER_INFORMATION di = (PDRIVER_INFORMATION)OutputBuffer;
 	UINT32 DriverCount = (OutputLength - sizeof(DRIVER_INFORMATION)) / sizeof(DRIVER_ENTRY_INFORMATION);
 
-	// 1.获得第一模块信息
-	g_PsLoadedModuleList = (PLDR_DATA_TABLE_ENTRY)((PLDR_DATA_TABLE_ENTRY)g_DriverObject->DriverSection)->InLoadOrderLinks.Flink;  // 拿到Ldr链表首单元（空头节点）
-
-	Status = APEnumDriverModuleByLdrDataTableEntry(g_PsLoadedModuleList, di, DriverCount);
+	Status = APEnumDriverModuleByLdrDataTableEntry(g_DynamicData.PsLoadedModuleList, di, DriverCount);
 	if (NT_SUCCESS(Status))
 	{
 		APEnumDriverModuleByIterateDirectoryObject(di, DriverCount);
@@ -576,7 +571,7 @@ APGetDeviceObjectNameInfo(IN PDEVICE_OBJECT DeviceObject, OUT PWCHAR DeviceName)
 		//		ObjectHeaderNameInfo = (POBJECT_HEADER_NAME_INFO)((PUINT8)DeviceObjectHeader - DeviceObjectHeader->NameInfoOffset);
 		//		if (ObjectHeaderNameInfo && MmIsAddressValid((PVOID)ObjectHeaderNameInfo))
 		//		{
-		//			StringCchCopyW(NameBuffer, ObjectHeaderNameInfo->Name.Length / sizeof(WCHAR) + 1, (WCHAR*)ObjectHeaderNameInfo->Name.Buffer);
+		//			RtlStringCchCopyW(NameBuffer, ObjectHeaderNameInfo->Name.Length / sizeof(WCHAR) + 1, (WCHAR*)ObjectHeaderNameInfo->Name.Buffer);
 		//		}
 		//	}
 		//	else

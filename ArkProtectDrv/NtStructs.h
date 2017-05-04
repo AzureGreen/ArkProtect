@@ -5,6 +5,18 @@
 
 //////////////////////////////////////////////////////////////////////////
 //
+// SSDT
+//
+typedef struct _KSERVICE_TABLE_DESCRIPTOR {
+	PUINT_PTR  Base;        // 服务表基地址
+	PUINT32    Count;       // 每个服务调用次数
+	UINT32     Limit;		// 服务函数个数 / 结构体对齐
+	PUINT8     Number;      // SystemServiceParameterTable
+} KSERVICE_TABLE_DESCRIPTOR, *PKSERVICE_TABLE_DESCRIPTOR;
+
+
+//////////////////////////////////////////////////////////////////////////
+//
 // Section
 //
 typedef struct _CONTROL_AREA

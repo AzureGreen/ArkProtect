@@ -186,6 +186,7 @@
     <ClInclude Include="ProcessThread.h" />
     <ClInclude Include="ProcessWindow.h" />
     <ClInclude Include="ShadowSSDT.h" />
+    <ClInclude Include="Ssdt.h" />
     <ClInclude Include="SystemCallback.h" />
   </ItemGroup>
   <ItemGroup>
@@ -203,6 +204,7 @@
     <ClCompile Include="ProcessThread.c" />
     <ClCompile Include="ProcessWindow.c" />
     <ClCompile Include="ShadowSSDT.c" />
+    <ClCompile Include="Ssdt.c" />
     <ClCompile Include="SystemCallback.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

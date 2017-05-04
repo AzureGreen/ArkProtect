@@ -581,7 +581,7 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 		if (m_DriverDlg) m_DriverDlg->ShowWindow(TRUE);
 		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
 		if (m_KernelDlg) m_KernelDlg->ShowWindow(FALSE);
-	//	if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
+		if (m_HookDlg) m_HookDlg->ShowWindow(FALSE);
 		if (m_RegistryDlg) m_RegistryDlg->ShowWindow(FALSE);
 
 		break;
@@ -604,33 +604,32 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 		if (m_KernelDlg) m_KernelDlg->ShowWindow(TRUE);
 		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
 		if (m_DriverDlg) m_DriverDlg->ShowWindow(FALSE);
-	//	if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
+		if (m_HookDlg) m_HookDlg->ShowWindow(FALSE);
 		if (m_RegistryDlg) m_RegistryDlg->ShowWindow(FALSE);
 
 		break;
 	}
 	case ArkProtect::cd_HookDialog:
 	{
-	//	if (m_KrnlHookDlg == NULL)
-	//	{
-	//		m_KrnlHookDlg = new CKrnlHookDlg(this);
+		if (m_HookDlg == NULL)
+		{
+			m_HookDlg = new CHookDlg(this, &m_Global);
 
-	//		// 绑定对话框
-	//		m_KrnlHookDlg->Create(IDD_DIALOG_KRNLHOOK, GetDlgItem(IDC_TAB_MAIN));
+			// 绑定对话框
+			m_HookDlg->Create(IDD_HOOK_DIALOG, GetDlgItem(IDC_APP_TAB));
 
-	//		// 移动窗口位置
-	//		CRect	Rect;
-	//		m_MainTab.GetClientRect(&Rect);
-	//		m_KrnlHookDlg->MoveWindow(&Rect);
-	//	}
+			// 移动窗口位置
+			CRect	Rect;
+			m_AppTab.GetClientRect(&Rect);
+			m_HookDlg->MoveWindow(&Rect);
+		}
 
-	//	if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(TRUE);
-	//	if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
-	//	if (m_ModuleDlg) m_ModuleDlg->ShowWindow(FALSE);
-	//	if (m_KernelSysDlg) m_KernelSysDlg->ShowWindow(FALSE);
+		if (m_HookDlg) m_HookDlg->ShowWindow(TRUE);
+		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
+		if (m_DriverDlg) m_DriverDlg->ShowWindow(FALSE);
+		if (m_KernelDlg) m_KernelDlg->ShowWindow(FALSE);
+		if (m_RegistryDlg) m_RegistryDlg->ShowWindow(FALSE);
 
-
-	//	MessageBox(0, 0, 0);
 		break;
 	}
 	case ArkProtect::cd_RegistryDialog:
@@ -652,8 +651,7 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(FALSE);
 		if (m_DriverDlg) m_DriverDlg->ShowWindow(FALSE);
 		if (m_KernelDlg) m_KernelDlg->ShowWindow(FALSE);
-		//if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
-
+		if (m_HookDlg) m_HookDlg->ShowWindow(FALSE);
 
 		break;
 	}

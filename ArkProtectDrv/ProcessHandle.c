@@ -40,12 +40,12 @@ APGetHandleType(IN HANDLE Handle, OUT PWCHAR wzHandleType)
 				{
 					if (ObjectTypeInfo->TypeName.Length / sizeof(WCHAR) >= MAX_PATH - 1)
 					{
-						StringCchCopyW(wzHandleType, MAX_PATH, ObjectTypeInfo->TypeName.Buffer);
+						RtlStringCchCopyW(wzHandleType, MAX_PATH, ObjectTypeInfo->TypeName.Buffer);
 						//wcsncpy(wzHandleType, ObjectTypeInfo->TypeName.Buffer, (MAX_PATH - 1));
 					}
 					else
 					{
-						StringCchCopyW(wzHandleType, ObjectTypeInfo->TypeName.Length / sizeof(WCHAR) + 1, ObjectTypeInfo->TypeName.Buffer);
+						RtlStringCchCopyW(wzHandleType, ObjectTypeInfo->TypeName.Length / sizeof(WCHAR) + 1, ObjectTypeInfo->TypeName.Buffer);
 						//wcsncpy(wzHandleType, ObjectTypeInfo->TypeName.Buffer, ObjectTypeInfo->TypeName.Length);
 					}
 				}
@@ -99,12 +99,12 @@ APGetHandleName(IN HANDLE Handle, OUT PWCHAR wzHandleName)
 				{
 					if (ObjectNameInfo->Name.Length / sizeof(WCHAR) >= MAX_PATH - 1)
 					{
-						StringCchCopyW(wzHandleName, MAX_PATH, ObjectNameInfo->Name.Buffer);
+						RtlStringCchCopyW(wzHandleName, MAX_PATH, ObjectNameInfo->Name.Buffer);
 						//wcsncpy(wzHandleName, ObjectNameInfo->Name.Buffer, (MAX_PATH - 1));
 					}
 					else
 					{
-						StringCchCopyW(wzHandleName, ObjectNameInfo->Name.Length / sizeof(WCHAR) + 1, ObjectNameInfo->Name.Buffer);
+						RtlStringCchCopyW(wzHandleName, ObjectNameInfo->Name.Length / sizeof(WCHAR) + 1, ObjectNameInfo->Name.Buffer);
 						//wcsncpy(wzHandleName, ObjectNameInfo->Name.Buffer, ObjectNameInfo->Name.Length);
 					}
 				}

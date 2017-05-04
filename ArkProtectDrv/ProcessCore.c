@@ -307,7 +307,7 @@ APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath)
 
 							//RtlCopyMemory(ProcessFullPath, oni->Name.Buffer, ProcessFullPathLength);
 
-							StringCchCopyW(ProcessFullPath, ProcessFullPathLength, oni->Name.Buffer);
+							RtlStringCchCopyW(ProcessFullPath, ProcessFullPathLength, oni->Name.Buffer);
 
 							Status = STATUS_SUCCESS;
 

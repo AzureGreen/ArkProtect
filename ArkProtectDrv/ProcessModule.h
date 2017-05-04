@@ -2,7 +2,7 @@
 #define CXX_ProcessModule_H
 
 #include <ntifs.h>
-#include <strsafe.h>
+#include <ntstrsafe.h>
 #include "Private.h"
 #include "ProcessCore.h"
 
