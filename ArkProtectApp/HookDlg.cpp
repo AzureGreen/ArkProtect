@@ -37,6 +37,7 @@ BEGIN_MESSAGE_MAP(CHookDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_SHOWWINDOW()
 	ON_LBN_SELCHANGE(IDC_HOOK_LISTBOX, &CHookDlg::OnLbnSelchangeHookListbox)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_HOOK_LISTCTRL, &CHookDlg::OnNMCustomdrawHookListctrl)
 END_MESSAGE_MAP()
 
 
@@ -146,6 +147,10 @@ void CHookDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 		m_HookListCtrl.SetFocus();
 
 	}
+	else
+	{
+		m_iCurSel = 65535;
+	}
 }
 
 
@@ -192,6 +197,43 @@ void CHookDlg::OnLbnSelchangeHookListbox()
 }
 
 
+void CHookDlg::OnNMCustomdrawHookListctrl(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+
+	*pResult = CDRF_DODEFAULT;
+
+	if (CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+	}
+	else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		*pResult = CDRF_NOTIFYSUBITEMDRAW;
+	}
+	else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage)
+	{
+		COLORREF clrNewTextColor, clrNewBkColor;
+		BOOL bHooked = 0;
+		int iItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
+
+		clrNewTextColor = RGB(0, 0, 0);
+		clrNewBkColor = RGB(255, 255, 255);
+
+		bHooked = (BOOL)m_HookListCtrl.GetItemData(iItem);
+		if (bHooked == TRUE)
+		{
+			clrNewTextColor = RGB(255, 0, 0);
+		}
+
+		pLVCD->clrText = clrNewTextColor;
+		pLVCD->clrTextBk = clrNewBkColor;
+
+		*pResult = CDRF_DODEFAULT;
+	}
+}
+
 
 /************************************************************************
 *  Name : APInitializeHookItemList
@@ -210,4 +252,5 @@ void CHookDlg::APInitializeHookItemList()
 	m_HookListBox.SetItemHeight(-1, (UINT)(16 * (m_Global->iDpiy / 96.0)));
 	m_HookModuleListBox.SetItemHeight(-1, (UINT)(16 * (m_Global->iDpiy / 96.0)));
 }
+
 

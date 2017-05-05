@@ -1,10 +1,11 @@
 #include "main.h"
 
-extern PVOID    g_ImageBuffer;
+extern PVOID            g_ImageBuffer;
 
-DYNAMIC_DATA	g_DynamicData = { 0 };
-PDRIVER_OBJECT  g_DriverObject = NULL;      // 保存全局驱动对象
-PEPROCESS       g_SystemEProcess = NULL;    // 保存全局系统进程
+DYNAMIC_DATA	        g_DynamicData = { 0 };
+PDRIVER_OBJECT          g_DriverObject = NULL;      // 保存全局驱动对象
+PEPROCESS               g_SystemEProcess = NULL;    // 保存全局系统进程
+PLDR_DATA_TABLE_ENTRY   g_PsLoadedModuleList = NULL;// 加载模块List
 
 NTSTATUS
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegisterPath)
@@ -38,6 +39,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegisterPath)
 			g_DriverObject = DriverObject;
 
 			g_SystemEProcess = PsGetCurrentProcess();   // 保存系统进程体结构
+
+			g_PsLoadedModuleList = (PLDR_DATA_TABLE_ENTRY)((PLDR_DATA_TABLE_ENTRY)g_DriverObject->DriverSection)->InLoadOrderLinks.Flink;  // 拿到Ldr链表首单元（空头节点）
 
 			Status = APInitializeDynamicData(&g_DynamicData);			// 初始化信息
 
@@ -172,9 +175,6 @@ APInitializeDynamicData(IN OUT PDYNAMIC_DATA DynamicData)
 		}
 
 	}
-
-	g_DynamicData.PsLoadedModuleList = (PLDR_DATA_TABLE_ENTRY)((PLDR_DATA_TABLE_ENTRY)g_DriverObject->DriverSection)->InLoadOrderLinks.Flink;  // 拿到Ldr链表首单元（空头节点）
-
 
 	return Status;
 }

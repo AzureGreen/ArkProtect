@@ -17,6 +17,7 @@ namespace ArkProtect
 	typedef struct _SSDT_HOOK_ENTRY_INFORMATION
 	{
 		UINT32	    Ordinal;
+		BOOL        bHooked;
 		UINT_PTR	CurrentAddress;
 		UINT_PTR	OriginalAddress;
 		WCHAR	    wzFunctionName[100];
@@ -25,7 +26,6 @@ namespace ArkProtect
 	typedef struct _SSDT_HOOK_INFORMATION
 	{
 		UINT32                        NumberOfSsdtFunctions;
-		UINT32                        NumberOfSsdtHooks;
 		SSDT_HOOK_ENTRY_INFORMATION   SsdtHookEntry[1];
 	} SSDT_HOOK_INFORMATION, *PSSDT_HOOK_INFORMATION;
 
@@ -58,8 +58,6 @@ namespace ArkProtect
 			{ L"当前函数所在模块",		195 } };
 
 		std::vector<SSDT_HOOK_ENTRY_INFORMATION> m_SsdtHookEntryVector;
-
-		UINT32             m_SsdtFunctionCount = 0;
 
 		class CGlobal      *m_Global;
 

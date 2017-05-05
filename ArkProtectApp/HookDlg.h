@@ -25,6 +25,7 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnLbnSelchangeHookListbox();
+	afx_msg void OnNMCustomdrawHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -39,4 +40,5 @@ public:
 	
 	int                  m_iCurSel = 65535;
 
+	
 };

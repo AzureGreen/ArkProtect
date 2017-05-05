@@ -1,8 +1,9 @@
 #include "DriverCore.h"
 
 
-extern PDRIVER_OBJECT  g_DriverObject;      // 保存全局驱动对象
-extern DYNAMIC_DATA	   g_DynamicData;
+extern PDRIVER_OBJECT          g_DriverObject;      // 保存全局驱动对象
+extern DYNAMIC_DATA	           g_DynamicData;
+extern PLDR_DATA_TABLE_ENTRY   g_PsLoadedModuleList;
 
 POBJECT_TYPE           g_DirectoryObjectType = NULL;  // 目录对象类型地址
 
@@ -348,7 +349,7 @@ APEnumDriverInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 	PDRIVER_INFORMATION di = (PDRIVER_INFORMATION)OutputBuffer;
 	UINT32 DriverCount = (OutputLength - sizeof(DRIVER_INFORMATION)) / sizeof(DRIVER_ENTRY_INFORMATION);
 
-	Status = APEnumDriverModuleByLdrDataTableEntry(g_DynamicData.PsLoadedModuleList, di, DriverCount);
+	Status = APEnumDriverModuleByLdrDataTableEntry(g_PsLoadedModuleList, di, DriverCount);
 	if (NT_SUCCESS(Status))
 	{
 		APEnumDriverModuleByIterateDirectoryObject(di, DriverCount);

@@ -1,6 +1,7 @@
 #include "Ssdt.h"
 
-extern DYNAMIC_DATA  g_DynamicData;
+extern DYNAMIC_DATA            g_DynamicData;
+extern PLDR_DATA_TABLE_ENTRY   g_PsLoadedModuleList;
 
 PVOID    g_ImageBuffer = NULL;       // ÖØÔØÄÚºËµÄ»ùµØÖ·
 PKSERVICE_TABLE_DESCRIPTOR g_CurrentSsdtAddress = NULL;  // µ±Ç°ÏµÍ³ÔËÐÐ×ÅµÄNtosµÄSsdt»ùµØÖ·
@@ -8,6 +9,7 @@ PKSERVICE_TABLE_DESCRIPTOR g_ReloadSsdtAddress = NULL;   // ÎÒÃÇÖØÔØ³öÀ´µÄNtosµÄ
 UINT_PTR g_OriginalSsdtFunctionAddress[0x200] = { 0 };   // SsdtFunctionÔ­±¾µÄµØÖ·
 UINT32   g_SsdtItem[0x200] = { 0 };                       // Ssdt±íÀïÃæÔ­Ê¼´æ·ÅµÄÊý¾Ý
 WCHAR    g_SsdtFunctionName[0x200][100] = { 0 };          // Ssdtº¯ÊýÃû³Æ±í£¨°´ÐòºÅ´æ·Å£©
+
 
 /************************************************************************
 *  Name : APGetCurrentSsdtAddress
@@ -18,64 +20,268 @@ WCHAR    g_SsdtFunctionName[0x200][100] = { 0 };          // Ssdtº¯ÊýÃû³Æ±í£¨°´Ð
 UINT_PTR
 APGetCurrentSsdtAddress()
 {
-	UINT_PTR  SsdtAddress = 0;
-
-#ifdef _WIN64
-	/*
-	kd> rdmsr c0000082
-	msr[c0000082] = fffff800`03e81640
-	*/
-	PUINT8	StartSearchAddress = (PUINT8)__readmsr(0xC0000082);   // fffff800`03ecf640
-	PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
-	PUINT8	i = NULL;
-	UINT8   v1 = 0, v2 = 0, v3 = 0;
-	INT32   iOffset = 0;    // 002320c7 Æ«ÒÆ²»»á³¬¹ý4×Ö½Ú
-
-	for (i = StartSearchAddress; i<EndSearchAddress; i++)
+	if (g_CurrentSsdtAddress == NULL)
 	{
+#ifdef _WIN64
 		/*
-		kd> u fffff800`03e81640 l 500
-		nt!KiSystemCall64:
-		fffff800`03e81640 0f01f8          swapgs
-		......
-
-		nt!KiSystemServiceRepeat:
-		fffff800`03e9c772 4c8d15c7202300  lea     r10,[nt!KeServiceDescriptorTable (fffff800`040ce840)]
-		fffff800`03e9c779 4c8d1d00212300  lea     r11,[nt!KeServiceDescriptorTableShadow (fffff800`040ce880)]
-		fffff800`03e9c780 f7830001000080000000 test dword ptr [rbx+100h],80h
-
-		TargetAddress = CurrentAddress + Offset + 7
-		fffff800`040ce840 = fffff800`03e9c772 + 0x002320c7 + 7
+		kd> rdmsr c0000082
+		msr[c0000082] = fffff800`03e81640
 		*/
+		PUINT8	StartSearchAddress = (PUINT8)__readmsr(0xC0000082);   // fffff800`03ecf640
+		PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
+		PUINT8	i = NULL;
+		UINT8   v1 = 0, v2 = 0, v3 = 0;
+		INT32   iOffset = 0;    // 002320c7 Æ«ÒÆ²»»á³¬¹ý4×Ö½Ú
 
-		if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
+		for (i = StartSearchAddress; i<EndSearchAddress; i++)
 		{
-			v1 = *i;
-			v2 = *(i + 1);
-			v3 = *(i + 2);
-			if (v1 == 0x4c && v2 == 0x8d && v3 == 0x15)		// Ó²±àÂë  lea r10
+			/*
+			kd> u fffff800`03e81640 l 500
+			nt!KiSystemCall64:
+			fffff800`03e81640 0f01f8          swapgs
+			......
+
+			nt!KiSystemServiceRepeat:
+			fffff800`03e9c772 4c8d15c7202300  lea     r10,[nt!KeServiceDescriptorTable (fffff800`040ce840)]
+			fffff800`03e9c779 4c8d1d00212300  lea     r11,[nt!KeServiceDescriptorTableShadow (fffff800`040ce880)]
+			fffff800`03e9c780 f7830001000080000000 test dword ptr [rbx+100h],80h
+
+			TargetAddress = CurrentAddress + Offset + 7
+			fffff800`040ce840 = fffff800`03e9c772 + 0x002320c7 + 7
+			*/
+
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
 			{
-				RtlCopyMemory(&iOffset, i + 3, 4);
-				SsdtAddress = (UINT64)(iOffset + (UINT64)i + 7);
+				v1 = *i;
+				v2 = *(i + 1);
+				v3 = *(i + 2);
+				if (v1 == 0x4c && v2 == 0x8d && v3 == 0x15)		// Ó²±àÂë  lea r10
+				{
+					RtlCopyMemory(&iOffset, i + 3, 4);
+					(UINT_PTR)g_CurrentSsdtAddress = (UINT_PTR)(iOffset + (UINT64)i + 7);
+				}
 			}
 		}
-	}
 
 #else
 
-	/*
-	kd> dd KeServiceDescriptorTable
-	80553fa0  80502b8c 00000000 0000011c 80503000
-	*/
+		/*
+		kd> dd KeServiceDescriptorTable
+		80553fa0  80502b8c 00000000 0000011c 80503000
+		*/
 
-	// ÔÚNtoskrnl.exeµÄµ¼³ö±íÖÐ£¬»ñÈ¡µ½KeServiceDescriptorTableµØÖ·
-	APGetNtosExportVariableAddress(L"KeServiceDescriptorTable", (PVOID*)SsdtAddress);
+		// ÔÚNtoskrnl.exeµÄµ¼³ö±íÖÐ£¬»ñÈ¡µ½KeServiceDescriptorTableµØÖ·
+		APGetNtosExportVariableAddress(L"KeServiceDescriptorTable", (PVOID*)&g_CurrentSsdtAddress);
+
+#endif
+	}
+
+	DbgPrint("SSDTAddress is %p\r\n", g_CurrentSsdtAddress);
+
+	return (UINT_PTR)g_CurrentSsdtAddress;
+}
+
+
+/************************************************************************
+*  Name : APMappingFileInKernelSpace
+*  Param: wzFileFullPath		ÎÄ¼þÍêÕûÂ·¾¶
+*  Param: MappingBaseAddress	Ó³ÉäºóµÄ»ùµØÖ· (OUT)
+*  Ret  : BOOLEAN
+*  ½«PEÎÄ¼þÓ³Éäµ½ÄÚºË¿Õ¼ä
+************************************************************************/
+NTSTATUS
+APMappingFileInKernelSpace(IN WCHAR* wzFileFullPath, OUT PVOID* MappingBaseAddress)
+{
+	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
+
+	if (wzFileFullPath && MappingBaseAddress)
+	{
+		UNICODE_STRING    uniFileFullPath = { 0 };
+		OBJECT_ATTRIBUTES oa = { 0 };
+		IO_STATUS_BLOCK   Iosb = { 0 };
+		HANDLE			  FileHandle = NULL;
+		HANDLE			  SectionHandle = NULL;
+
+		RtlInitUnicodeString(&uniFileFullPath, wzFileFullPath);		// ³£Á¿Ö¸Õë¸ñÊ½»¯µ½unicode
+		InitializeObjectAttributes(&oa,									// ³õÊ¼»¯ oa
+			&uniFileFullPath,											// DllÍêÕûÂ·¾¶
+			OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,					// ²»Çø·Ö´óÐ¡Ð´ | ÄÚºË¾ä±ú
+			NULL,
+			NULL);
+
+		Status = IoCreateFile(&FileHandle,								// »ñµÃÎÄ¼þ¾ä±ú
+			GENERIC_READ | SYNCHRONIZE,									// Í¬²½¶Á
+			&oa,														// ÎÄ¼þ¾ø¶ÔÂ·¾¶
+			&Iosb,
+			NULL,
+			FILE_ATTRIBUTE_NORMAL,
+			FILE_SHARE_READ,
+			FILE_OPEN,
+			FILE_SYNCHRONOUS_IO_NONALERT,
+			NULL,
+			0,
+			CreateFileTypeNone,
+			NULL,
+			IO_NO_PARAMETER_CHECKING);
+
+		if (NT_SUCCESS(Status))
+		{
+			InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+
+			Status = ZwCreateSection(&SectionHandle,			// ´´½¨½Ú¶ÔÏó,ÓÃÓÚºóÃæÎÄ¼þÓ³Éä £¨CreateFileMapping£©
+				SECTION_QUERY | SECTION_MAP_READ,
+				&oa,
+				NULL,
+				PAGE_WRITECOPY,
+				SEC_IMAGE,              // ÄÚ´æ¶ÔÆë
+				FileHandle);
+
+			if (NT_SUCCESS(Status))
+			{
+				SIZE_T MappingViewSize = 0;
+
+				Status = ZwMapViewOfSection(SectionHandle,
+					ZwCurrentProcess(),				// Ó³Éäµ½µ±Ç°½ø³ÌµÄÄÚ´æ¿Õ¼äÖÐ System
+					MappingBaseAddress,
+					0,
+					0,
+					0,
+					&MappingViewSize,
+					ViewUnmap,
+					0,
+					PAGE_WRITECOPY);
+
+				ZwClose(SectionHandle);
+			}
+			ZwClose(FileHandle);
+		}
+	}
+
+	return Status;
+}
+
+
+NTSTATUS
+APInitializeSsdtFunctionName()
+{
+	NTSTATUS  Status = STATUS_SUCCESS;
+
+	if (g_CurrentSsdtAddress == NULL)
+	{
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	if (*g_SsdtFunctionName[0] == 0 || *g_SsdtFunctionName[g_CurrentSsdtAddress->Limit] == 0)
+	{
+		UINT32    Count = 0;
+
+#ifdef _WIN64
+
+		/* Win7 64bit
+		004> u zwopenprocess
+		ntdll!ZwOpenProcess:
+		00000000`774c1570 4c8bd1          mov     r10,rcx
+		00000000`774c1573 b823000000      mov     eax,23h
+		00000000`774c1578 0f05            syscall
+		00000000`774c157a c3              ret
+		00000000`774c157b 0f1f440000      nop     dword ptr [rax+rax]
+		*/
+
+		UINT32    SsdtFunctionIndexOffset = 4;
+
+#else
+
+		/* 	Win7 32bit
+		kd> u zwopenProcess
+		nt!ZwOpenProcess:
+		83e9162c b8be000000      mov     eax,0BEh
+		83e91631 8d542404        lea     edx,[esp+4]
+		83e91635 9c              pushfd
+		83e91636 6a08            push    8
+		83e91638 e8b1190000      call    nt!KiSystemService (83e92fee)
+		83e9163d c21000          ret     10h
+		*/
+
+		UINT32    SsdtFunctionIndexOffset = 1;
 
 #endif
 
-	DbgPrint("SSDTAddress is %p\r\n", SsdtAddress);
+		// 1.Ó³Éäntdllµ½ÄÚ´æÖÐ
+		WCHAR   wzFileFullPath[] = L"\\SystemRoot\\System32\\ntdll.dll";
+		PVOID   MappingBaseAddress = NULL;
 
-	return SsdtAddress;
+		Status = APMappingFileInKernelSpace(wzFileFullPath, &MappingBaseAddress);
+		if (NT_SUCCESS(Status))
+		{
+			// 2.¶ÁÈ¡ntdllµÄµ¼³ö±í
+
+			PIMAGE_DOS_HEADER       DosHeader = NULL;
+			PIMAGE_NT_HEADERS       NtHeader = NULL;
+
+			__try
+			{
+				DosHeader = (PIMAGE_DOS_HEADER)MappingBaseAddress;
+				NtHeader = (PIMAGE_NT_HEADERS)((UINT_PTR)MappingBaseAddress + DosHeader->e_lfanew);
+				if (NtHeader && NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress)
+				{
+					PIMAGE_EXPORT_DIRECTORY ExportDirectory = NULL;
+					PUINT32                 AddressOfFunctions = NULL;      // offset
+					PUINT32                 AddressOfNames = NULL;          // offset
+					PUINT16                 AddressOfNameOrdinals = NULL;   // Ordinal
+
+					ExportDirectory = (PIMAGE_EXPORT_DIRECTORY)((PUINT8)MappingBaseAddress + NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);		// µ¼³ö±íµØÖ·
+
+					AddressOfFunctions = (PUINT32)((PUINT8)MappingBaseAddress + ExportDirectory->AddressOfFunctions);
+					AddressOfNames = (PUINT32)((PUINT8)MappingBaseAddress + ExportDirectory->AddressOfNames);
+					AddressOfNameOrdinals = (PUINT16)((PUINT8)MappingBaseAddress + ExportDirectory->AddressOfNameOrdinals);
+
+					// ÕâÀï²»´¦Àí×ª·¢£¬ntdllÓ¦¸Ã²»´æÔÚ×ª·¢
+					for (UINT32 i = 0; i < ExportDirectory->NumberOfNames; i++)
+					{
+						CHAR*                   szFunctionName = NULL;
+
+						szFunctionName = (CHAR*)((PUINT8)MappingBaseAddress + AddressOfNames[i]);   // »ñµÃº¯ÊýÃû³Æ
+
+																									// Í¨¹ýº¯ÊýÃû³Æ¿ªÍ·ÊÇ ZW À´ÅÐ¶ÏÊÇ·ñÊÇSsdtº¯Êý
+						if (szFunctionName[0] == 'Z' && szFunctionName[1] == 'w')
+						{
+							UINT32   FunctionOrdinal = 0;
+							UINT_PTR FunctionAddress = 0;
+							INT32    SsdtFunctionIndex = 0;
+							WCHAR    wzFunctionName[100] = { 0 };
+
+							FunctionOrdinal = AddressOfNameOrdinals[i];
+							FunctionAddress = (UINT_PTR)((PUINT8)MappingBaseAddress + AddressOfFunctions[FunctionOrdinal]);
+
+							SsdtFunctionIndex = *(PUINT32)(FunctionAddress + SsdtFunctionIndexOffset);
+
+							if ((SsdtFunctionIndex >= 0) && (SsdtFunctionIndex < (INT32)g_CurrentSsdtAddress->Limit))
+							{
+								APCharToWchar(szFunctionName, wzFunctionName);
+
+								wzFunctionName[0] = 'N';
+								wzFunctionName[1] = 't';
+
+								RtlStringCchCopyW(g_SsdtFunctionName[SsdtFunctionIndex], wcslen(wzFunctionName) + 1, wzFunctionName);
+
+								Status = STATUS_SUCCESS;
+							}
+
+							Count++;
+						}
+					}
+				}
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				DbgPrint("Catch Exception\r\n");
+			}
+
+			ZwUnmapViewOfSection(NtCurrentProcess(), MappingBaseAddress);
+		}
+	}
+
+	return Status;
 }
 
 
@@ -170,8 +376,8 @@ APGetModuleHandle(IN PCHAR szModuleName)
 	RtlInitEmptyUnicodeString(&uniModuleName, Buffer, sizeof(Buffer));
 	RtlAnsiStringToUnicodeString(&uniModuleName, &ansiModuleName, FALSE);
 
-	for (PLIST_ENTRY TravelListEntry = g_DynamicData.PsLoadedModuleList->InLoadOrderLinks.Flink;
-		TravelListEntry != (PLIST_ENTRY)g_DynamicData.PsLoadedModuleList;
+	for (PLIST_ENTRY TravelListEntry = g_PsLoadedModuleList->InLoadOrderLinks.Flink;
+		TravelListEntry != (PLIST_ENTRY)g_PsLoadedModuleList;
 		TravelListEntry = TravelListEntry->Flink)
 	{
 		PLDR_DATA_TABLE_ENTRY LdrDataTableEntry = (PLDR_DATA_TABLE_ENTRY)TravelListEntry;   // Ê×³ÉÔ±¾ÍÊÇInLoadOrderLinks
@@ -236,8 +442,8 @@ APGetProcAddress(IN PVOID ModuleBase, IN PCHAR szFunctionName)
 			// Ä¿Ç°²»ÂÛÊÇÐòºÅµ¼³ö»¹ÊÇÃû³Æµ¼³ö¶¼ÊÇ¶ÔµÄ½øÕâÀï
 			UINT_PTR FunctionAddress = (UINT_PTR)((PUINT8)ModuleBase + AddressOfFunctions[Ordinal]);		// µÃµ½º¯ÊýµÄµØÖ·£¨Ò²Ðí²»ÊÇÕæÊµµØÖ·£©
 
-			// ¼ì²éÊÇ²»ÊÇforwarder export£¬Èç¹û¸ÕµÃµ½µÄº¯ÊýµØÖ·»¹ÔÚµ¼³ö±í·¶Î§ÄÚ£¬ÔòÉæ¼°µ½×ª·¢Æ÷£¨×Ódllµ¼Èë¸¸dllµ¼³öµÄº¯ÊýºóÔÙµ¼³ö----> ×ª·¢Æ÷£©																						
-			// ÒòÎªÈç¹ûÊÇº¯ÊýÕæÊµµØÖ·£¬¾ÍÒÑ¾­³¬³öÁËµ¼³ö±íµØÖ··¶Î§
+																											// ¼ì²éÊÇ²»ÊÇforwarder export£¬Èç¹û¸ÕµÃµ½µÄº¯ÊýµØÖ·»¹ÔÚµ¼³ö±í·¶Î§ÄÚ£¬ÔòÉæ¼°µ½×ª·¢Æ÷£¨×Ódllµ¼Èë¸¸dllµ¼³öµÄº¯ÊýºóÔÙµ¼³ö----> ×ª·¢Æ÷£©																						
+																											// ÒòÎªÈç¹ûÊÇº¯ÊýÕæÊµµØÖ·£¬¾ÍÒÑ¾­³¬³öÁËµ¼³ö±íµØÖ··¶Î§
 			if (FunctionAddress >= (UINT_PTR)((PUINT8)ModuleBase + ExportDirectoryRVA) &&
 				FunctionAddress <= (UINT_PTR)((PUINT8)ModuleBase + ExportDirectoryRVA + ExportDirectorySize))
 			{
@@ -397,13 +603,13 @@ APFixRelocBaseTable(IN PVOID ReloadBase, IN PVOID OriginalBase)
 					PUINT64	RelocAddress = (PUINT64)((PUINT8)ReloadBase + BaseRelocation->VirtualAddress + (TypeOffset[i] & 0x0FFF));  // ¶¨Î»µ½ÖØ¶¨Ïò¿é
 					*RelocAddress = (UINT64)(*RelocAddress + (UINT_PTR)((UINT_PTR)OriginalBase - (UINT_PTR)NtHeader->OptionalHeader.ImageBase));            // ÖØ¶¨Ïò¿éµÄÊý¾Ý + £¨ÕæÊµ¼ÓÔØµØÖ· - Ô¤¼ÓÔØµØÖ· = Offset£©
 
-					//DbgPrint("RelocAddress: %p\r\n", RelocAddress);
+																																							//DbgPrint("RelocAddress: %p\r\n", RelocAddress);
 #endif // _WIN64
 				}
 				else if ((TypeOffset[i] >> 12) == IMAGE_REL_BASED_HIGHLOW)
 				{
 #ifndef _WIN64
-					PUINT32	RelocAddress = (PUINT32)((PUINT8)ImageBase + BaseRelocation->VirtualAddress + (TypeOffset[i] & 0x0FFF));
+					PUINT32	RelocAddress = (PUINT32)((PUINT8)ReloadBase + BaseRelocation->VirtualAddress + (TypeOffset[i] & 0x0FFF));
 					*RelocAddress = (UINT32)(*RelocAddress + ((PUINT8)OriginalBase - NtHeader->OptionalHeader.ImageBase));
 
 					//DbgPrint("RelocAddress: %p\r\n", RelocAddress);
@@ -508,12 +714,12 @@ APFixKiServiceTable(IN PVOID ImageBase, IN PVOID OriginalBase)
 #else
 			for (UINT32 i = 0; i < g_ReloadSsdtAddress->Limit; i++)
 			{
-				g_OriginalSsdtFunctionAddress[i] = g_ReloadSsdtAddress->Base[i];
+				g_OriginalSsdtFunctionAddress[i] = *(UINT32*)(g_ReloadSsdtAddress->Base + i * 4);
 				g_SsdtItem[i] = g_OriginalSsdtFunctionAddress[i];
-				g_ReloadSsdtAddress->Base[i] += iKrnlOffset;      // ½«ËùÓÐSsdtº¯ÊýµØÖ·×ªµ½ÎÒÃÇÐÂ¼ÓÔØµ½ÄÚ´æÖÐµÄµØÖ·
+				*(UINT32*)(g_ReloadSsdtAddress->Base + i * 4) += KrnlOffset;      // ½«ËùÓÐSsdtº¯ÊýµØÖ·×ªµ½ÎÒÃÇÐÂ¼ÓÔØµ½ÄÚ´æÖÐµÄµØÖ·
 			}
 #endif // _WIN64
-			
+
 		}
 		else
 		{
@@ -536,58 +742,69 @@ APFixKiServiceTable(IN PVOID ImageBase, IN PVOID OriginalBase)
 NTSTATUS
 APReloadNtkrnl()
 {
-	NTSTATUS              Status = STATUS_UNSUCCESSFUL;
-	PLDR_DATA_TABLE_ENTRY NtLdr = NULL;
-	PVOID                 FileBuffer = NULL;
+	NTSTATUS    Status = STATUS_SUCCESS;
 
-	NtLdr = (PLDR_DATA_TABLE_ENTRY)g_DynamicData.PsLoadedModuleList->InLoadOrderLinks.Flink;   // Ntkrnl
-
-	DbgPrint("Ä£¿éÃû³Æ:%S\r\n", NtLdr->BaseDllName.Buffer);
-	DbgPrint("Ä£¿éÂ·¾¶:%S\r\n", NtLdr->FullDllName.Buffer);
-	DbgPrint("Ä£¿éµØÖ·:%p\r\n", NtLdr->DllBase);
-	DbgPrint("Ä£¿é´óÐ¡:%x\r\n", NtLdr->SizeOfImage);
-
-	// 2.¶ÁÈ¡µÚÒ»Ä£¿éÎÄ¼þµ½ÄÚ´æ£¬°´ÄÚ´æ¶ÔÆë¸ñÊ½Íê³ÉPEµÄIAT£¬BaseRelocÐÞ¸´
-	FileBuffer = APGetFileBuffer(&NtLdr->FullDllName);
-	if (FileBuffer)
+	if (g_ImageBuffer == NULL)
 	{
-		PIMAGE_DOS_HEADER DosHeader = NULL;
-		PIMAGE_NT_HEADERS NtHeader = NULL;
-		PIMAGE_SECTION_HEADER SectionHeader = NULL;
+		PLDR_DATA_TABLE_ENTRY NtLdr = NULL;
+		PVOID                 FileBuffer = NULL;
 
-		DosHeader = (PIMAGE_DOS_HEADER)FileBuffer;
-		if (DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
+		Status = STATUS_UNSUCCESSFUL;
+
+		// 1.»ñµÃµÚÒ»Ä£¿éÐÅÏ¢
+		NtLdr = (PLDR_DATA_TABLE_ENTRY)g_PsLoadedModuleList->InLoadOrderLinks.Flink;   // Ntkrnl
+
+		DbgPrint("Ä£¿éÃû³Æ:%S\r\n", NtLdr->BaseDllName.Buffer);
+		DbgPrint("Ä£¿éÂ·¾¶:%S\r\n", NtLdr->FullDllName.Buffer);
+		DbgPrint("Ä£¿éµØÖ·:%p\r\n", NtLdr->DllBase);
+		DbgPrint("Ä£¿é´óÐ¡:%x\r\n", NtLdr->SizeOfImage);
+
+		// 2.¶ÁÈ¡µÚÒ»Ä£¿éÎÄ¼þµ½ÄÚ´æ£¬°´ÄÚ´æ¶ÔÆë¸ñÊ½Íê³ÉPEµÄIAT£¬BaseRelocÐÞ¸´
+		FileBuffer = APGetFileBuffer(&NtLdr->FullDllName);
+		if (FileBuffer)
 		{
-			NtHeader = (PIMAGE_NT_HEADERS)((PUINT8)FileBuffer + DosHeader->e_lfanew);
-			if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
+			PIMAGE_DOS_HEADER DosHeader = NULL;
+			PIMAGE_NT_HEADERS NtHeader = NULL;
+			PIMAGE_SECTION_HEADER SectionHeader = NULL;
+
+			DosHeader = (PIMAGE_DOS_HEADER)FileBuffer;
+			if (DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
 			{
-				g_ImageBuffer = ExAllocatePool(NonPagedPool, NtHeader->OptionalHeader.SizeOfImage);
-				if (g_ImageBuffer)
+				NtHeader = (PIMAGE_NT_HEADERS)((PUINT8)FileBuffer + DosHeader->e_lfanew);
+				if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
 				{
-					DbgPrint("New Base::%p\r\n", g_ImageBuffer);
-
-					// 2.1.¿ªÊ¼¿½±´Êý¾Ý
-					RtlZeroMemory(g_ImageBuffer, NtHeader->OptionalHeader.SizeOfImage);
-					// 2.1.1.¿½±´Í·
-					RtlCopyMemory(g_ImageBuffer, FileBuffer, NtHeader->OptionalHeader.SizeOfHeaders);
-					// 2.1.2.¿½±´½ÚÇø
-					SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
-					for (UINT16 i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+					g_ImageBuffer = ExAllocatePool(NonPagedPool, NtHeader->OptionalHeader.SizeOfImage);
+					if (g_ImageBuffer)
 					{
-						RtlCopyMemory((PUINT8)g_ImageBuffer + SectionHeader[i].VirtualAddress,
-							(PUINT8)FileBuffer + SectionHeader[i].PointerToRawData, SectionHeader[i].SizeOfRawData);
+						DbgPrint("New Base::%p\r\n", g_ImageBuffer);
+
+						// 2.1.¿ªÊ¼¿½±´Êý¾Ý
+						RtlZeroMemory(g_ImageBuffer, NtHeader->OptionalHeader.SizeOfImage);
+						// 2.1.1.¿½±´Í·
+						RtlCopyMemory(g_ImageBuffer, FileBuffer, NtHeader->OptionalHeader.SizeOfHeaders);
+						// 2.1.2.¿½±´½ÚÇø
+						SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
+						for (UINT16 i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+						{
+							RtlCopyMemory((PUINT8)g_ImageBuffer + SectionHeader[i].VirtualAddress,
+								(PUINT8)FileBuffer + SectionHeader[i].PointerToRawData, SectionHeader[i].SizeOfRawData);
+						}
+
+						// 2.2.ÐÞ¸´µ¼ÈëµØÖ·±í
+						APFixImportAddressTable(g_ImageBuffer);
+
+						// 2.3.ÐÞ¸´ÖØ¶¨Ïò±í
+						APFixRelocBaseTable(g_ImageBuffer, NtLdr->DllBase);
+
+						// 2.4.ÐÞ¸´SSDT
+						APFixKiServiceTable(g_ImageBuffer, NtLdr->DllBase);
+
+						Status = STATUS_SUCCESS;
 					}
-
-					// 2.2.ÐÞ¸´µ¼ÈëµØÖ·±í
-					APFixImportAddressTable(g_ImageBuffer);
-
-					// 2.3.ÐÞ¸´ÖØ¶¨Ïò±í
-					APFixRelocBaseTable(g_ImageBuffer, NtLdr->DllBase);
-
-					// 2.4.ÐÞ¸´SSDT
-					APFixKiServiceTable(g_ImageBuffer, NtLdr->DllBase);
-
-					Status = STATUS_SUCCESS;
+					else
+					{
+						DbgPrint("ReloadNtkrnl:: Not Valid PE\r\n");
+					}
 				}
 				else
 				{
@@ -598,214 +815,16 @@ APReloadNtkrnl()
 			{
 				DbgPrint("ReloadNtkrnl:: Not Valid PE\r\n");
 			}
+			ExFreePool(FileBuffer);
+			FileBuffer = NULL;
 		}
-		else
-		{
-			DbgPrint("ReloadNtkrnl:: Not Valid PE\r\n");
-		}
-		ExFreePool(FileBuffer);
-		FileBuffer = NULL;
+
 	}
 
 	return Status;
 }
 
 
-
-/************************************************************************
-*  Name : APMappingFileInKernelSpace
-*  Param: wzFileFullPath		ÎÄ¼þÍêÕûÂ·¾¶
-*  Param: MappingBaseAddress	Ó³ÉäºóµÄ»ùµØÖ· (OUT)
-*  Ret  : BOOLEAN
-*  ½«PEÎÄ¼þÓ³Éäµ½ÄÚºË¿Õ¼ä
-************************************************************************/
-NTSTATUS
-APMappingFileInKernelSpace(IN WCHAR* wzFileFullPath, OUT PVOID* MappingBaseAddress)
-{
-	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
-
-	if (wzFileFullPath && MappingBaseAddress)
-	{
-		UNICODE_STRING    uniFileFullPath = { 0 };
-		OBJECT_ATTRIBUTES oa = { 0 };
-		IO_STATUS_BLOCK   Iosb = { 0 };
-		HANDLE			  FileHandle = NULL;
-		HANDLE			  SectionHandle = NULL;
-
-		RtlInitUnicodeString(&uniFileFullPath, wzFileFullPath);		// ³£Á¿Ö¸Õë¸ñÊ½»¯µ½unicode
-		InitializeObjectAttributes(&oa,									// ³õÊ¼»¯ oa
-			&uniFileFullPath,											// DllÍêÕûÂ·¾¶
-			OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,					// ²»Çø·Ö´óÐ¡Ð´ | ÄÚºË¾ä±ú
-			NULL,
-			NULL);
-
-		Status = IoCreateFile(&FileHandle,								// »ñµÃÎÄ¼þ¾ä±ú
-			GENERIC_READ | SYNCHRONIZE,									// Í¬²½¶Á
-			&oa,														// ÎÄ¼þ¾ø¶ÔÂ·¾¶
-			&Iosb,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			FILE_SHARE_READ,
-			FILE_OPEN,
-			FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0,
-			CreateFileTypeNone,
-			NULL,
-			IO_NO_PARAMETER_CHECKING);
-
-		if (NT_SUCCESS(Status))
-		{
-			InitializeObjectAttributes(&oa, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
-
-			Status = ZwCreateSection(&SectionHandle,			// ´´½¨½Ú¶ÔÏó,ÓÃÓÚºóÃæÎÄ¼þÓ³Éä £¨CreateFileMapping£©
-				SECTION_QUERY | SECTION_MAP_READ,
-				&oa,
-				NULL,
-				PAGE_WRITECOPY,
-				SEC_IMAGE,              // ÄÚ´æ¶ÔÆë
-				FileHandle);
-
-			if (NT_SUCCESS(Status))
-			{
-				SIZE_T MappingViewSize = 0;
-
-				Status = ZwMapViewOfSection(SectionHandle,
-					ZwCurrentProcess(),				// Ó³Éäµ½µ±Ç°½ø³ÌµÄÄÚ´æ¿Õ¼äÖÐ System
-					MappingBaseAddress,
-					0,
-					0,
-					0,
-					&MappingViewSize,
-					ViewUnmap,
-					0,
-					PAGE_WRITECOPY);
-
-				ZwClose(SectionHandle);
-			}
-			ZwClose(FileHandle);
-		}
-	}
-
-	return Status;
-}
-
-
-NTSTATUS
-APInitializeSsdtFunctionName()
-{
-	UINT32    Count = 0;
-	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
-
-#ifdef _WIN64
-
-	/* Win7 64bit
-	004> u zwopenprocess
-	ntdll!ZwOpenProcess:
-	00000000`774c1570 4c8bd1          mov     r10,rcx
-	00000000`774c1573 b823000000      mov     eax,23h
-	00000000`774c1578 0f05            syscall
-	00000000`774c157a c3              ret
-	00000000`774c157b 0f1f440000      nop     dword ptr [rax+rax]
-	*/
-
-	UINT32    SsdtFunctionIndexOffset = 4;
-
-#else
-
-	/* 	Win7 32bit
-	kd> u zwopenProcess
-	nt!ZwOpenProcess:
-	83e9162c b8be000000      mov     eax,0BEh
-	83e91631 8d542404        lea     edx,[esp+4]
-	83e91635 9c              pushfd
-	83e91636 6a08            push    8
-	83e91638 e8b1190000      call    nt!KiSystemService (83e92fee)
-	83e9163d c21000          ret     10h
-	*/
-
-	UINT32    SsdtFunctionIndexOffset = 1;
-
-#endif
-
-	// 1.Ó³Éäntdllµ½ÄÚ´æÖÐ
-	WCHAR   wzFileFullPath[] = L"\\SystemRoot\\System32\\ntdll.dll";
-	PVOID   MappingBaseAddress = NULL;
-
-	Status = APMappingFileInKernelSpace(wzFileFullPath, &MappingBaseAddress);
-	if (NT_SUCCESS(Status))
-	{
-		// 2.¶ÁÈ¡ntdllµÄµ¼³ö±í
-
-		PIMAGE_DOS_HEADER       DosHeader = NULL;
-		PIMAGE_NT_HEADERS       NtHeader = NULL;
-
-		__try
-		{
-			DosHeader = (PIMAGE_DOS_HEADER)MappingBaseAddress;
-			NtHeader = (PIMAGE_NT_HEADERS)((UINT_PTR)MappingBaseAddress + DosHeader->e_lfanew);
-			if (NtHeader && NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress)
-			{
-				PIMAGE_EXPORT_DIRECTORY ExportDirectory = NULL;
-				PUINT32                 AddressOfFunctions = NULL;      // offset
-				PUINT32                 AddressOfNames = NULL;          // offset
-				PUINT16                 AddressOfNameOrdinals = NULL;   // Ordinal
-
-				ExportDirectory = (PIMAGE_EXPORT_DIRECTORY)((PUINT8)MappingBaseAddress + NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);		// µ¼³ö±íµØÖ·
-
-				AddressOfFunctions = (PUINT32)((PUINT8)MappingBaseAddress + ExportDirectory->AddressOfFunctions);
-				AddressOfNames = (PUINT32)((PUINT8)MappingBaseAddress + ExportDirectory->AddressOfNames);
-				AddressOfNameOrdinals = (PUINT16)((PUINT8)MappingBaseAddress + ExportDirectory->AddressOfNameOrdinals);
-
-				// ÕâÀï²»´¦Àí×ª·¢£¬ntdllÓ¦¸Ã²»´æÔÚ×ª·¢
-				for (UINT32 i = 0; i < ExportDirectory->NumberOfNames; i++)
-				{
-					CHAR*                   szFunctionName = NULL;
-
-					szFunctionName = (CHAR*)((PUINT8)MappingBaseAddress + AddressOfNames[i]);   // »ñµÃº¯ÊýÃû³Æ
-					
-					// Í¨¹ýº¯ÊýÃû³Æ¿ªÍ·ÊÇ ZW À´ÅÐ¶ÏÊÇ·ñÊÇSsdtº¯Êý
-					if (szFunctionName[0] == 'Z' && szFunctionName[1] == 'w')
-					{
-						UINT32   FunctionOrdinal = 0;
-						UINT_PTR FunctionAddress = 0;
-						INT32    SsdtFunctionIndex = 0;
-						WCHAR    wzFunctionName[100] = { 0 };
-
-						FunctionOrdinal = AddressOfNameOrdinals[i];
-						FunctionAddress = (UINT_PTR)((PUINT8)MappingBaseAddress + AddressOfFunctions[FunctionOrdinal]);
-
-						SsdtFunctionIndex = *(PUINT32)(FunctionAddress + SsdtFunctionIndexOffset);
-
-						if ((SsdtFunctionIndex >=0) && (SsdtFunctionIndex < (INT32)g_CurrentSsdtAddress->Limit))
-						{
-							APCharToWchar(szFunctionName, wzFunctionName);
-
-							wzFunctionName[0] = 'N';
-							wzFunctionName[1] = 't';
-
-							RtlStringCchCopyW(g_SsdtFunctionName[SsdtFunctionIndex], wcslen(wzFunctionName) + 1, wzFunctionName);
-
-							Status = STATUS_SUCCESS;
-						}
-
-						Count++;
-					}
-				}
-			}
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			DbgPrint("Catch Exception\r\n");
-		}
-
-		ZwUnmapViewOfSection(NtCurrentProcess(), MappingBaseAddress);
-	}
-
-	DbgPrint("Count: %d\r\n", Count);
-
-	return Status;
-}
 
 /************************************************************************
 *  Name : APEnumSsdtHook
@@ -819,7 +838,7 @@ APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 {
 	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
 
-	UINT32    SsdtHookCount = (OutputLength - sizeof(SSDT_HOOK_INFORMATION)) / sizeof(SSDT_HOOK_ENTRY_INFORMATION);
+	UINT32    SsdtFunctionCount = (OutputLength - sizeof(SSDT_HOOK_INFORMATION)) / sizeof(SSDT_HOOK_ENTRY_INFORMATION);
 
 	PSSDT_HOOK_INFORMATION shi = (PSSDT_HOOK_INFORMATION)OutputBuffer;
 
@@ -827,8 +846,6 @@ APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 	g_CurrentSsdtAddress = (PKSERVICE_TABLE_DESCRIPTOR)APGetCurrentSsdtAddress();
 	if (g_CurrentSsdtAddress && MmIsAddressValid(g_CurrentSsdtAddress))
 	{
-		shi->NumberOfSsdtFunctions = g_CurrentSsdtAddress->Limit;
-
 		// 2.³õÊ¼»¯Ssdtº¯ÊýÃû³Æ
 		Status = APInitializeSsdtFunctionName();
 		if (NT_SUCCESS(Status))
@@ -840,41 +857,44 @@ APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 				// 4.¶Ô±ÈOriginal&Current
 				for (UINT32 i = 0; i < g_CurrentSsdtAddress->Limit; i++)
 				{
-					
-	#ifdef _WIN64
-					// 64Î»´æ´¢µÄÊÇ Æ«ÒÆ£¨¸ß28Î»£©
-					INT32 OriginalOffset = g_SsdtItem[i] >> 4;
-					INT32 CurrentOffset = (*(UINT32*)((UINT64)g_CurrentSsdtAddress->Base + i * 4)) >> 4;
-				
-					if (OriginalOffset != CurrentOffset)   // ±íÃ÷±»HookÁË
+					if (SsdtFunctionCount >= shi->NumberOfSsdtFunctions)
 					{
-						// ÎÒÐèÒªÍ¨¹ýº¯ÊýµÄµØÖ·»ñµÃº¯ÊýµÄÃû³Æ---->NtoskrnlµÄµ¼³ö±íÀïÃæÕÒ Æ¥Åäº¯ÊýµØÖ·£¬ÄÃµ½ÐòºÅ£¬È»ºóÔÚÃû³Æ±íÀïÃæÕÒ
+#ifdef _WIN64
+						// 64Î»´æ´¢µÄÊÇ Æ«ÒÆ£¨¸ß28Î»£©
+						INT32 OriginalOffset = g_SsdtItem[i] >> 4;
+						INT32 CurrentOffset = (*(UINT32*)((UINT64)g_CurrentSsdtAddress->Base + i * 4)) >> 4;
 
-						if (SsdtHookCount >= shi->NumberOfSsdtHooks)
+						if (OriginalOffset != CurrentOffset)   // ±íÃ÷±»HookÁË
 						{
-							shi->SsdtHookEntry[shi->NumberOfSsdtHooks].Ordinal = i;
-							shi->SsdtHookEntry[shi->NumberOfSsdtHooks].CurrentAddress = (UINT_PTR)(g_CurrentSsdtAddress->Base + CurrentOffset);
-							shi->SsdtHookEntry[shi->NumberOfSsdtHooks].OriginalAddress = g_OriginalSsdtFunctionAddress[i];
-						
-							RtlStringCchCopyW(shi->SsdtHookEntry[shi->NumberOfSsdtHooks].wzFunctionName, wcslen(g_SsdtFunctionName[i]) + 1, g_SsdtFunctionName[i]);
-							
-							Status = STATUS_SUCCESS;
+							shi->SsdtHookEntry[shi->NumberOfSsdtFunctions].bHooked = TRUE;
 						}
 						else
 						{
-							Status = STATUS_BUFFER_TOO_SMALL;
+							shi->SsdtHookEntry[shi->NumberOfSsdtFunctions].bHooked = FALSE;
 						}
-						shi->NumberOfSsdtHooks++;
+
+						shi->SsdtHookEntry[shi->NumberOfSsdtFunctions].Ordinal = i;
+						shi->SsdtHookEntry[shi->NumberOfSsdtFunctions].CurrentAddress = (UINT_PTR)(g_CurrentSsdtAddress->Base + CurrentOffset);
+						shi->SsdtHookEntry[shi->NumberOfSsdtFunctions].OriginalAddress = g_OriginalSsdtFunctionAddress[i];
+
+						RtlStringCchCopyW(shi->SsdtHookEntry[shi->NumberOfSsdtFunctions].wzFunctionName, wcslen(g_SsdtFunctionName[i]) + 1, g_SsdtFunctionName[i]);
+
+#else
+
+
+
+
+#endif // _WIN64
+
+						Status = STATUS_SUCCESS;
 					}
-	#else
-
-
-
-
-	#endif // _WIN64
+					else
+					{
+						Status = STATUS_BUFFER_TOO_SMALL;
+					}
+					shi->NumberOfSsdtFunctions++;
 
 				}
-
 			}
 			else
 			{

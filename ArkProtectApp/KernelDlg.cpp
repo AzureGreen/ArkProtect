@@ -122,6 +122,10 @@ void CKernelDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 		m_KernelListCtrl.SetFocus();
 
 	}
+	else
+	{
+		m_iCurSel = 65535;
+	}
 }
 
 

@@ -95,8 +95,6 @@ typedef struct _DYNAMIC_DATA
 
 	UINT32      NtUserQueryWindowIndex;     // NtUserQueryWindow Index In SSSDT
 
-	PLDR_DATA_TABLE_ENTRY  PsLoadedModuleList; // Module Load List
-
 } DYNAMIC_DATA, *PDYNAMIC_DATA;
 
 

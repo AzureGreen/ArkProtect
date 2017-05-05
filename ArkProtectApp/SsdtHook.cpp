@@ -51,7 +51,7 @@ namespace ArkProtect
 		m_SsdtHookEntryVector.clear();
 
 		BOOL bOk = FALSE;
-		UINT32   Count = 0x100;
+		UINT32   Count = 0x200;
 		DWORD	 dwReturnLength = 0;
 		PSSDT_HOOK_INFORMATION shi = NULL;
 
@@ -84,14 +84,13 @@ namespace ArkProtect
 				&dwReturnLength,
 				NULL);
 
-			Count = (UINT32)shi->NumberOfSsdtHooks + 100;
+			Count = (UINT32)shi->NumberOfSsdtFunctions + 100;
 
 		} while (bOk == FALSE && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
 
 		if (bOk && shi)
 		{
-			m_SsdtFunctionCount = shi->NumberOfSsdtFunctions;    // 保存SsdtFunction的个数
-			for (UINT32 i = 0; i < shi->NumberOfSsdtHooks; i++)
+			for (UINT32 i = 0; i < shi->NumberOfSsdtFunctions; i++)
 			{
 				// 完善进程信息结构
 				m_SsdtHookEntryVector.push_back(shi->SsdtHookEntry[i]);
@@ -122,6 +121,7 @@ namespace ArkProtect
 	************************************************************************/
 	void CSsdtHook::InsertSsdtHookInfoList(CListCtrl *ListCtrl)
 	{
+		UINT32 SsdtFuncNum = 0;
 		UINT32 SsdtHookNum = 0;
 		size_t Size = m_SsdtHookEntryVector.size();
 		for (size_t i = 0; i < Size; i++)
@@ -134,9 +134,17 @@ namespace ArkProtect
 			strFunctionName = SsdtHookEntry.wzFunctionName;
 			strCurrentAddress.Format(L"0x%p", SsdtHookEntry.CurrentAddress);
 			strOriginalAddress.Format(L"0x%p", SsdtHookEntry.OriginalAddress);
-			strStatus = L"Hooked";
 			strFilePath = m_DriverCore.GetDriverPathByAddress(SsdtHookEntry.CurrentAddress);
 
+			if (SsdtHookEntry.bHooked)
+			{
+				strStatus = L"SsdtHook";
+				SsdtHookNum++;
+			}
+			else
+			{
+				strStatus = L"-";
+			}
 
 			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strOrdinal);
 			ListCtrl->SetItemText(iItem, shc_FunctionName, strFunctionName);
@@ -145,16 +153,21 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, shc_Status, strStatus);
 			ListCtrl->SetItemText(iItem, shc_FilePath, strFilePath);
 
-			SsdtHookNum++;
+			if (SsdtHookEntry.bHooked)
+			{
+				ListCtrl->SetItemData(iItem, TRUE);
+			}
+
+			SsdtFuncNum++;
 
 			CString strStatusContext;
-			strStatusContext.Format(L"Ssdt Hook Info is loading now, Count:%d", SsdtHookNum);
+			strStatusContext.Format(L"Ssdt Hook Info is loading now, Count:%d", SsdtFuncNum);
 
 			m_Global->UpdateStatusBarDetail(strStatusContext);
 		}
 
 		CString strStatusContext;
-		strStatusContext.Format(L"Ssdt函数: %d，被挂钩函数: %d",m_SsdtFunctionCount, Size);
+		strStatusContext.Format(L"Ssdt函数: %d，被挂钩函数: %d", Size, SsdtHookNum);
 		m_Global->UpdateStatusBarDetail(strStatusContext);
 	}
 
