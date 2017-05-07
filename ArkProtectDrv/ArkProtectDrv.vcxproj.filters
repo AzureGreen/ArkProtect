@@ -78,6 +78,12 @@
     <ClInclude Include="Ssdt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PeLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sssdt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -126,6 +132,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Ssdt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PeLoader.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sssdt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

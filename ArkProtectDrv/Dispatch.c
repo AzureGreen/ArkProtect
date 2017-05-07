@@ -452,6 +452,60 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 			break;
 		}
+		case IOCTL_ARKPROTECT_RESUMESSDTHOOK:
+		{
+			DbgPrint("Resume SsdtHook\r\n");
+
+			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			{
+				__try
+				{
+					ProbeForRead(InputBuffer, InputLength, sizeof(UINT32));
+
+					Status = APResumeSsdtHook(*(PUINT32)InputBuffer);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+			}
+
+			break;
+		}
+		case IOCTL_ARKPROTECT_ENUMSSSDTHOOK:
+		{
+			DbgPrint("Enum SssdtHook\r\n");
+
+			if (OutputBuffer)
+			{
+				__try
+				{
+					ProbeForWrite(OutputBuffer, OutputLength, sizeof(UINT8));
+
+					Status = APEnumSssdtHook(OutputBuffer, OutputLength);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+			}
+
+			break;
+		}
 
 		default:
 			Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;

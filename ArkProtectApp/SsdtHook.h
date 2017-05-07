@@ -46,15 +46,19 @@ namespace ArkProtect
 
 		static DWORD CALLBACK QuerySsdtHookCallback(LPARAM lParam);
 
+		BOOL ResumeSsdtHook(UINT32 Ordinal);
+
+		static DWORD CALLBACK ResumeSsdtHookCallback(LPARAM lParam);
+
 
 	private:
 		int           m_iColumnCount = 6;
 		COLUMN_STRUCT m_ColumnStruct[6] = {
-			{ L"序号",					50 },
+			{ L"序号",					35 },
 			{ L"函数名称",				145 },
 			{ L"函数当前地址",			125 },
 			{ L"函数原始地址",			125 },
-			{ L"状态",					85 },
+			{ L"状态",					55 },
 			{ L"当前函数所在模块",		195 } };
 
 		std::vector<SSDT_HOOK_ENTRY_INFORMATION> m_SsdtHookEntryVector;
@@ -64,6 +68,8 @@ namespace ArkProtect
 		class CDriverCore  &m_DriverCore;
 
 		static CSsdtHook   *m_SsdtHook;
+
+		static UINT32      m_SsdtFunctionCount;
 	};
 }
 

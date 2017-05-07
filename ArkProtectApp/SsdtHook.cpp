@@ -5,12 +5,14 @@
 namespace ArkProtect
 {
 	CSsdtHook *CSsdtHook::m_SsdtHook;
+	UINT32    CSsdtHook::m_SsdtFunctionCount;
 
 	CSsdtHook::CSsdtHook(CGlobal *GlobalObject)
 		: m_Global(GlobalObject)
 		, m_DriverCore(GlobalObject->DriverCore())
 	{
 		m_SsdtHook = this;
+		m_SsdtFunctionCount = 0;
 	}
 
 
@@ -95,6 +97,8 @@ namespace ArkProtect
 				// 完善进程信息结构
 				m_SsdtHookEntryVector.push_back(shi->SsdtHookEntry[i]);
 			}
+
+			m_SsdtFunctionCount = shi->NumberOfSsdtFunctions;
 			bOk = TRUE;
 		}
 
@@ -216,6 +220,75 @@ namespace ArkProtect
 		m_SsdtHook->m_Global->UpdateStatusBarDetail(L"Ssdt is loading now...");
 
 		m_SsdtHook->QuerySsdtHook(ListCtrl);
+
+		m_SsdtHook->m_Global->m_bIsRequestNow = FALSE;
+
+		return 0;
+	}
+
+
+	/************************************************************************
+	*  Name : UnloadDriver
+	*  Param: Ordinal
+	*  Ret  : BOOL
+	*  与驱动层通信，枚举进程及相关信息
+	************************************************************************/
+	BOOL CSsdtHook::ResumeSsdtHook(UINT32 Ordinal)
+	{
+		BOOL   bOk = FALSE;
+		DWORD  dwReturnLength = 0;
+		bOk = DeviceIoControl(m_Global->m_DeviceHandle,
+			IOCTL_ARKPROTECT_RESUMESSDTHOOK,
+			&Ordinal,		// InputBuffer
+			sizeof(UINT32),
+			NULL,
+			0,
+			&dwReturnLength,
+			NULL);
+
+		return bOk;
+	}
+
+
+	/************************************************************************
+	*  Name : ResumeSsdtHookCallback
+	*  Param: lParam （ListCtrl）
+	*  Ret  : DWORD
+	*  查询进程模块的回调
+	************************************************************************/
+	DWORD CALLBACK CSsdtHook::ResumeSsdtHookCallback(LPARAM lParam)
+	{
+		CListCtrl *ListCtrl = (CListCtrl*)lParam;
+
+		int iIndex = ListCtrl->GetSelectionMark();
+		if (iIndex < 0)
+		{
+			return 0;
+		}
+
+		UINT32   Ordinal = iIndex;
+
+		UINT_PTR CurrentAddress = 0;
+		CString  strCurrentAddress = ListCtrl->GetItemText(iIndex, shc_CurrentAddress);
+		swscanf_s(strCurrentAddress.GetBuffer() + 2, L"%p", &CurrentAddress);
+
+		UINT_PTR OriginalAddress = 0;
+		CString  strOriginalAddress = ListCtrl->GetItemText(iIndex, shc_OriginalAddress);
+		swscanf_s(strOriginalAddress.GetBuffer() + 2, L"%p", &OriginalAddress);
+
+		// 如果没有Hook就直接返回了
+		if (OriginalAddress == CurrentAddress || Ordinal < 0 || Ordinal > m_SsdtFunctionCount)
+		{
+			return 0;
+		}
+
+		m_SsdtHook->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+
+		if (m_SsdtHook->ResumeSsdtHook(Ordinal))
+		{
+			// 刷新列表
+			m_SsdtHook->QuerySsdtHook(ListCtrl);
+		}
 
 		m_SsdtHook->m_Global->m_bIsRequestNow = FALSE;
 

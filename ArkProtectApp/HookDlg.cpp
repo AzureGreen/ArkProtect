@@ -38,6 +38,9 @@ BEGIN_MESSAGE_MAP(CHookDlg, CDialogEx)
 	ON_WM_SHOWWINDOW()
 	ON_LBN_SELCHANGE(IDC_HOOK_LISTBOX, &CHookDlg::OnLbnSelchangeHookListbox)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_HOOK_LISTCTRL, &CHookDlg::OnNMCustomdrawHookListctrl)
+	ON_COMMAND(ID_SSDT_FRESHEN, &CHookDlg::OnSsdtFreshen)
+	ON_COMMAND(ID_SSDT_RESUME, &CHookDlg::OnSsdtResume)
+	ON_NOTIFY(NM_RCLICK, IDC_HOOK_LISTCTRL, &CHookDlg::OnNMRClickHookListctrl)
 END_MESSAGE_MAP()
 
 
@@ -186,7 +189,29 @@ void CHookDlg::OnLbnSelchangeHookListbox()
 
 		break;
 	}
+	case ArkProtect::hi_Sssdt:
+	{
+		if (m_Global->m_bIsRequestNow == TRUE || m_iCurSel == ArkProtect::hi_Sssdt)
+		{
+			m_HookListBox.SetCurSel(m_iCurSel);
+			break;
+		}
 
+		m_iCurSel = iCurSel;
+
+		m_HookModuleListBox.ShowWindow(FALSE);
+
+		// 初始化ListCtrl
+		m_Global->SssdtHook().InitializeSssdtList(&m_HookListCtrl);
+
+		// 加载进程信息列表
+		CloseHandle(
+			CreateThread(NULL, 0,
+			(LPTHREAD_START_ROUTINE)ArkProtect::CSssdtHook::QuerySssdtHookCallback, &m_HookListCtrl, 0, NULL)
+		);
+
+		break;
+	}
 
 	default:
 		break;
@@ -235,6 +260,41 @@ void CHookDlg::OnNMCustomdrawHookListctrl(NMHDR *pNMHDR, LRESULT *pResult)
 }
 
 
+
+void CHookDlg::OnSsdtFreshen()
+{
+	// TODO: 在此添加命令处理程序代码
+	
+	m_iCurSel = 65535;
+
+	m_HookListBox.SetCurSel(ArkProtect::hi_Ssdt);
+
+	OnLbnSelchangeHookListbox();
+
+	m_HookListCtrl.SetFocus();
+
+}
+
+
+
+void CHookDlg::OnSsdtResume()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	if (m_Global->m_bIsRequestNow == TRUE)
+	{
+		return;
+	}
+
+	// 加载进程信息列表
+	CloseHandle(
+		CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CSsdtHook::ResumeSsdtHookCallback, &m_HookListCtrl, 0, NULL)
+	);
+}
+
+
+
 /************************************************************************
 *  Name : APInitializeHookItemList
 *  Param: void
@@ -254,3 +314,36 @@ void CHookDlg::APInitializeHookItemList()
 }
 
 
+
+
+
+
+void CHookDlg::OnNMRClickHookListctrl(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+
+	CMenu Menu;
+	Menu.LoadMenuW(IDR_SSDT_MENU);
+	CMenu* SubMenu = Menu.GetSubMenu(0);	// 子菜单
+
+	CPoint Pt;
+	GetCursorPos(&Pt);         // 得到鼠标位置
+
+	int	iCount = SubMenu->GetMenuItemCount();
+
+	// 如果没有选中,除了刷新 其他全部Disable
+	if (m_HookListCtrl.GetSelectedCount() == 0)
+	{
+		for (int i = 0; i < iCount; i++)
+		{
+			SubMenu->EnableMenuItem(i, MF_BYPOSITION | MF_DISABLED | MF_GRAYED); //菜单全部变灰
+		}
+
+		SubMenu->EnableMenuItem(ID_DRIVER_FRESHEN, MF_BYCOMMAND | MF_ENABLED);
+	}
+
+	SubMenu->TrackPopupMenu(TPM_LEFTALIGN, Pt.x, Pt.y, this);
+
+	*pResult = 0;
+}

@@ -41,4 +41,7 @@ public:
 	int                  m_iCurSel = 65535;
 
 	
+	afx_msg void OnSsdtFreshen();
+	afx_msg void OnSsdtResume();
+	afx_msg void OnNMRClickHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
 };

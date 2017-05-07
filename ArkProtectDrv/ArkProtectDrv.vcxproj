@@ -178,6 +178,7 @@
     <ClInclude Include="IoTimer.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="NtStructs.h" />
+    <ClInclude Include="PeLoader.h" />
     <ClInclude Include="Private.h" />
     <ClInclude Include="ProcessCore.h" />
     <ClInclude Include="ProcessHandle.h" />
@@ -187,6 +188,7 @@
     <ClInclude Include="ProcessWindow.h" />
     <ClInclude Include="ShadowSSDT.h" />
     <ClInclude Include="Ssdt.h" />
+    <ClInclude Include="Sssdt.h" />
     <ClInclude Include="SystemCallback.h" />
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +198,7 @@
     <ClCompile Include="FilterDriver.c" />
     <ClCompile Include="IoTimer.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="PeLoader.c" />
     <ClCompile Include="Private.c" />
     <ClCompile Include="ProcessCore.c" />
     <ClCompile Include="ProcessHandle.c" />
@@ -205,6 +208,7 @@
     <ClCompile Include="ProcessWindow.c" />
     <ClCompile Include="ShadowSSDT.c" />
     <ClCompile Include="Ssdt.c" />
+    <ClCompile Include="Sssdt.c" />
     <ClCompile Include="SystemCallback.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

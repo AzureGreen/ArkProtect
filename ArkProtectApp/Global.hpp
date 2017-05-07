@@ -16,6 +16,7 @@
 #include "IoTimer.h"
 #include "DpcTimer.h"
 #include "SsdtHook.h"
+#include "SssdtHook.h"
 
 #include "RegistryCore.h"
 
@@ -42,6 +43,7 @@ namespace ArkProtect
 		, m_IoTimer(this)
 		, m_DpcTimer(this)
 		, m_SsdtHook(this)
+		, m_SssdtHook(this)
 		{};
 		~CGlobal() {};
 
@@ -328,6 +330,7 @@ namespace ArkProtect
 		inline CIoTimer&         IoTimer()       { return m_IoTimer; }
 		inline CDpcTimer&        DpcTimer()      { return m_DpcTimer; }
 		inline CSsdtHook&        SsdtHook()      { return m_SsdtHook; }
+		inline CSssdtHook&       SssdtHook()     { return m_SssdtHook; }
 
 		inline CRegistryCore&    RegistryCore()  { return m_RegistryCore; }
 
@@ -382,6 +385,7 @@ namespace ArkProtect
 		// 钩子相关
 		//
 		CSsdtHook          m_SsdtHook;
+		CSssdtHook         m_SssdtHook;
 
 		//
 		// 注册表相关

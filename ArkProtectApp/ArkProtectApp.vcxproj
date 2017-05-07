@@ -192,6 +192,7 @@
     <ClInclude Include="HookDlg.h" />
     <ClInclude Include="IoTimer.h" />
     <ClInclude Include="SsdtHook.h" />
+    <ClInclude Include="SssdtHook.h" />
     <ClInclude Include="SystemCallback.h" />
     <ClInclude Include="Define.h" />
     <ClInclude Include="DriverCore.h" />
@@ -221,6 +222,7 @@
     <ClCompile Include="HookDlg.cpp" />
     <ClCompile Include="IoTimer.cpp" />
     <ClCompile Include="SsdtHook.cpp" />
+    <ClCompile Include="SssdtHook.cpp" />
     <ClCompile Include="SystemCallback.cpp" />
     <ClCompile Include="DriverCore.cpp" />
     <ClCompile Include="DriverDlg.cpp" />

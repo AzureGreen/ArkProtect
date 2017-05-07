@@ -5,6 +5,7 @@
 #include <ntimage.h>
 #include <ntstrsafe.h>
 #include "Private.h"
+#include "PeLoader.h"
 
 typedef struct _SSDT_HOOK_ENTRY_INFORMATION
 {
@@ -22,33 +23,23 @@ typedef struct _SSDT_HOOK_INFORMATION
 } SSDT_HOOK_INFORMATION, *PSSDT_HOOK_INFORMATION;
 
 
-
 UINT_PTR
 APGetCurrentSsdtAddress();
 
 NTSTATUS
-APMappingFileInKernelSpace(IN WCHAR * wzFileFullPath, OUT PVOID * MappingBaseAddress);
-
-NTSTATUS
 APInitializeSsdtFunctionName();
 
-PVOID 
-APGetFileBuffer(IN PUNICODE_STRING uniFilePath);
+VOID 
+APFixKiServiceTable(IN PVOID ImageBase, IN PVOID OriginalBase);
 
-PVOID 
-APGetModuleHandle(IN PCHAR szModuleName);
-
-PVOID 
-APGetProcAddress(IN PVOID ModuleBase, IN PCHAR szFunctionName);
-
-VOID
-APFixImportAddressTable(IN PVOID ImageBase);
-
-VOID
-APFixRelocBaseTable(IN PVOID ImageBase, IN PVOID OriginalBase);
+NTSTATUS 
+APReloadNtkrnl();
 
 NTSTATUS
 APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength);
+
+NTSTATUS 
+APResumeSsdtHook(IN UINT32 Ordinal);
 
 #endif // !CXX_Ssdt_H
 
