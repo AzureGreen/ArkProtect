@@ -42,11 +42,11 @@ namespace ArkProtect
 	private:
 		int           m_iColumnCount = 6;
 		COLUMN_STRUCT m_ColumnStruct[6] = {
-			{ L"序号",					20 },
+			{ L"序号",					35 },
 			{ L"函数名称",				145 },
 			{ L"函数当前地址",			125 },
 			{ L"函数原始地址",			125 },
-			{ L"状态",					30 },
+			{ L"状态",					55 },
 			{ L"当前函数所在模块",		195 } };
 
 		std::vector<SSSDT_HOOK_ENTRY_INFORMATION> m_SssdtHookEntryVector;

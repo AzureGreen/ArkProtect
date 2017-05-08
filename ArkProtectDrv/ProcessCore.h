@@ -54,6 +54,9 @@ APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength);
 NTSTATUS 
 APTerminateProcess(IN UINT32 ProcessId);
 
+PEPROCESS 
+APGetGuiProcess();
+
 
 #endif // !CXX_ProcessCore_H
 

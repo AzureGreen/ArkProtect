@@ -401,7 +401,7 @@ APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 NTSTATUS
 APTerminateProcess(IN UINT32 ProcessId)
 {
-	NTSTATUS       Status = STATUS_UNSUCCESSFUL;
+	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
 	
 	if (ProcessId <= 4)
 	{
@@ -421,4 +421,37 @@ APTerminateProcess(IN UINT32 ProcessId)
 	}
 
 	return Status;
+}
+
+
+/************************************************************************
+*  Name : APGetGuiProcess
+*  Param: void
+*  Ret  : PEPROCESS
+*  遍历进程，获得csrss Eprocess
+************************************************************************/
+PEPROCESS
+APGetGuiProcess()
+{
+	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
+	PEPROCESS EProcess = NULL;
+
+	for (UINT32 i = 4; i < MAX_PROCESS_COUNT; i += 4)
+	{
+		Status = PsLookupProcessByProcessId((HANDLE)i, &EProcess);
+		if (NT_SUCCESS(Status) && EProcess && MmIsAddressValid((PVOID)EProcess))
+		{
+			CHAR *ProcessImageName = (CHAR*)PsGetProcessImageFileName(EProcess);
+			
+			ObDereferenceObject(EProcess);
+
+			if (!_strnicmp("csrss.exe", ProcessImageName, strlen("csrss.exe")))
+			{
+				DbgPrint("EProcess = %p ProcessId = %ld ImageName = %s\r\n", EProcess, PsGetProcessId(EProcess), PsGetProcessImageFileName(EProcess));
+				return EProcess;
+			}
+		}
+	}
+
+	return NULL;
 }

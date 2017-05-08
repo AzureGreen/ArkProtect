@@ -5,7 +5,61 @@ extern PDRIVER_OBJECT          g_DriverObject;      // 保存全局驱动对象
 extern DYNAMIC_DATA	           g_DynamicData;
 extern PLDR_DATA_TABLE_ENTRY   g_PsLoadedModuleList;
 
-POBJECT_TYPE           g_DirectoryObjectType = NULL;  // 目录对象类型地址
+POBJECT_TYPE    g_DirectoryObjectType = NULL;  // 目录对象类型地址
+
+
+/************************************************************************
+*  Name : APEnumDriverModuleByLdrDataTableEntry
+*  Param: wzDriverName          DriverName
+*  Param: PsLoadedModuleList    内核模块加载List
+*  Ret  : NTSTATUS
+*  通过遍历Ldr枚举内核模块 按加载顺序来
+************************************************************************/
+PLDR_DATA_TABLE_ENTRY
+APGetDriverModuleLdr(IN const WCHAR* wzDriverName, IN PLDR_DATA_TABLE_ENTRY PsLoadedModuleList)
+{
+	BOOLEAN   bFind = FALSE;
+	PLDR_DATA_TABLE_ENTRY TravelEntry = NULL;
+
+	if (wzDriverName && PsLoadedModuleList)
+	{
+		KIRQL OldIrql = KeRaiseIrqlToDpcLevel();  // 提高中断请求级别到dpc级别
+
+		__try
+		{
+			UINT32 MaxSize = PAGE_SIZE;
+
+			for (TravelEntry = (PLDR_DATA_TABLE_ENTRY)PsLoadedModuleList->InLoadOrderLinks.Flink;  // Ntkrnl
+				TravelEntry && TravelEntry != PsLoadedModuleList && MaxSize--;
+				TravelEntry = (PLDR_DATA_TABLE_ENTRY)TravelEntry->InLoadOrderLinks.Flink)
+			{
+				if ((UINT_PTR)TravelEntry->DllBase > g_DynamicData.MinKernelSpaceAddress && TravelEntry->SizeOfImage > 0)
+				{
+					if (APIsUnicodeStringValid(&(TravelEntry->BaseDllName)) && _wcsicmp(TravelEntry->BaseDllName.Buffer, wzDriverName) == 0)
+					{
+						bFind = TRUE;
+						break;
+					}
+				}
+			}
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			DbgPrint("Catch Exception\r\n");
+		}
+
+		KeLowerIrql(OldIrql);
+	}
+
+	if (bFind)
+	{
+		return TravelEntry;
+	}
+	else
+	{
+		return NULL;
+	}
+}
 
 
 /************************************************************************

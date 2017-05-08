@@ -35,6 +35,9 @@ APFixKiServiceTable(IN PVOID ImageBase, IN PVOID OriginalBase);
 NTSTATUS 
 APReloadNtkrnl();
 
+NTSTATUS 
+APEnumSsdtHookByReloadNtKrnl(OUT PSSDT_HOOK_INFORMATION shi, IN UINT32 SsdtFunctionCount);
+
 NTSTATUS
 APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength);
 

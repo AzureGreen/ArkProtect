@@ -132,23 +132,23 @@ APGetFileBuffer(IN PUNICODE_STRING uniFilePath)
 				Status = ZwReadFile(FileHandle, NULL, NULL, NULL, &IoStatusBlock, FileBuffer, fsi.EndOfFile.LowPart, &ReturnLength, NULL);
 				if (!NT_SUCCESS(Status))
 				{
-					DbgPrint("KeGetFileData::ZwReadFile Failed\r\n");
+					DbgPrint("APGetFileData::ZwReadFile Failed\r\n");
 				}
 			}
 			else
 			{
-				DbgPrint("KeGetFileData::ZwQueryInformationFile Failed\r\n");
+				DbgPrint("APGetFileData::ZwQueryInformationFile Failed\r\n");
 			}
 		}
 		else
 		{
-			DbgPrint("KeGetFileData::ZwQueryInformationFile Failed\r\n");
+			DbgPrint("APGetFileData::ZwQueryInformationFile Failed\r\n");
 		}
 		ZwClose(FileHandle);
 	}
 	else
 	{
-		DbgPrint("KeGetFileData::ZwCreateFile Failed\r\n");
+		DbgPrint("APGetFileData::ZwCreateFile Failed\r\n");
 	}
 
 	return FileBuffer;
@@ -315,7 +315,7 @@ APFixImportAddressTable(IN PVOID ImageBase)
 					}
 					else
 					{
-						DbgPrint("FixImportAddressTable::No Such Function\r\n");
+						DbgPrint("APFixImportAddressTable::No Such Function\r\n");
 					}
 				}
 				// 没有序号导入
@@ -324,7 +324,7 @@ APFixImportAddressTable(IN PVOID ImageBase)
 		}
 		else
 		{
-			DbgPrint("FixImportAddressTable::No Such Module\r\n");
+			DbgPrint("APFixImportAddressTable::No Such Module\r\n");
 		}
 
 		ImportDescriptor++;    // 下一张导入表
@@ -399,7 +399,7 @@ APFixRelocBaseTable(IN PVOID ReloadBase, IN PVOID OriginalBase)
 #ifdef _WIN64
 					// 调试发现 Win7 x64的全局变量没有能够修复成功
 					PUINT64	RelocAddress = (PUINT64)((PUINT8)ReloadBase + BaseRelocation->VirtualAddress + (TypeOffset[i] & 0x0FFF));  // 定位到重定向块
-					*RelocAddress = (UINT64)(*RelocAddress + (UINT_PTR)((UINT_PTR)OriginalBase - (UINT_PTR)NtHeader->OptionalHeader.ImageBase));            // 重定向块的数据 + （真实加载地址 - 预加载地址 = Offset）
+					*RelocAddress = (UINT64)(*RelocAddress + (INT_PTR)((UINT_PTR)OriginalBase - (UINT_PTR)NtHeader->OptionalHeader.ImageBase));            // 重定向块的数据 + （真实加载地址 - 预加载地址 = Offset）
 
 					//DbgPrint("RelocAddress: %p\r\n", RelocAddress);
 #endif // _WIN64
@@ -408,7 +408,7 @@ APFixRelocBaseTable(IN PVOID ReloadBase, IN PVOID OriginalBase)
 				{
 #ifndef _WIN64
 					PUINT32	RelocAddress = (PUINT32)((PUINT8)ReloadBase + BaseRelocation->VirtualAddress + (TypeOffset[i] & 0x0FFF));
-					*RelocAddress = (UINT32)(*RelocAddress + ((PUINT8)OriginalBase - NtHeader->OptionalHeader.ImageBase));
+					*RelocAddress = (UINT32)(*RelocAddress + (INT_PTR)((PUINT8)OriginalBase - NtHeader->OptionalHeader.ImageBase));
 
 					//DbgPrint("RelocAddress: %p\r\n", RelocAddress);
 #endif // !_WIN64
@@ -420,6 +420,6 @@ APFixRelocBaseTable(IN PVOID ReloadBase, IN PVOID OriginalBase)
 	}
 	else
 	{
-		DbgPrint("FixRelocBaseTable::No BaseReloc\r\n");
+		DbgPrint("APFixRelocBaseTable::No BaseReloc\r\n");
 	}
 }

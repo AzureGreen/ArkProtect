@@ -3,11 +3,11 @@
 extern DYNAMIC_DATA            g_DynamicData;
 extern PLDR_DATA_TABLE_ENTRY   g_PsLoadedModuleList;
 
-PVOID    g_ImageBuffer = NULL;       // 重载内核的基地址
+PVOID    g_ReloadNtImage = NULL;       // 重载内核的基地址
 PKSERVICE_TABLE_DESCRIPTOR g_CurrentSsdtAddress = NULL;  // 当前系统运行着的Ntos的Ssdt基地址
 PKSERVICE_TABLE_DESCRIPTOR g_ReloadSsdtAddress = NULL;   // 我们重载出来的Ntos的Ssdt基地址
 UINT_PTR g_OriginalSsdtFunctionAddress[0x200] = { 0 };   // SsdtFunction原本的地址
-UINT32   g_SsdtItem[0x200] = { 0 };                       // Ssdt表里面原始存放的数据
+//UINT32   g_SsdtItem[0x200] = { 0 };                       // Ssdt表里面原始存放的数据
 WCHAR    g_SsdtFunctionName[0x200][100] = { 0 };          // Ssdt函数名称表（按序号存放）
 
 
@@ -59,6 +59,7 @@ APGetCurrentSsdtAddress()
 				{
 					RtlCopyMemory(&iOffset, i + 3, 4);
 					(UINT_PTR)g_CurrentSsdtAddress = (UINT_PTR)(iOffset + (UINT64)i + 7);
+					break;
 				}
 			}
 		}
@@ -279,7 +280,7 @@ APFixKiServiceTable(IN PVOID ImageBase, IN PVOID OriginalBase)
 			// 刚开始保存的是函数的真实地址，我们保存在自己的全局数组中
 			for (UINT32 i = 0; i < g_ReloadSsdtAddress->Limit; i++)
 			{
-				g_OriginalSsdtFunctionAddress[i] = *(UINT64*)((ULONG_PTR)g_ReloadSsdtAddress->Base + i * 8);
+				g_OriginalSsdtFunctionAddress[i] = *(UINT64*)((UINT_PTR)g_ReloadSsdtAddress->Base + i * 8);
 			}
 
 			for (UINT32 i = 0; i < g_ReloadSsdtAddress->Limit; i++)
@@ -294,15 +295,15 @@ APFixKiServiceTable(IN PVOID ImageBase, IN PVOID OriginalBase)
 			DbgPrint("CurrentSsdt%p\n", g_CurrentSsdtAddress->Base);
 			DbgPrint("ReloaddSsdt%p\n", g_ReloadSsdtAddress->Base);
 
-			for (UINT32 i = 0; i < g_ReloadSsdtAddress->Limit; i++)
+		/*	for (UINT32 i = 0; i < g_ReloadSsdtAddress->Limit; i++)
 			{
 				g_SsdtItem[i] = *(UINT32*)((UINT64)g_ReloadSsdtAddress->Base + i * 4);
-			}
+			}*/
 #else
 			for (UINT32 i = 0; i < g_ReloadSsdtAddress->Limit; i++)
 			{
 				g_OriginalSsdtFunctionAddress[i] = *(UINT32*)(g_ReloadSsdtAddress->Base + i * 4);
-				g_SsdtItem[i] = g_OriginalSsdtFunctionAddress[i];
+			//	g_SsdtItem[i] = g_OriginalSsdtFunctionAddress[i];
 				*(UINT32*)(g_ReloadSsdtAddress->Base + i * 4) += KrnlOffset;      // 将所有Ssdt函数地址转到我们新加载到内存中的地址
 			}
 #endif // _WIN64
@@ -331,7 +332,7 @@ APReloadNtkrnl()
 {
 	NTSTATUS    Status = STATUS_SUCCESS;
 
-	if (g_ImageBuffer == NULL)
+	if (g_ReloadNtImage == NULL)
 	{
 		PLDR_DATA_TABLE_ENTRY NtLdr = NULL;
 		PVOID                 FileBuffer = NULL;
@@ -360,31 +361,31 @@ APReloadNtkrnl()
 				NtHeader = (PIMAGE_NT_HEADERS)((PUINT8)FileBuffer + DosHeader->e_lfanew);
 				if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
 				{
-					g_ImageBuffer = ExAllocatePool(NonPagedPool, NtHeader->OptionalHeader.SizeOfImage);
-					if (g_ImageBuffer)
+					g_ReloadNtImage = ExAllocatePool(NonPagedPool, NtHeader->OptionalHeader.SizeOfImage);
+					if (g_ReloadNtImage)
 					{
-						DbgPrint("New Base::%p\r\n", g_ImageBuffer);
+						DbgPrint("New Base::%p\r\n", g_ReloadNtImage);
 
 						// 2.1.开始拷贝数据
-						RtlZeroMemory(g_ImageBuffer, NtHeader->OptionalHeader.SizeOfImage);
+						RtlZeroMemory(g_ReloadNtImage, NtHeader->OptionalHeader.SizeOfImage);
 						// 2.1.1.拷贝头
-						RtlCopyMemory(g_ImageBuffer, FileBuffer, NtHeader->OptionalHeader.SizeOfHeaders);
+						RtlCopyMemory(g_ReloadNtImage, FileBuffer, NtHeader->OptionalHeader.SizeOfHeaders);
 						// 2.1.2.拷贝节区
 						SectionHeader = IMAGE_FIRST_SECTION(NtHeader);
 						for (UINT16 i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
 						{
-							RtlCopyMemory((PUINT8)g_ImageBuffer + SectionHeader[i].VirtualAddress,
+							RtlCopyMemory((PUINT8)g_ReloadNtImage + SectionHeader[i].VirtualAddress,
 								(PUINT8)FileBuffer + SectionHeader[i].PointerToRawData, SectionHeader[i].SizeOfRawData);
 						}
 
 						// 2.2.修复导入地址表
-						APFixImportAddressTable(g_ImageBuffer);
+						APFixImportAddressTable(g_ReloadNtImage);
 
 						// 2.3.修复重定向表
-						APFixRelocBaseTable(g_ImageBuffer, NtLdr->DllBase);
+						APFixRelocBaseTable(g_ReloadNtImage, NtLdr->DllBase);
 
 						// 2.4.修复SSDT
-						APFixKiServiceTable(g_ImageBuffer, NtLdr->DllBase);
+						APFixKiServiceTable(g_ReloadNtImage, NtLdr->DllBase);
 
 						Status = STATUS_SUCCESS;
 					}
@@ -412,22 +413,17 @@ APReloadNtkrnl()
 }
 
 
-
 /************************************************************************
-*  Name : APEnumSsdtHook
-*  Param: OutputBuffer            ring3内存
-*  Param: OutputLength
+*  Name : APEnumSsdtHookByReloadNtKrnl
+*  Param: shi
+*  Param: SsdtFunctionCount
 *  Ret  : NTSTATUS
-*  枚举进程模块
+*  重载Ntoskrnl 检查Sssdt Hook
 ************************************************************************/
 NTSTATUS
-APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
+APEnumSsdtHookByReloadNtKrnl(OUT PSSDT_HOOK_INFORMATION shi, IN UINT32 SsdtFunctionCount)
 {
 	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
-
-	UINT32    SsdtFunctionCount = (OutputLength - sizeof(SSDT_HOOK_INFORMATION)) / sizeof(SSDT_HOOK_ENTRY_INFORMATION);
-
-	PSSDT_HOOK_INFORMATION shi = (PSSDT_HOOK_INFORMATION)OutputBuffer;
 
 	// 1.获得当前的SSDT
 	g_CurrentSsdtAddress = (PKSERVICE_TABLE_DESCRIPTOR)APGetCurrentSsdtAddress();
@@ -448,7 +444,7 @@ APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 					{
 #ifdef _WIN64
 						// 64位存储的是 偏移（高28位）
-						INT32 OriginalOffset = g_SsdtItem[i] >> 4;
+						//INT32 OriginalOffset = g_SsdtItem[i] >> 4;
 						INT32 CurrentOffset = (*(PINT32)((UINT64)g_CurrentSsdtAddress->Base + i * 4)) >> 4;    // 带符号位的移位
 
 						UINT64 CurrentSsdtFunctionAddress = (UINT_PTR)((UINT_PTR)g_CurrentSsdtAddress->Base + CurrentOffset);
@@ -457,7 +453,7 @@ APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 #else
 						// 32位存储的是 绝对地址
 						UINT32 CurrentSsdtFunctionAddress = *(UINT32*)((UINT32)g_CurrentSsdtAddress->Base + i * 4);
-						UINT32 OriginalSsdtFunctionAddress = g_SsdtItem[i];
+						UINT32 OriginalSsdtFunctionAddress = g_OriginalSsdtFunctionAddress[i];
 
 #endif // _WIN64
 
@@ -503,6 +499,28 @@ APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 }
 
 
+/************************************************************************
+*  Name : APEnumSsdtHook
+*  Param: OutputBuffer            ring3内存
+*  Param: OutputLength
+*  Ret  : NTSTATUS
+*  枚举进程模块
+************************************************************************/
+NTSTATUS
+APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
+{
+	NTSTATUS  Status = STATUS_UNSUCCESSFUL;
+
+	UINT32    SsdtFunctionCount = (OutputLength - sizeof(SSDT_HOOK_INFORMATION)) / sizeof(SSDT_HOOK_ENTRY_INFORMATION);
+
+	PSSDT_HOOK_INFORMATION shi = (PSSDT_HOOK_INFORMATION)OutputBuffer;
+
+	Status = APEnumSsdtHookByReloadNtKrnl(shi, SsdtFunctionCount);
+	
+	return Status;
+}
+
+
 NTSTATUS
 APResumeSsdtHook(IN UINT32 Ordinal)
 {
@@ -516,7 +534,7 @@ APResumeSsdtHook(IN UINT32 Ordinal)
 	{
 		// 需要做的是将当前Ssdt中保存的值改为g_SsdtItem[i]中的对应项
 		
-		*(UINT32*)((UINT_PTR)g_CurrentSsdtAddress->Base + Ordinal * 4) = g_SsdtItem[Ordinal];
+		*(UINT32*)((UINT_PTR)g_CurrentSsdtAddress->Base + Ordinal * 4) = *(UINT32*)((UINT_PTR)g_ReloadSsdtAddress->Base + Ordinal * 4);
 				
 		Status = STATUS_SUCCESS;
 	}

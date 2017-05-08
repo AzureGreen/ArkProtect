@@ -107,6 +107,12 @@ APIsUnicodeStringValid(IN PUNICODE_STRING uniString);
 VOID 
 APCharToWchar(IN CHAR * szString, OUT WCHAR * wzString);
 
+VOID 
+APPageProtectOff();
+
+VOID 
+APPageProtectOn();
+
 BOOLEAN 
 APDosPathToNtPath(IN WCHAR * wzDosFullPath, OUT WCHAR * wzNtFullPath);
 

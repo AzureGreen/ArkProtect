@@ -89,6 +89,54 @@ APCharToWchar(IN CHAR* szString, OUT WCHAR* wzString)
 }
 
 
+/************************************************************************
+*  Name : APPageProtectOff
+*  Param: void
+*  Ret  : VOID
+*  关闭页面写保护
+************************************************************************/
+VOID
+APPageProtectOff()
+{
+#if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
+	_disable();
+	__writecr0(__readcr0() & (~(0x10000)));
+#else
+	__asm
+	{
+		cli;
+		mov eax, cr0;
+		and eax, not 0x10000;
+		mov cr0, eax;
+	}
+#endif
+}
+
+
+/************************************************************************
+*  Name : APPageProtectOn
+*  Param: void
+*  Ret  : VOID
+*  开启页面写保护
+************************************************************************/
+VOID
+APPageProtectOn()
+{
+#if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
+	__writecr0(__readcr0() ^ 0x10000);
+	_enable();
+#else
+	__asm
+	{
+		mov eax, cr0;
+		or  eax, 0x10000;
+		mov cr0, eax;
+		sti;
+	}
+#endif
+}
+
+
 /*
 UINT32
 APGetLogicalDriveStringsW(UINT32 BufferLength, LPWSTR wzBuffer)

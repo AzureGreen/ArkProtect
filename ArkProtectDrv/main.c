@@ -1,6 +1,7 @@
 #include "main.h"
 
-extern PVOID            g_ImageBuffer;
+extern PVOID            g_ReloadNtImage;
+extern PVOID            g_ReloadWin32kImage;
 
 DYNAMIC_DATA	        g_DynamicData = { 0 };
 PDRIVER_OBJECT          g_DriverObject = NULL;      // 保存全局驱动对象
@@ -208,10 +209,16 @@ APUnloadDriver(IN PDRIVER_OBJECT DriverObject)
 		CurrentDeviceObject = NextDeviceObject;
 	}
 
-	if (g_ImageBuffer)
+	if (g_ReloadNtImage)
 	{
-		ExFreePool(g_ImageBuffer);
-		g_ImageBuffer = NULL;
+		ExFreePool(g_ReloadNtImage);
+		g_ReloadNtImage = NULL;
+	}
+
+	if (g_ReloadWin32kImage)
+	{
+		ExFreePool(g_ReloadWin32kImage);
+		g_ReloadWin32kImage = NULL;
 	}
 
 	DbgPrint("ArkProtect is stopped!!!");

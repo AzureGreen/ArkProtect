@@ -199,7 +199,7 @@ namespace ArkProtect
 			return;
 		}
 
-	//	InsertSssdtHookInfoList(ListCtrl);
+		InsertSssdtHookInfoList(ListCtrl);
 	}
 
 
