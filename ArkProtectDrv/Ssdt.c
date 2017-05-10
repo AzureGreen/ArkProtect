@@ -302,9 +302,9 @@ APFixKiServiceTable(IN PVOID ImageBase, IN PVOID OriginalBase)
 #else
 			for (UINT32 i = 0; i < g_ReloadSsdtAddress->Limit; i++)
 			{
-				g_OriginalSsdtFunctionAddress[i] = *(UINT32*)(g_ReloadSsdtAddress->Base + i * 4);
+				g_OriginalSsdtFunctionAddress[i] = *(UINT32*)((UINT_PTR)g_ReloadSsdtAddress->Base + i * 4);
 			//	g_SsdtItem[i] = g_OriginalSsdtFunctionAddress[i];
-				*(UINT32*)(g_ReloadSsdtAddress->Base + i * 4) += KrnlOffset;      // 将所有Ssdt函数地址转到我们新加载到内存中的地址
+				*(UINT32*)((UINT_PTR)g_ReloadSsdtAddress->Base + i * 4) += KrnlOffset;      // 将所有Ssdt函数地址转到我们新加载到内存中的地址
 			}
 #endif // _WIN64
 

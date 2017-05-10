@@ -209,10 +209,7 @@ APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath)
 			3: kd> dt _SECTION_OBJECT 0xfffff8a0`01bf2a50
 			nt!_SECTION_OBJECT
 			+0x000 StartingVa       : (null)
-			+0x008 EndingVa         : 0xfffff880`037fcba8 Void
-			+0x010 Parent           : 0xfffff880`037fcb90 Void
-			+0x018 LeftChild        : (null)
-			+0x020 RightChild       : 0xfffffa80`1ac18d40 Void
+			......
 			+0x028 Segment          : 0xfffff8a0`01deb000 _SEGMENT_OBJECT
 			*/
 			PSEGMENT Segment = SectionObject->Segment;
@@ -223,17 +220,7 @@ APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath)
 				3: kd> dt _SEGMENT 0xfffff8a0`01deb000
 				nt!_SEGMENT
 				+0x000 ControlArea      : 0xfffffa80`1ac18800 _CONTROL_AREA
-				+0x008 TotalNumberOfPtes : 0x2c0
-				+0x00c SegmentFlags     : _SEGMENT_FLAGS
-				+0x010 NumberOfCommittedPages : 0
-				+0x018 SizeOfSegment    : 0x2c0000
-				+0x020 ExtendInfo       : 0x00000000`ff9f0000 _MMEXTEND_INFO
-				+0x020 BasedAddress     : 0x00000000`ff9f0000 Void
-				+0x028 SegmentLock      : _EX_PUSH_LOCK
-				+0x030 u1               : <unnamed-tag>
-				+0x038 u2               : <unnamed-tag>
-				+0x040 PrototypePte     : 0xfffff8a0`01deb048 _MMPTE
-				+0x048 ThePtes          : [1] _MMPTE
+				......
 				*/
 				PCONTROL_AREA ControlArea = Segment->ControlArea;
 
@@ -243,26 +230,13 @@ APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath)
 					3: kd> dt _CONTROL_AREA 0xfffffa80`1ac18800
 					nt!_CONTROL_AREA
 					+0x000 Segment          : 0xfffff8a0`01deb000 _SEGMENT
-					+0x008 DereferenceList  : _LIST_ENTRY [ 0x00000000`00000000 - 0x0 ]
-					+0x018 NumberOfSectionReferences : 1
-					+0x020 NumberOfPfnReferences : 0xb7
-					+0x028 NumberOfMappedViews : 1
-					+0x030 NumberOfUserReferences : 2
-					+0x038 u                : <unnamed-tag>
-					+0x03c FlushInProgressCount : 0
+					......
 					+0x040 FilePointer      : _EX_FAST_REF
-					+0x048 ControlAreaLock  : 0n0
-					+0x04c ModifiedWriteCount : 0
-					+0x04c StartingFrame    : 0
-					+0x050 WaitingForDeletion : (null)
-					+0x058 u2               : <unnamed-tag>
-					+0x068 LockedPages      : 0n1
-					+0x070 ViewList         : _LIST_ENTRY [ 0xfffffa80`1acf3230 - 0xfffffa80`1acf3230 ]
 
 					3: kd> dq 0xfffffa80`1ac18800+40
 					fffffa80`1ac18840  fffffa80`1ac18d44 00000000`00000000
 					*/
-					PFILE_OBJECT FileObject = (PFILE_OBJECT)((UINT_PTR)ControlArea->FilePointer & 0xFFFFFFFFFFFFFFF0);
+					PFILE_OBJECT FileObject = (PFILE_OBJECT)((UINT_PTR)ControlArea->FilePointer & 0xFFFFFFFFFFFFFFF8);
 
 					if (FileObject && MmIsAddressValid(FileObject))
 					{
@@ -271,24 +245,7 @@ APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath)
 						3: kd> dt _FILE_OBJECT fffffa80`1ac18d40
 						nt!_FILE_OBJECT
 						+0x000 Type             : 0n5
-						+0x002 Size             : 0n216
-						+0x008 DeviceObject     : 0xfffffa80`192fd4c0 _DEVICE_OBJECT
-						+0x010 Vpb              : 0xfffffa80`1923d370 _VPB
-						+0x018 FsContext        : 0xfffff8a0`01dbb140 Void
-						+0x020 FsContext2       : 0xfffff8a0`01bf1ec0 Void
-						+0x028 SectionObjectPointer : 0xfffffa80`1ac25328 _SECTION_OBJECT_POINTERS
-						+0x030 PrivateCacheMap  : (null)
-						+0x038 FinalStatus      : 0n0
-						+0x040 RelatedFileObject : (null)
-						+0x048 LockOperation    : 0 ''
-						+0x049 DeletePending    : 0 ''
-						+0x04a ReadAccess       : 0x1 ''
-						+0x04b WriteAccess      : 0 ''
-						+0x04c DeleteAccess     : 0 ''
-						+0x04d SharedRead       : 0x1 ''
-						+0x04e SharedWrite      : 0 ''
-						+0x04f SharedDelete     : 0x1 ''
-						+0x050 Flags            : 0x44042
+						......
 						+0x058 FileName         : _UNICODE_STRING "\Windows\explorer.exe"
 						*/
 						Status = IoQueryFileDosDeviceName(FileObject, &oni);
@@ -302,12 +259,12 @@ APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath)
 							}
 							else
 							{
-								ProcessFullPathLength = oni->Name.Length * sizeof(WCHAR);
+								ProcessFullPathLength = oni->Name.Length;
 							}
 
 							//RtlCopyMemory(ProcessFullPath, oni->Name.Buffer, ProcessFullPathLength);
 
-							RtlStringCchCopyW(ProcessFullPath, ProcessFullPathLength, oni->Name.Buffer);
+							RtlStringCchCopyW(ProcessFullPath, ProcessFullPathLength + 1, oni->Name.Buffer);
 
 							Status = STATUS_SUCCESS;
 

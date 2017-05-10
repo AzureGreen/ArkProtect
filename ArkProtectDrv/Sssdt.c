@@ -1024,9 +1024,9 @@ APFixWin32pServiceTable(IN PVOID ImageBase, IN PVOID OriginalBase)
 #else
 		for (UINT32 i = 0; i < g_ReloadWin32pServiceTableAddress.Limit; i++)
 		{
-			g_OriginalSssdtFunctionAddress[i] = *(UINT32*)(g_ReloadWin32pServiceTableAddress.Base + i * 4);
+			g_OriginalSssdtFunctionAddress[i] = *(UINT32*)((UINT_PTR)g_ReloadWin32pServiceTableAddress.Base + i * 4);
 			//g_SssdtItem[i] = g_OriginalSssdtFunctionAddress[i];
-			*(UINT32*)(g_ReloadWin32pServiceTableAddress.Base + i * 4) += KrnlOffset;      // 将所有Ssdt函数地址转到我们新加载到内存中的地址
+			*(UINT32*)((UINT_PTR)g_ReloadWin32pServiceTableAddress.Base + i * 4) += KrnlOffset;      // 将所有Ssdt函数地址转到我们新加载到内存中的地址
 		}
 #endif // _WIN64
 
