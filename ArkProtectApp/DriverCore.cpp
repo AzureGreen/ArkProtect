@@ -277,9 +277,9 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, dc_LoadOrder, strLoadOrder);
 			ListCtrl->SetItemText(iItem, dc_Company, strCompanyName);
 
-			if (_wcsnicmp(strCompanyName, L"Microsoft Corporation", wcslen(L"Microsoft Corporation")) == 0)
+			if (_wcsnicmp(DriverEntry.wzCompanyName, L"Microsoft Corporation", wcslen(L"Microsoft Corporation")) != 0)
 			{
-				ListCtrl->SetItemData(iItem, 1);
+				ListCtrl->SetItemData(iItem, TRUE);
 			}
 
 			DriverNum++;

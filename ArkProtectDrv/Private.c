@@ -137,141 +137,6 @@ APPageProtectOn()
 }
 
 
-/*
-UINT32
-APGetLogicalDriveStringsW(UINT32 BufferLength, LPWSTR wzBuffer)
-{
-	UINT32         DriveMap;
-	UNICODE_STRING RootName;
-	int i;
-	PUCHAR Dst;
-	DWORD BytesLeft;
-	DWORD BytesNeeded;
-	BOOLEAN WeFailed;
-	WCHAR wszDrive[] = L"A:\\";
-
-	BufferLength = BufferLength * 2;
-	BytesNeeded = 0;
-	BytesLeft = BufferLength;
-	Dst = (PUCHAR)wzBuffer;
-	WeFailed = FALSE;
-
-	RtlInitUnicodeString(&RootName, wszDrive);
-
-	DriveMap = GetLogicalDrives();
-	for (i = 0; i < MAX_DOS_DRIVES; i++)
-	{
-		RootName.Buffer[0] = (WCHAR)((CHAR)i + 'A');
-		if (DriveMap & (1 << i)) {
-
-			BytesNeeded += RootName.MaximumLength;
-			if (BytesNeeded < (USHORT)BytesLeft) {
-				RtlMoveMemory(Dst, RootName.Buffer, RootName.MaximumLength);
-				Dst += RootName.MaximumLength;
-				*(PWSTR)Dst = UNICODE_NULL;
-			}
-			else {
-				WeFailed = TRUE;
-			}
-		}
-	}
-
-	if (WeFailed) {
-		BytesNeeded += 2;
-	}
-
-	return(BytesNeeded / 2);
-}
-
-*/
-
-
-
-
-/*
-BOOLEAN
-DosPathToNtPath(IN WCHAR* wzDosFullPath, OUT WCHAR* wzNtFullPath)
-{
-	WCHAR	wzDriveStrings[0x1000] = { 0 };
-	int		i = 0;
-	WCHAR	wzNtDriveHead[3] = { 0 };
-	WCHAR	wzDosDriveHead[0x100] = { 0 };
-	int		iLength = 0;
-	// 检查参数
-	if (!wzDosFullPath || !wzNtFullPath)
-	{
-		return FALSE;
-	}
-
-	// 获取本地磁盘字符串
-	if (GetLogicalDriveStrings(sizeof(wzDriveStrings), wzDriveStrings))
-	{
-		for (i = 0; wzDriveStrings[i]; i += 4)     // A:\\0B:\\0C:\\0D:\\0......所以这里每次 +4
-		{
-			// A B 盘符是不用的盘符
-			if (!lstrcmp(&wzDriveStrings[i], L"A:\\") || !lstrcmp(&wzDriveStrings[i], L"B:\\"))
-			{
-				continue;
-			}
-			wzNtDriveHead[0] = wzDriveStrings[i];		// C
-			wzNtDriveHead[1] = wzDriveStrings[i + 1];	// :
-			wzNtDriveHead[2] = '\0';
-
-			if (!APQueryDosDevice(wzNtDriveHead, wzDosDriveHead, 0x100))	// 查询 Dos 设备名
-			{
-				return FALSE;
-			}
-			iLength = lstrlen(wzDosDriveHead);
-			if (_tcsnicmp(wzDosFullPath, wzDosDriveHead, iLength) == 0)
-			{
-				lstrcpy(wzNtFullPath, wzNtDriveHead);	// 复制驱动器
-				lstrcat(wzNtFullPath, wzDosFullPath + iLength);	// 复制路径,紧接后面
-
-				return TRUE;
-			}
-		}
-	}
-	lstrcpy(wzNtFullPath, wzDosFullPath);
-	return FALSE;
-}
-*/
-
-
-
-BOOLEAN
-APDosPathToNtPath(IN WCHAR *wzDosFullPath, OUT WCHAR *wzNtFullPath)
-{
-	WCHAR  wzNtDriveHead[4] = { 0 };
-	WCHAR  wzDosDriveHead[64] = { 0 };
-
-	if (!wzNtFullPath || !wzDosFullPath)
-	{
-		return FALSE;
-	}
-	// 从 'A'开始
-	for (UINT16 i = 65; i < 26 + 65; i++)
-	{
-		wzNtDriveHead[0] = (WCHAR)i;
-		wzNtDriveHead[1] = L':';
-		if (APQueryDosDevice(wzNtDriveHead, wzDosDriveHead, 64))
-		{
-			if (wzDosDriveHead)
-			{
-				SIZE_T DosDriveHeadLength = 0;
-				DosDriveHeadLength = wcslen(wzDosDriveHead);
-				if (_wcsnicmp(wzDosDriveHead, wzDosFullPath, DosDriveHeadLength) == 0)
-				{
-					//wcscpy(wzNtFullPath, wzNtDriveHead);
-					//wcscat(wzNtFullPath, wzDosFullPath + DosDriveHeadLength);
-					RtlStringCchCopyW(wzNtFullPath, wcslen(wzNtDriveHead), wzNtDriveHead);
-					RtlStringCchCatW(wzNtFullPath, wcslen(wzDosFullPath + DosDriveHeadLength) + 1, wzDosFullPath + DosDriveHeadLength);
-					return TRUE;
-				}
-			}
-		}
-	}
-	return FALSE;
-}
 
 
 UINT32
@@ -384,4 +249,41 @@ APQueryDosDevice(WCHAR *DeviceName, WCHAR *TargetPath, UINT32 MaximumLength)
 		DbgPrint("Open Directory Failed\r\n");
 	}
 	return ucchReturned;
+}
+
+
+BOOLEAN
+APDosPathToNtPath(IN WCHAR *wzDosFullPath, OUT WCHAR *wzNtFullPath)
+{
+	WCHAR  wzNtDriveHead[3] = { 0 };
+	WCHAR  wzDosDriveHead[64] = { 0 };
+
+	if (!wzNtFullPath || !wzDosFullPath)
+	{
+		return FALSE;
+	}
+	// 从 'A'开始
+	for (UINT16 i = 65; i < 26 + 65; i++)
+	{
+		wzNtDriveHead[0] = (WCHAR)i;
+		wzNtDriveHead[1] = L':';
+		wzNtDriveHead[2] = L'\0';
+		if (APQueryDosDevice(wzNtDriveHead, wzDosDriveHead, 64))
+		{
+			if (wzDosDriveHead)
+			{
+				SIZE_T DosDriveHeadLength = 0;
+				DosDriveHeadLength = wcslen(wzDosDriveHead);
+				if (_wcsnicmp(wzDosDriveHead, wzDosFullPath, DosDriveHeadLength) == 0)
+				{
+					//wcscpy(wzNtFullPath, wzNtDriveHead);
+					//wcscat(wzNtFullPath, wzDosFullPath + DosDriveHeadLength);
+					RtlStringCchCopyW(wzNtFullPath, wcslen(wzNtDriveHead) + 1, wzNtDriveHead);
+					RtlStringCchCatW(wzNtFullPath, wcslen(wzNtFullPath) + wcslen(wzDosFullPath + DosDriveHeadLength) + 1, wzDosFullPath + DosDriveHeadLength);
+					return TRUE;
+				}
+			}
+		}
+	}
+	return FALSE;
 }

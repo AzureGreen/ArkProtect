@@ -7,6 +7,8 @@ BOOLEAN(*pfnKeSetTimer)(
 	__in_opt PKDPC Dpc);
 
 
+#ifdef _WIN64
+
 /************************************************************************
 *  Name : FindKiWaitVariableAddress
 *  Param: KiWaitNeverAddress
@@ -14,7 +16,6 @@ BOOLEAN(*pfnKeSetTimer)(
 *  Ret  : BOOLEAN
 *  通过 KeSetTimer 和硬编码 获得 未导出变量 KiWaitNeverAddress & KiWaitAlwaysAddress
 ************************************************************************/
-
 BOOLEAN
 FindKiWaitVariableAddress(OUT PUINT_PTR* KiWaitNeverAddress, OUT PUINT_PTR* KiWaitAlwaysAddress)
 {
@@ -28,30 +29,7 @@ FindKiWaitVariableAddress(OUT PUINT_PTR* KiWaitNeverAddress, OUT PUINT_PTR* KiWa
 		1: kd> u KeSetTimer l 50
 		nt!KeSetTimer:
 		fffff800`03ed28b0 4883ec38        sub     rsp,38h
-		fffff800`03ed28b4 4c89442420      mov     qword ptr [rsp+20h],r8
-		fffff800`03ed28b9 4533c9          xor     r9d,r9d
-		fffff800`03ed28bc 4533c0          xor     r8d,r8d
-		fffff800`03ed28bf e80c000000      call    nt!KiSetTimerEx (fffff800`03ed28d0)
-		fffff800`03ed28c4 4883c438        add     rsp,38h
-		fffff800`03ed28c8 c3              ret
-		fffff800`03ed28c9 90              nop
-		fffff800`03ed28ca 90              nop
-		fffff800`03ed28cb 90              nop
-		fffff800`03ed28cc 90              nop
-		fffff800`03ed28cd 90              nop
-		fffff800`03ed28ce 90              nop
-		fffff800`03ed28cf 90              nop
-		nt!KiSetTimerEx:
-		fffff800`03ed28d0 48895c2408      mov     qword ptr [rsp+8],rbx
-		fffff800`03ed28d5 4889542410      mov     qword ptr [rsp+10h],rdx
-		fffff800`03ed28da 55              push    rbp
-		fffff800`03ed28db 56              push    rsi
-		fffff800`03ed28dc 57              push    rdi
-		fffff800`03ed28dd 4154            push    r12
-		fffff800`03ed28df 4155            push    r13
-		fffff800`03ed28e1 4156            push    r14
-		fffff800`03ed28e3 4157            push    r15
-		fffff800`03ed28e5 4883ec50        sub     rsp,50h
+		......
 		fffff800`03ed28e9 488b0530c82200  mov     rax,qword ptr [nt!KiWaitNever (fffff800`040ff120)]
 		fffff800`03ed28f0 488b1d19c92200  mov     rbx,qword ptr [nt!KiWaitAlways (fffff800`040ff210)]
 
@@ -75,10 +53,10 @@ FindKiWaitVariableAddress(OUT PUINT_PTR* KiWaitNeverAddress, OUT PUINT_PTR* KiWa
 				v3 = *(i + 2);
 				if (v1 == 0x48 && v2 == 0x8b && v3 == 0x05)		// 硬编码  mov rax
 				{
-					memcpy(&iOffset, i + 3, 4);
+					RtlCopyMemory(&iOffset, i + 3, 4);
 					*KiWaitNeverAddress = (PUINT64)(iOffset + (UINT64)i + 7);
 					i += 7;
-					memcpy(&iOffset, i + 3, 4);
+					RtlCopyMemory(&iOffset, i + 3, 4);
 					*KiWaitAlwaysAddress = (PUINT64)(iOffset + (UINT64)i + 7);
 					return TRUE;
 				}
@@ -87,6 +65,7 @@ FindKiWaitVariableAddress(OUT PUINT_PTR* KiWaitNeverAddress, OUT PUINT_PTR* KiWa
 	}
 	return FALSE;
 }
+
 
 /************************************************************************
 *  Name : APTransTimerDPCEx
@@ -171,7 +150,7 @@ APEnumDpcTimerByIterateKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT3
 			KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
 
 			// 256个KTIMER_TABLE_ENTRY数组
-			for (UINT32 j = 0; j < 0x100; j++) 
+			for (UINT32 j = 0; j < 0x100; j++)
 			{
 				PLIST_ENTRY CurrentListEntry = (PLIST_ENTRY)(TimerEntries + sizeof(KTIMER_TABLE_ENTRY) * j + sizeof(UINT64));  // 每次定位到数组的List_Entry成员
 				if (CurrentListEntry && MmIsAddressValid(CurrentListEntry))
@@ -206,7 +185,7 @@ APEnumDpcTimerByIterateKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT3
 								dti->DpcTimerEntry[dti->NumberOfDpcTimers].RealDpc = (UINT_PTR)RealDpc;
 								dti->DpcTimerEntry[dti->NumberOfDpcTimers].Cycle = Timer->Period;
 								dti->DpcTimerEntry[dti->NumberOfDpcTimers].TimeDispatch = (UINT_PTR)RealDpc->DeferredRoutine;
-								
+
 								Status = STATUS_SUCCESS;
 							}
 							else
@@ -214,7 +193,6 @@ APEnumDpcTimerByIterateKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT3
 								Status = STATUS_BUFFER_TOO_SMALL;
 							}
 							dti->NumberOfDpcTimers++;
-							
 						}
 					}
 				}
@@ -225,6 +203,147 @@ APEnumDpcTimerByIterateKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT3
 
 	return Status;
 }
+
+#else
+
+/************************************************************************
+*  Name : APGetKiTimerTableListHead
+*  Param: void
+*  Ret  : UINT_PTR
+*  x86 通过Ntos导出变量 KeUpdateSystemTime 和 硬编码 得到 KiTimerTableListHead
+************************************************************************/
+UINT_PTR
+APGetKiTimerTableListHead()
+{
+	UINT32  KiTimerTableListHead = 0;
+	UINT32	KeUpdateSystemTime = 0;
+
+	APGetNtosExportVariableAddress(L"KeUpdateSystemTime", (PVOID)&KeUpdateSystemTime);
+	if (KeUpdateSystemTime)
+	{
+		//DbgPrint("KeUpdateSystemTime: Win x86:%p\r\n", KeUpdateSystemTime);
+
+		/*
+		u KeUpdateSystemTime l 50
+		nt!KeUpdateSystemTime:
+		80541f38 b90000dfff      mov     ecx,0FFDF0000h
+		......
+		80541fed 8d0cc520405580  lea     ecx,nt!KiTimerTableListHead (80554020)[eax*8]
+
+
+		kd> dd 80554020
+		80554020  80554020 80554020 80554028 80554028
+		80554030  82a035f0 82a92eb0 80554038 80554038
+		80554040  82466eb0 82466eb0 80554048 80554048
+		*/
+
+		PUINT8	i = NULL;
+		PUINT8	StartSearchAddress = NULL;
+		PUINT8	EndSearchAddress = NULL;
+		UINT8   v1 = 0, v2 = 0, v3 = 0;
+
+		StartSearchAddress = (PUINT8)KeUpdateSystemTime;  // fffff800`03ecf640
+		EndSearchAddress = StartSearchAddress + 0x500;
+
+		for (i = StartSearchAddress; i < EndSearchAddress; i++)
+		{
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
+			{
+				v1 = *i;
+				v2 = *(i + 1);
+				v3 = *(i + 2);
+				if (v1 == 0x8d && v2 == 0x0c && v3 == 0xc5)		// 硬编码  lea ecx
+				{
+					RtlCopyMemory(&KiTimerTableListHead, i + 3, 4);
+					// Hit
+				/*	if (*KiTimerTableListHead && MmIsAddressValid((PVOID)*KiTimerTableListHead))
+					{
+					}*/
+					break;					
+				}
+			}
+		}
+	}
+
+	return KiTimerTableListHead;
+}
+
+/************************************************************************
+*  Name : APEnumDpcTimerByIterateKiTimerTableListHead
+*  Param: KiTimerTableListHead		一个ListEntry结构的数组，大小为0x100
+*  Ret  : NTSTATUS
+*  x86 通过 KiTimerTableListHead(100个成员的数组) ---> _LIST_ENTRY 循环遍历
+************************************************************************/
+NTSTATUS
+APEnumDpcTimerByIterateKiTimerTableListHead(OUT PDPC_TIMER_INFORMATION dti, IN UINT32 DpcTimerCount)
+{
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
+	PLIST_ENTRY	KiTimerTableListHead = 0;		// x86 下使用
+
+	KiTimerTableListHead = (PLIST_ENTRY)APGetKiTimerTableListHead();
+	if (KiTimerTableListHead && MmIsAddressValid((PVOID)KiTimerTableListHead))
+	{
+		KIRQL  OldIrql = 0;
+		OldIrql = KeRaiseIrqlToDpcLevel();
+
+		// 循环KiTimerTableList数组，数组每个成员都是一个List_Entry
+		for (UINT32 i = 0; i < 0x100; i++)			// KiTimerTableList数组长度为0x100
+		{
+			// 循环遍历每一个List_Entry成员，该List_Entry是 KTimer 结构体中的一个成员
+			for (PLIST_ENTRY TravelListEntry = KiTimerTableListHead[i].Flink;
+				MmIsAddressValid(TravelListEntry) && TravelListEntry != &KiTimerTableListHead[i];
+				TravelListEntry = TravelListEntry->Flink)
+			{
+				PKTIMER		Timer = NULL;
+
+				Timer = CONTAINING_RECORD(TravelListEntry, KTIMER, TimerListEntry);
+
+				/*
+				kd> dt _KTIMER
+				nt!_KTIMER
+				+0x000 Header           : _DISPATCHER_HEADER
+				+0x010 DueTime          : _ULARGE_INTEGER
+				+0x018 TimerListEntry   : _LIST_ENTRY
+				+0x020 Dpc              : Ptr32 _KDPC
+				+0x024 Period           : Int4B
+				*/
+
+				if (Timer &&
+					MmIsAddressValid(Timer) &&
+					MmIsAddressValid(Timer->Dpc) &&
+					MmIsAddressValid(Timer->Dpc->DeferredRoutine))
+				{
+					if (DpcTimerCount > dti->NumberOfDpcTimers)
+					{
+						DbgPrint("DPC对象:%p\r\n", (UINT32)Timer->Dpc);
+						DbgPrint("DPC函数入口:%p\r\n", (UINT32)Timer->Dpc->DeferredRoutine);
+						DbgPrint("Timer对象:%p\r\n", (UINT32)Timer);
+						DbgPrint("触发周期:%d\r\n:", Timer->Period);
+
+						dti->DpcTimerEntry[dti->NumberOfDpcTimers].TimerObject = (UINT_PTR)Timer;
+						dti->DpcTimerEntry[dti->NumberOfDpcTimers].RealDpc = (UINT_PTR)Timer->Dpc;
+						dti->DpcTimerEntry[dti->NumberOfDpcTimers].Cycle = Timer->Period;
+						dti->DpcTimerEntry[dti->NumberOfDpcTimers].TimeDispatch = (UINT_PTR)Timer->Dpc->DeferredRoutine;
+
+						Status = STATUS_SUCCESS;
+					}
+					else
+					{
+						Status = STATUS_BUFFER_TOO_SMALL;
+					}
+					dti->NumberOfDpcTimers++;
+
+				}
+			}
+		}
+		KeLowerIrql(OldIrql);
+	}
+
+	return Status;
+}
+
+#endif // _WIN64
+
 
 
 /************************************************************************
@@ -244,7 +363,17 @@ APEnumDpcTimer(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 
 	if (DpcTimerCount && dti)
 	{
+#ifdef _WIN64
+
 		Status = APEnumDpcTimerByIterateKTimerTableEntry(dti, DpcTimerCount);
+#else
+
+		Status = APEnumDpcTimerByIterateKiTimerTableListHead(dti, DpcTimerCount);
+
+#endif // _WIN64
+
+
+		
 	}
 	
 	return Status;

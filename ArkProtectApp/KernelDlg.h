@@ -43,4 +43,5 @@ public:
 
 
 	
+	afx_msg void OnNMCustomdrawKernelListctrl(NMHDR *pNMHDR, LRESULT *pResult);
 };

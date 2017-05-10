@@ -228,7 +228,7 @@ namespace ArkProtect
 
 
 	/************************************************************************
-	*  Name : UnloadDriver
+	*  Name : ResumeSsdtHook
 	*  Param: Ordinal
 	*  Ret  : BOOL
 	*  与驱动层通信，枚举进程及相关信息
@@ -237,6 +237,7 @@ namespace ArkProtect
 	{
 		BOOL   bOk = FALSE;
 		DWORD  dwReturnLength = 0;
+
 		bOk = DeviceIoControl(m_Global->m_DeviceHandle,
 			IOCTL_ARKPROTECT_RESUMESSDTHOOK,
 			&Ordinal,		// InputBuffer
@@ -254,7 +255,7 @@ namespace ArkProtect
 	*  Name : ResumeSsdtHookCallback
 	*  Param: lParam （ListCtrl）
 	*  Ret  : DWORD
-	*  查询进程模块的回调
+	*  恢复指定SsdtHook的回调
 	************************************************************************/
 	DWORD CALLBACK CSsdtHook::ResumeSsdtHookCallback(LPARAM lParam)
 	{
@@ -281,6 +282,32 @@ namespace ArkProtect
 		{
 			return 0;
 		}
+
+		m_SsdtHook->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+
+		if (m_SsdtHook->ResumeSsdtHook(Ordinal))
+		{
+			// 刷新列表
+			m_SsdtHook->QuerySsdtHook(ListCtrl);
+		}
+
+		m_SsdtHook->m_Global->m_bIsRequestNow = FALSE;
+
+		return 0;
+	}
+
+
+	/************************************************************************
+	*  Name : ResumeAllSsdtHookCallback
+	*  Param: lParam （ListCtrl）
+	*  Ret  : DWORD
+	*  恢复所有SsdtHook的回调
+	************************************************************************/
+	DWORD CALLBACK CSsdtHook::ResumeAllSsdtHookCallback(LPARAM lParam)
+	{
+		CListCtrl *ListCtrl = (CListCtrl*)lParam;
+
+		UINT32 Ordinal = RESUME_ALL_HOOKS;
 
 		m_SsdtHook->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
 

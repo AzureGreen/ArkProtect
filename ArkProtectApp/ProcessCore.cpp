@@ -421,6 +421,11 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, pc_UserAccess, strUserAccess);
 			ListCtrl->SetItemText(iItem, pc_Company, strCompanyName);
 
+			if ((i != 0) && (_wcsnicmp(ProcessEntry.wzCompanyName, L"Microsoft Corporation", wcslen(L"Microsoft Corporation")) != 0))
+			{
+				ListCtrl->SetItemData(iItem, TRUE);
+			}
+
 			ProcessNum++;
 
 			CString strStatusContext;

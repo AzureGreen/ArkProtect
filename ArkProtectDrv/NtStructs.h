@@ -192,7 +192,16 @@ MemoryBasicVlmInformation
 } MEMORY_INFORMATION_CLASS;
 */
 
-#define MemorySectionName 2
+typedef enum _MEMORY_INFORMATION_CLASS_EX
+{
+	MemoryBasicInformationEx = 0,
+	MemoryWorkingSetInformation = 1,
+	MemorySectionName = 2,
+	MemoryRegionInformation = 3,
+	MemoryWorkingSetExInformation = 4,
+} MEMORY_INFORMATION_CLASS_EX;
+
+//#define MemorySectionName 2
 
 //
 // Memory Information Structures for NtQueryVirtualMemory

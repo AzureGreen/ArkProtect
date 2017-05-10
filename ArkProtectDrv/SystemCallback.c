@@ -408,8 +408,8 @@ APGetRegisterCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callbac
 					if (CallbackCount > sci->NumberOfCallbacks)
 					{
 						sci->CallbackEntry[sci->NumberOfCallbacks].Type = ct_NotifyCmpCallBack;
-						sci->CallbackEntry[sci->NumberOfCallbacks].CallbackAddress = Notify->Function;
-						sci->CallbackEntry[sci->NumberOfCallbacks].Description = Notify->Cookie.QuadPart;
+						sci->CallbackEntry[sci->NumberOfCallbacks].CallbackAddress = (UINT_PTR)Notify->Function;
+						sci->CallbackEntry[sci->NumberOfCallbacks].Description = (UINT_PTR)Notify->Cookie.QuadPart;
 					}
 					sci->NumberOfCallbacks++;
 				}

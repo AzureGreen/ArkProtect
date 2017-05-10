@@ -99,12 +99,39 @@ void CDriverDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 
 void CDriverDlg::OnNMCustomdrawDriverList(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
 	// TODO: 在此添加控件通知处理程序代码
 
+	*pResult = CDRF_DODEFAULT;
 
+	if (CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+	}
+	else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		*pResult = CDRF_NOTIFYSUBITEMDRAW;
+	}
+	else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage)
+	{
+		COLORREF clrNewTextColor, clrNewBkColor;
+		BOOL bNotTrust = FALSE;
+		int iItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
 
-	*pResult = 0;
+		clrNewTextColor = RGB(0, 0, 0);
+		clrNewBkColor = RGB(255, 255, 255);
+
+		bNotTrust = (BOOL)m_DriverListCtrl.GetItemData(iItem);
+		if (bNotTrust == TRUE)
+		{
+			clrNewTextColor = RGB(0, 0, 255);
+		}
+
+		pLVCD->clrText = clrNewTextColor;
+		pLVCD->clrTextBk = clrNewBkColor;
+
+		*pResult = CDRF_DODEFAULT;
+	}
 }
 
 

@@ -26,6 +26,7 @@ protected:
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnLbnSelchangeHookListbox();
 	afx_msg void OnNMCustomdrawHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMRClickHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
 
 	DECLARE_MESSAGE_MAP()
 public:
@@ -41,7 +42,7 @@ public:
 	int                  m_iCurSel = 65535;
 
 	
-	afx_msg void OnSsdtFreshen();
-	afx_msg void OnSsdtResume();
-	afx_msg void OnNMRClickHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnHookFreshen();
+	afx_msg void OnHookResume();
+	afx_msg void OnHookResumeAll();
 };

@@ -227,4 +227,99 @@ namespace ArkProtect
 
 
 
+	/************************************************************************
+	*  Name : ResumeSssdtHook
+	*  Param: Ordinal
+	*  Ret  : BOOL
+	*  与驱动层通信，枚举进程及相关信息
+	************************************************************************/
+	BOOL CSssdtHook::ResumeSssdtHook(UINT32 Ordinal)
+	{
+		BOOL   bOk = FALSE;
+		DWORD  dwReturnLength = 0;
+
+		bOk = DeviceIoControl(m_Global->m_DeviceHandle,
+			IOCTL_ARKPROTECT_RESUMESSSDTHOOK,
+			&Ordinal,		// InputBuffer
+			sizeof(UINT32),
+			NULL,
+			0,
+			&dwReturnLength,
+			NULL);
+
+		return bOk;
+	}
+
+
+	/************************************************************************
+	*  Name : ResumeSssdtHookCallback
+	*  Param: lParam （ListCtrl）
+	*  Ret  : DWORD
+	*  恢复指定SssdtHook的回调
+	************************************************************************/
+	DWORD CALLBACK CSssdtHook::ResumeSssdtHookCallback(LPARAM lParam)
+	{
+		CListCtrl *ListCtrl = (CListCtrl*)lParam;
+
+		int iIndex = ListCtrl->GetSelectionMark();
+		if (iIndex < 0)
+		{
+			return 0;
+		}
+
+		UINT32   Ordinal = iIndex;
+
+		UINT_PTR CurrentAddress = 0;
+		CString  strCurrentAddress = ListCtrl->GetItemText(iIndex, shc_CurrentAddress);
+		swscanf_s(strCurrentAddress.GetBuffer() + 2, L"%p", &CurrentAddress);
+
+		UINT_PTR OriginalAddress = 0;
+		CString  strOriginalAddress = ListCtrl->GetItemText(iIndex, shc_OriginalAddress);
+		swscanf_s(strOriginalAddress.GetBuffer() + 2, L"%p", &OriginalAddress);
+
+		// 如果没有Hook就直接返回了
+		if (OriginalAddress == CurrentAddress || Ordinal < 0 || Ordinal > m_SssdtFunctionCount)
+		{
+			return 0;
+		}
+
+		m_SssdtHook->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+
+		if (m_SssdtHook->ResumeSssdtHook(Ordinal))
+		{
+			// 刷新列表
+			m_SssdtHook->QuerySssdtHook(ListCtrl);
+		}
+
+		m_SssdtHook->m_Global->m_bIsRequestNow = FALSE;
+
+		return 0;
+	}
+
+
+	/************************************************************************
+	*  Name : ResumeAllSssdtHookCallback
+	*  Param: lParam （ListCtrl）
+	*  Ret  : DWORD
+	*  恢复所有SsdtHook的回调
+	************************************************************************/
+	DWORD CALLBACK CSssdtHook::ResumeAllSssdtHookCallback(LPARAM lParam)
+	{
+		CListCtrl *ListCtrl = (CListCtrl*)lParam;
+
+		UINT32 Ordinal = RESUME_ALL_HOOKS;
+
+		m_SssdtHook->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
+
+		if (m_SssdtHook->ResumeSssdtHook(Ordinal))
+		{
+			// 刷新列表
+			m_SssdtHook->QuerySssdtHook(ListCtrl);
+		}
+
+		m_SssdtHook->m_Global->m_bIsRequestNow = FALSE;
+
+		return 0;
+	}
+
 }

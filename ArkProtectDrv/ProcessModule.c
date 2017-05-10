@@ -40,8 +40,11 @@ APIsProcessModuleInList(IN UINT_PTR BaseAddress, IN UINT32 ModuleSize, IN PPROCE
 NTSTATUS
 APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION pmi, IN UINT32 ModuleCount)
 {
-	NTSTATUS Status = STATUS_UNSUCCESSFUL;
-	HANDLE   ProcessHandle = NULL;
+	NTSTATUS   Status = STATUS_UNSUCCESSFUL;
+	KAPC_STATE ApcState;
+	HANDLE     ProcessHandle = NULL;
+
+	KeStackAttachProcess(EProcess, &ApcState);     // attach到目标进程内,因为要访问的是用户空间地址
 
 	Status = ObOpenObjectByPointer(EProcess, 
 		OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
@@ -53,9 +56,11 @@ APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MO
 	if (NT_SUCCESS(Status))
 	{
 		MEMORY_BASIC_INFORMATION mbi = { 0 };
-		PMEMORY_SECTION_NAME msn = (PMEMORY_SECTION_NAME)ExAllocatePool(PagedPool, MAX_PATH);
+		PMEMORY_SECTION_NAME msn = (PMEMORY_SECTION_NAME)ExAllocatePool(NonPagedPool, MAX_PATH * sizeof(WCHAR));
 		if (msn)
 		{
+			RtlZeroMemory(msn, MAX_PATH * sizeof(WCHAR));
+
 			__try
 			{
 				for (SIZE_T BaseAddress = 0; BaseAddress <= (SIZE_T)g_DynamicData.MaxUserSpaceAddress; BaseAddress += 0x10000)
@@ -75,65 +80,59 @@ APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MO
 							(PVOID)BaseAddress,
 							MemorySectionName,
 							(PVOID)msn,
-							sizeof(MEMORY_SECTION_NAME),
+							MAX_PATH * sizeof(WCHAR),
 							&ReturnLength);
-						// 判断错误是不是申请的内存不足
-						if (!NT_SUCCESS(Status) && Status == STATUS_INFO_LENGTH_MISMATCH)
+						if (NT_SUCCESS(Status))
 						{
-							ExFreePool(msn);
-							msn = (PMEMORY_SECTION_NAME)ExAllocatePool(PagedPool, ReturnLength);
-							if (msn)
+							BOOLEAN bAlreadyHave = TRUE;
+							// 获得模块Nt名称
+							WCHAR  wzNtFullPath[MAX_PATH] = { 0 };
+
+							APDosPathToNtPath(msn->NameBuffer, wzNtFullPath);
+
+							// 因为同一个DLL会重复多次，判断与上次插入的是否想同
+							if (pmi->NumberOfModules == 0)  // First Time
 							{
-								Status = ZwQueryVirtualMemory(ProcessHandle,
-									(PVOID)BaseAddress,
-									MemorySectionName,
-									(PVOID)msn,
-									sizeof(MEMORY_SECTION_NAME),
-									&ReturnLength);
-								if (!NT_SUCCESS(Status))
-								{
-									continue;
-								}
+								bAlreadyHave = FALSE;
 							}
 							else
 							{
-								continue;
+								bAlreadyHave = (_wcsicmp(pmi->ModuleEntry[pmi->NumberOfModules - 1].wzFilePath, wzNtFullPath) == 0) ? TRUE : FALSE;
 							}
-						}
-					
-						if (!APIsProcessModuleInList((UINT_PTR)mbi.BaseAddress, (UINT32)mbi.RegionSize, pmi, ModuleCount))
-						{
-							if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
-							{	
-								WCHAR  wzNtFullPath[MAX_PATH] = { 0 };
-								SIZE_T TravelAddress = 0;
 
-								// 模块名称
-								APDosPathToNtPath(msn->NameBuffer, wzNtFullPath);
-								RtlStringCchCopyW(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, wcslen(wzNtFullPath) + 1, wzNtFullPath);
-								
-								// 模块基地址
-								pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)mbi.BaseAddress;
-								
-								// 获得模块大小
-								for (SIZE_T TravelAddress = 0; TravelAddress <= (SIZE_T)g_DynamicData.MaxUserSpaceAddress; TravelAddress += mbi.RegionSize)
+							if (bAlreadyHave == FALSE) 
+							{
+								if (!APIsProcessModuleInList((UINT_PTR)mbi.BaseAddress, (UINT32)mbi.RegionSize, pmi, ModuleCount))
 								{
-									Status = ZwQueryVirtualMemory(ProcessHandle,
-										(PVOID)TravelAddress,
-										MemoryBasicInformation,
-										(PVOID)&mbi,
-										sizeof(MEMORY_BASIC_INFORMATION),
-										&ReturnLength);
-									if (NT_SUCCESS(Status) && mbi.Type != MEM_IMAGE)
-									{
-										break;
-									}
-								}
+									if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
+									{		
+										SIZE_T TravelAddress = 0;
 
-								pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = TravelAddress - BaseAddress;
-								
+										RtlStringCchCopyW(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, wcslen(wzNtFullPath) + 1, wzNtFullPath);
+
+										// 模块基地址
+										pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)mbi.BaseAddress;
+
+										// 获得模块大小
+										for (SIZE_T TravelAddress = BaseAddress; TravelAddress <= (SIZE_T)g_DynamicData.MaxUserSpaceAddress; TravelAddress += mbi.RegionSize)
+										{
+											Status = ZwQueryVirtualMemory(ProcessHandle,
+												(PVOID)TravelAddress,
+												MemoryBasicInformation,
+												(PVOID)&mbi,
+												sizeof(MEMORY_BASIC_INFORMATION),
+												&ReturnLength);
+											if (NT_SUCCESS(Status) && mbi.Type != MEM_IMAGE)
+											{
+												break;
+											}
+										}
+
+										pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = TravelAddress - BaseAddress;
+									}
+									pmi->NumberOfModules++;
+								}
 							}
-							pmi->NumberOfModules++;
 						}
 					}
 				}
@@ -152,63 +151,10 @@ APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MO
 		}
 		ZwClose(ProcessHandle);
 	}
+
+	KeUnstackDetachProcess(&ApcState);
+
 	return Status;
-}
-
-
-/************************************************************************
-*  Name : APFillProcessModuleInfoByIterateLdr
-*  Param: LdrListEntry			模块基地址（OUT）
-*  Param: ModuleSize			模块大小（IN）
-*  Ret  : NTSTATUS
-*  通过FileObject获得进程完整路径
-************************************************************************/
-VOID
-APFillProcessModuleInfoByIterateLdr(IN PLIST_ENTRY LdrListEntry, IN eLdrType LdrType, OUT PPROCESS_MODULE_INFORMATION pmi, IN UINT32 ModuleCount)
-{
-
-	for (PLIST_ENTRY TravelListEntry = LdrListEntry->Flink;
-		TravelListEntry != LdrListEntry;
-		TravelListEntry = (PLIST_ENTRY)TravelListEntry->Flink)
-	{
-		PLDR_DATA_TABLE_ENTRY LdrDataTableEntry = NULL;
-		switch (LdrType)
-		{
-		case lt_InLoadOrderModuleList:
-		{
-			LdrDataTableEntry = CONTAINING_RECORD(TravelListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-			break;
-		}
-		case lt_InMemoryOrderModuleList:
-		{
-			LdrDataTableEntry = CONTAINING_RECORD(TravelListEntry, LDR_DATA_TABLE_ENTRY, InMemoryOrderLinks);
-			break;
-		}
-		case lt_InInitializationOrderModuleList:
-		{
-			LdrDataTableEntry = CONTAINING_RECORD(TravelListEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
-			break;
-		}
-		default:
-			break;
-		}
-
-		if ((PUINT8)LdrDataTableEntry > 0 && MmIsAddressValid(LdrDataTableEntry))
-		{
-			// 插入
-			if (!APIsProcessModuleInList((UINT_PTR)LdrDataTableEntry->DllBase, LdrDataTableEntry->SizeOfImage, pmi, ModuleCount))
-			{
-				if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
-				{
-					pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)LdrDataTableEntry->DllBase;
-					pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = LdrDataTableEntry->SizeOfImage;
-					//wcsncpy(pmi->ModuleEntry[pmi->NumberOfModules].wzFullPath, LdrDataTableEntry->FullDllName.Buffer, LdrDataTableEntry->FullDllName.Length);
-					RtlStringCchCopyW(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, LdrDataTableEntry->FullDllName.Length, LdrDataTableEntry->FullDllName.Buffer);
-				}
-				pmi->NumberOfModules++;
-			}
-		}
-	}
 }
 
 
@@ -331,10 +277,6 @@ APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION 
 				}
 			}
 
-			// 枚举三根链表
-//			APFillProcessModuleInfoByIterateLdr((PLIST_ENTRY)&(LdrData->InLoadOrderModuleList), lt_InLoadOrderModuleList, pmi, ModuleCount);
-//			APFillProcessModuleInfoByIterateLdr((PLIST_ENTRY)&(LdrData->InMemoryOrderModuleList), lt_InMemoryOrderModuleList, pmi, ModuleCount);
-//			APFillProcessModuleInfoByIterateLdr((PLIST_ENTRY)&(LdrData->InInitializationOrderModuleList), lt_InInitializationOrderModuleList, pmi, ModuleCount);
 			// 枚举到了东西
 			if (pmi->NumberOfModules)
 			{
@@ -390,6 +332,40 @@ APEnumProcessModule(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 		if (pmi)
 		{
 			RtlZeroMemory(pmi, OutputLength);
+
+			// 暴力内存效率太低了
+	/*		Status = APEnumProcessModuleByZwQueryVirtualMemory(EProcess, pmi, ModuleCount);
+			if (NT_SUCCESS(Status))
+			{
+				if (ModuleCount >= pmi->NumberOfModules)
+				{
+					RtlCopyMemory(OutputBuffer, pmi, OutputLength);
+					Status = STATUS_SUCCESS;
+				}
+				else
+				{
+					((PPROCESS_MODULE_INFORMATION)OutputBuffer)->NumberOfModules = pmi->NumberOfModules;    // 让Ring3知道需要多少个
+					Status = STATUS_BUFFER_TOO_SMALL;	// 给ring3返回内存不够的信息
+				}
+			}
+			else
+			{
+				Status = APEnumProcessModuleByPeb(EProcess, pmi, ModuleCount);
+				if (NT_SUCCESS(Status))
+				{
+					if (ModuleCount >= pmi->NumberOfModules)
+					{
+						RtlCopyMemory(OutputBuffer, pmi, OutputLength);
+						Status = STATUS_SUCCESS;
+					}
+					else
+					{
+						((PPROCESS_MODULE_INFORMATION)OutputBuffer)->NumberOfModules = pmi->NumberOfModules;    // 让Ring3知道需要多少个
+						Status = STATUS_BUFFER_TOO_SMALL;	// 给ring3返回内存不够的信息
+					}
+				}
+			}
+			*/
 
 			Status = APEnumProcessModuleByPeb(EProcess, pmi, ModuleCount);
 			if (NT_SUCCESS(Status))

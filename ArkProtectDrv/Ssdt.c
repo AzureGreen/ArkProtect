@@ -521,21 +521,66 @@ APEnumSsdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 }
 
 
+/************************************************************************
+*  Name : APResumeSsdtHook
+*  Param: Ordinal           函数序号
+*  Ret  : NTSTATUS
+*  恢复指定的SsdtHook进程模块
+************************************************************************/
 NTSTATUS
 APResumeSsdtHook(IN UINT32 Ordinal)
 {
 	NTSTATUS       Status = STATUS_UNSUCCESSFUL;
-	
-	if (Ordinal > g_CurrentSsdtAddress->Limit)
+
+	if (Ordinal == RESUME_ALL_HOOKS)
+	{
+		// 恢复所有SsdtHook
+
+		// 对比Original&Current
+		for (UINT32 i = 0; i < g_CurrentSsdtAddress->Limit; i++)
+		{
+
+#ifdef _WIN64
+			// 64位存储的是 偏移（高28位）
+			INT32 CurrentOffset = (*(PINT32)((UINT64)g_CurrentSsdtAddress->Base + i * 4)) >> 4;    // 带符号位的移位
+
+			UINT64 CurrentSsdtFunctionAddress = (UINT_PTR)((UINT_PTR)g_CurrentSsdtAddress->Base + CurrentOffset);
+			UINT64 OriginalSsdtFunctionAddress = g_OriginalSsdtFunctionAddress[i];
+
+#else
+			// 32位存储的是 绝对地址
+			UINT32 CurrentSsdtFunctionAddress = *(UINT32*)((UINT32)g_CurrentSsdtAddress->Base + i * 4);
+			UINT32 OriginalSsdtFunctionAddress = g_OriginalSsdtFunctionAddress[i];
+
+#endif // _WIN64
+
+			if (OriginalSsdtFunctionAddress != CurrentSsdtFunctionAddress)   // 表明被Hook了
+			{
+				APPageProtectOff();
+
+				*(UINT32*)((UINT_PTR)g_CurrentSsdtAddress->Base + i * 4) = *(UINT32*)((UINT_PTR)g_ReloadSsdtAddress->Base + i * 4);
+				
+				APPageProtectOn();
+			}
+		}
+
+		Status = STATUS_SUCCESS;
+	}
+	else if (Ordinal > g_CurrentSsdtAddress->Limit)
 	{
 		Status = STATUS_INVALID_PARAMETER;
 	}
 	else
 	{
-		// 需要做的是将当前Ssdt中保存的值改为g_SsdtItem[i]中的对应项
+		// 恢复指定项的SsdtHook
+		// 需要做的是将当前Ssdt中保存的值改为g_ReloadSsdtAddress中的保存的值
 		
+		APPageProtectOff();
+
 		*(UINT32*)((UINT_PTR)g_CurrentSsdtAddress->Base + Ordinal * 4) = *(UINT32*)((UINT_PTR)g_ReloadSsdtAddress->Base + Ordinal * 4);
-				
+
+		APPageProtectOn();
+
 		Status = STATUS_SUCCESS;
 	}
 	

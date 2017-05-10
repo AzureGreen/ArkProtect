@@ -36,6 +36,7 @@ BEGIN_MESSAGE_MAP(CKernelDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_SHOWWINDOW()
 	ON_LBN_SELCHANGE(IDC_KERNEL_LISTBOX, &CKernelDlg::OnLbnSelchangeKernelListbox)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_KERNEL_LISTCTRL, &CKernelDlg::OnNMCustomdrawKernelListctrl)
 END_MESSAGE_MAP()
 
 
@@ -129,7 +130,42 @@ void CKernelDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 }
 
 
+void CKernelDlg::OnNMCustomdrawKernelListctrl(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
 
+	*pResult = CDRF_DODEFAULT;
+
+	if (CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+	}
+	else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		*pResult = CDRF_NOTIFYSUBITEMDRAW;
+	}
+	else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage)
+	{
+		COLORREF clrNewTextColor, clrNewBkColor;
+		BOOL bNotTrust = FALSE;
+		int iItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
+
+		clrNewTextColor = RGB(0, 0, 0);
+		clrNewBkColor = RGB(255, 255, 255);
+
+		bNotTrust = (BOOL)m_KernelListCtrl.GetItemData(iItem);
+		if (bNotTrust == TRUE)
+		{
+			clrNewTextColor = RGB(0, 0, 255);
+		}
+
+		pLVCD->clrText = clrNewTextColor;
+		pLVCD->clrTextBk = clrNewBkColor;
+
+		*pResult = CDRF_DODEFAULT;
+	}
+}
 
 
 void CKernelDlg::OnLbnSelchangeKernelListbox()
@@ -273,6 +309,9 @@ void CKernelDlg::APInitializeKernelItemList()
 
 	m_KernelListBox.SetItemHeight(-1, (UINT)(16 * (m_Global->iDpiy / 96.0)));
 }
+
+
+
 
 
 

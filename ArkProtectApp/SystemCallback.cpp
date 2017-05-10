@@ -204,7 +204,10 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, scc_Company, strCompany);
 			ListCtrl->SetItemText(iItem, scc_Description, strDescription);
 
-			ListCtrl->SetItemData(iItem, iItem);
+			if (_wcsnicmp(strCompany.GetBuffer(), L"Microsoft Corporation", wcslen(L"Microsoft Corporation")) != 0)
+			{
+				ListCtrl->SetItemData(iItem, TRUE);
+			}
 
 			CString strStatusContext;
 			strStatusContext.Format(L"系统回调正在加载  驱动加载：%d，注册表：%d，进程创建：%d，线程创建：%d，关机：%d，错误检测：%d",

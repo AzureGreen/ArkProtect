@@ -54,6 +54,7 @@ public:
 	static BOOL         m_bSortOrder;  // ¼ÇÂ¼ÅÅÐòË³Ðò
 	
 	
+	afx_msg void OnNMCustomdrawProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 

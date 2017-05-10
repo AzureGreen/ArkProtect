@@ -4,6 +4,9 @@
 
 namespace ArkProtect
 {
+
+#define RESUME_ALL_HOOKS 8080
+
 	enum eSsdtHookColumn
 	{
 		shc_Ordinal,         // ÐòºÅ
@@ -49,6 +52,8 @@ namespace ArkProtect
 		BOOL ResumeSsdtHook(UINT32 Ordinal);
 
 		static DWORD CALLBACK ResumeSsdtHookCallback(LPARAM lParam);
+
+		static DWORD CALLBACK ResumeAllSsdtHookCallback(LPARAM lParam);
 
 
 	private:

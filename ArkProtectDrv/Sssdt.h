@@ -43,6 +43,9 @@ APEnumSssdtHookByReloadWin32k(OUT PSSSDT_HOOK_INFORMATION shi, IN UINT32 SssdtFu
 NTSTATUS
 APEnumSssdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength);
 
+NTSTATUS 
+APResumeSssdtHook(IN UINT32 Ordinal);
+
 #endif // !CXX_Sssdt_H
 
 

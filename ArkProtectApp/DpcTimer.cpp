@@ -140,7 +140,10 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, dtc_FilePath, strFilePath);
 			ListCtrl->SetItemText(iItem, dtc_Company, strCompany);
 
-			ListCtrl->SetItemData(iItem, DpcTimerEntry.TimerObject);
+			if (_wcsnicmp(strCompany.GetBuffer(), L"Microsoft Corporation", wcslen(L"Microsoft Corporation")) != 0)
+			{
+				ListCtrl->SetItemData(iItem, TRUE);
+			}
 
 			DpcTimerNum++;
 

@@ -9,6 +9,7 @@
 
 //#define MAX_PATH 260
 #define MAX_DOS_DRIVES 26
+#define RESUME_ALL_HOOKS 8080
 
 typedef enum _eWinVersion {
 	WINVER_7 = 0x0610,

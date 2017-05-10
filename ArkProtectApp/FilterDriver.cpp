@@ -203,7 +203,10 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, fdc_AttachedDriverName, strAttachedDriverName);
 			ListCtrl->SetItemText(iItem, fdc_Compay, strCompany);
 
-			ListCtrl->SetItemData(iItem, iItem);
+			if (_wcsnicmp(strCompany.GetBuffer(), L"Microsoft Corporation", wcslen(L"Microsoft Corporation")) != 0)
+			{
+				ListCtrl->SetItemData(iItem, TRUE);
+			}
 
 			FilterDriverNum++;
 

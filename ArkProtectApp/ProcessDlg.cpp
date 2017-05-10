@@ -38,13 +38,13 @@ void CProcessDlg::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CProcessDlg, CDialogEx)
+	ON_WM_SIZE()
 	ON_WM_SHOWWINDOW()
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_PROCESS_LIST, &CProcessDlg::OnNMCustomdrawProcessList)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_PROCESS_LIST, &CProcessDlg::OnLvnColumnclickProcessList)
 	ON_NOTIFY(NM_RCLICK, IDC_PROCESS_LIST, &CProcessDlg::OnNMRClickProcessList)
 	ON_COMMAND(ID_PROCESS_FRESHEN, &CProcessDlg::OnProcessFreshen)
 	ON_COMMAND(ID_PROCESS_MODULE, &CProcessDlg::OnProcessModule)
-	ON_WM_SIZE()
-	
 	ON_COMMAND(ID_PROCESS_THREAD, &CProcessDlg::OnProcessThread)
 	ON_COMMAND(ID_PROCESS_HANDLE, &CProcessDlg::OnProcessHandle)
 	ON_COMMAND(ID_PROCESS_WINDOW, &CProcessDlg::OnProcessWindow)
@@ -109,6 +109,44 @@ void CProcessDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 		APLoadProcessList();
 
 		m_ProcessListCtrl.SetFocus();
+	}
+}
+
+
+void CProcessDlg::OnNMCustomdrawProcessList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+
+	*pResult = CDRF_DODEFAULT;
+
+	if (CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		*pResult = CDRF_NOTIFYITEMDRAW;
+	}
+	else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage)
+	{
+		*pResult = CDRF_NOTIFYSUBITEMDRAW;
+	}
+	else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage)
+	{
+		COLORREF clrNewTextColor, clrNewBkColor;
+		BOOL bNotTrust = FALSE;
+		int iItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
+
+		clrNewTextColor = RGB(0, 0, 0);
+		clrNewBkColor = RGB(255, 255, 255);
+
+		bNotTrust = (BOOL)m_ProcessListCtrl.GetItemData(iItem);
+		if (bNotTrust == TRUE)
+		{
+			clrNewTextColor = RGB(0, 0, 255);
+		}
+
+		pLVCD->clrText = clrNewTextColor;
+		pLVCD->clrTextBk = clrNewBkColor;
+
+		*pResult = CDRF_DODEFAULT;
 	}
 }
 
@@ -431,6 +469,8 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
+
+
 
 
 

@@ -894,7 +894,7 @@ APGetCurrentSssdtAddress()
 	}
 
 #else
-	UINT32 KeAddSystemServiceTableAddress = NULL;
+	UINT32 KeAddSystemServiceTableAddress = 0;
 
 	APGetNtosExportVariableAddress(L"KeAddSystemServiceTable", (PVOID*)&KeAddSystemServiceTableAddress);
 	if (KeAddSystemServiceTableAddress)
@@ -903,36 +903,34 @@ APGetCurrentSssdtAddress()
 		PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
 		PUINT8	i = NULL;
 		UINT8   v1 = 0, v2 = 0, v3 = 0;
-		INT32   iOffset = 0;    // 002320c7 偏移不会超过4字节
 
 		for (i = StartSearchAddress; i<EndSearchAddress; i++)
 		{
 			/*
-			kd> u fffff800`03e81640 l 500
-			nt!KiSystemCall64:
-			fffff800`03e81640 0f01f8          swapgs
-			......
-
-			nt!KiSystemServiceRepeat:
-			fffff800`03e9c772 4c8d15c7202300  lea     r10,[nt!KeServiceDescriptorTable (fffff800`040ce840)]
-			fffff800`03e9c779 4c8d1d00212300  lea     r11,[nt!KeServiceDescriptorTableShadow (fffff800`040ce880)]
-			fffff800`03e9c780 f7830001000080000000 test dword ptr [rbx+100h],80h
-
-			TargetAddress = CurrentAddress + Offset + 7
-			fffff800`040ce840 = fffff800`03e9c772 + 0x002320c7 + 7
+			3: kd> u KeAddSystemServiceTable l 10
+			nt!KeAddSystemServiceTable:
+			83fa30a0 8bff            mov     edi,edi
+			83fa30a2 55              push    ebp
+			83fa30a3 8bec            mov     ebp,esp
+			83fa30a5 837d1801        cmp     dword ptr [ebp+18h],1
+			83fa30a9 7760            ja      nt!KeAddSystemServiceTable+0x6b (83fa310b)
+			83fa30ab 8b4518          mov     eax,dword ptr [ebp+18h]
+			83fa30ae c1e004          shl     eax,4
+			83fa30b1 83b8000bf88300  cmp     dword ptr nt!KeServiceDescriptorTable (83f80b00)[eax],0
+			83fa30b8 7551            jne     nt!KeAddSystemServiceTable+0x6b (83fa310b)
+			83fa30ba 8d88400bf883    lea     ecx,nt!KeServiceDescriptorTableShadow (83f80b40)[eax]
+			83fa30c0 833900          cmp     dword ptr [ecx],0
 			*/
 
-			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 6))
 			{
 				v1 = *i;
 				v2 = *(i + 1);
-				v3 = *(i + 2);
-				if (v1 == 0x4c && v2 == 0x8d && v3 == 0x1d)		// 硬编码  lea r11
+				v3 = *(i + 6);
+				if (v1 == 0x8d && v2 == 0x88 && v3 == 0x83)		// 硬编码  lea ecx
 				{
-					RtlCopyMemory(&iOffset, i + 3, 4);
-					(UINT_PTR)g_CurrentSssdtAddress = (UINT_PTR)(iOffset + (UINT64)i + 7);
-
-					(UINT_PTR)g_CurrentSssdtAddress += sizeof(KSERVICE_TABLE_DESCRIPTOR);      // 过Ssdt
+					RtlCopyMemory(&CurrentSssdtAddress, i + 2, 4);
+					break;
 				}
 			}
 		}
@@ -1255,3 +1253,69 @@ APEnumSssdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 	return Status;
 }
 
+
+/************************************************************************
+*  Name : APResumeSssdtHook
+*  Param: Ordinal           函数序号
+*  Ret  : NTSTATUS
+*  恢复指定的SsdtHook进程模块
+************************************************************************/
+NTSTATUS
+APResumeSssdtHook(IN UINT32 Ordinal)
+{
+	NTSTATUS       Status = STATUS_UNSUCCESSFUL;
+
+	if (Ordinal == RESUME_ALL_HOOKS)
+	{
+		// 恢复所有SsdtHook
+
+		// 对比Original&Current
+		for (UINT32 i = 0; i < g_CurrentWin32pServiceTableAddress->Limit; i++)
+		{
+
+#ifdef _WIN64
+			// 64位存储的是 偏移（高28位）
+			INT32 CurrentOffset = (*(PINT32)((UINT64)g_CurrentWin32pServiceTableAddress->Base + i * 4)) >> 4;    // 带符号位的移位
+
+			UINT64 CurrentSsdtFunctionAddress = (UINT_PTR)((UINT_PTR)g_CurrentWin32pServiceTableAddress->Base + CurrentOffset);
+			UINT64 OriginalSsdtFunctionAddress = g_OriginalSssdtFunctionAddress[i];
+
+#else
+			// 32位存储的是 绝对地址
+			UINT32 CurrentSsdtFunctionAddress = *(UINT32*)((UINT32)g_CurrentWin32pServiceTableAddress->Base + i * 4);
+			UINT32 OriginalSsdtFunctionAddress = g_OriginalSssdtFunctionAddress[i];
+
+#endif // _WIN64
+
+			if (OriginalSsdtFunctionAddress != CurrentSsdtFunctionAddress)   // 表明被Hook了
+			{
+				APPageProtectOff();
+
+				*(UINT32*)((UINT_PTR)g_CurrentWin32pServiceTableAddress->Base + i * 4) = *(UINT32*)((UINT_PTR)g_ReloadWin32pServiceTableAddress.Base + i * 4);
+
+				APPageProtectOn();
+			}
+		}
+
+		Status = STATUS_SUCCESS;
+	}
+	else if (Ordinal > g_CurrentWin32pServiceTableAddress->Limit)
+	{
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	else
+	{
+		// 恢复指定项的SssdtHook
+		// 需要做的是将当前Sssdt中保存的值改为g_ReloadWin32pServiceTableAddress.Base中的保存的值
+
+		APPageProtectOff();
+
+		*(UINT32*)((UINT_PTR)g_CurrentWin32pServiceTableAddress->Base + Ordinal * 4) = *(UINT32*)((UINT_PTR)g_ReloadWin32pServiceTableAddress.Base + Ordinal * 4);
+
+		APPageProtectOn();
+
+		Status = STATUS_SUCCESS;
+	}
+
+	return Status;
+}

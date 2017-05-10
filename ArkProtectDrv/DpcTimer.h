@@ -20,11 +20,27 @@ typedef struct _DPC_TIMER_INFORMATION
 } DPC_TIMER_INFORMATION, *PDPC_TIMER_INFORMATION;
 
 
-PKDPC 
+#ifdef _WIN64
+
+BOOLEAN
+FindKiWaitVariableAddress(OUT PUINT_PTR* KiWaitNeverAddress, OUT PUINT_PTR* KiWaitAlwaysAddress);
+
+PKDPC
 APTransTimerDPCEx(IN PKTIMER Timer, IN UINT64 KiWaitNeverAddress, IN UINT64 KiWaitAlwaysAddress);
 
 NTSTATUS
 APEnumDpcTimerByIterateKTimerTableEntry(OUT PDPC_TIMER_INFORMATION dti, IN UINT32 DpcTimerCount);
+
+#else
+
+UINT_PTR
+APGetKiTimerTableListHead();
+
+NTSTATUS 
+APEnumDpcTimerByIterateKiTimerTableListHead(OUT PDPC_TIMER_INFORMATION dti, IN UINT32 DpcTimerCount);
+
+#endif // _WIN64
+
 
 NTSTATUS
 APEnumDpcTimer(OUT PVOID OutputBuffer, IN UINT32 OutputLength);

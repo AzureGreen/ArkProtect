@@ -37,6 +37,12 @@ namespace ArkProtect
 
 		static DWORD CALLBACK QuerySssdtHookCallback(LPARAM lParam);
 
+		BOOL ResumeSssdtHook(UINT32 Ordinal);
+
+		static DWORD CALLBACK ResumeSssdtHookCallback(LPARAM lParam);
+
+		static DWORD CALLBACK ResumeAllSssdtHookCallback(LPARAM lParam);
+
 
 
 	private:

@@ -151,7 +151,10 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, itc_FilePath, strFilePath);
 			ListCtrl->SetItemText(iItem, itc_Company, strCompany);
 
-			ListCtrl->SetItemData(iItem, iItem);
+			if (_wcsnicmp(strCompany.GetBuffer(), L"Microsoft Corporation", wcslen(L"Microsoft Corporation")) != 0)
+			{
+				ListCtrl->SetItemData(iItem, TRUE);
+			}
 
 			IoTimerNum++;
 
