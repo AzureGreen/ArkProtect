@@ -236,7 +236,15 @@ APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath)
 					3: kd> dq 0xfffffa80`1ac18800+40
 					fffffa80`1ac18840  fffffa80`1ac18d44 00000000`00000000
 					*/
-					PFILE_OBJECT FileObject = (PFILE_OBJECT)((UINT_PTR)ControlArea->FilePointer & 0xFFFFFFFFFFFFFFF8);
+					//PFILE_OBJECT FileObject = (PFILE_OBJECT)((UINT_PTR)ControlArea->FilePointer & 0xFFFFFFFFFFFFFFF8);
+					
+#ifdef _WIN64
+					PFILE_OBJECT FileObject = (PFILE_OBJECT)((UINT_PTR)ControlArea->FilePointer & ~0xf);
+#else
+					PFILE_OBJECT FileObject = (PFILE_OBJECT)((UINT_PTR)ControlArea->FilePointer & ~7);
+#endif // _WIN64
+
+					
 
 					if (FileObject && MmIsAddressValid(FileObject))
 					{

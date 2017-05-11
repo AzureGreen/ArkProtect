@@ -42,7 +42,7 @@ FindKiWaitVariableAddress(OUT PUINT_PTR* KiWaitNeverAddress, OUT PUINT_PTR* KiWa
 		INT32   iOffset = 0;
 
 		StartSearchAddress = (PUINT8)KeSetTimer;
-		EndSearchAddress = StartSearchAddress + 0x200;
+		EndSearchAddress = StartSearchAddress + 0x500;
 
 		for (i = StartSearchAddress; i < EndSearchAddress; i++)
 		{

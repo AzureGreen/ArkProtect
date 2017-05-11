@@ -4,6 +4,20 @@
 #include <ntifs.h>
 #include "Private.h"
 
+#ifdef _WIN64
+
+#define PSP_MAX_CREATE_PROCESS_NOTIFY 64
+#define PSP_MAX_CREATE_THREAD_NOTIFY  64
+#define PSP_MAX_LOAD_IMAGE_NOTIFY     64
+
+#else
+
+#define PSP_MAX_CREATE_PROCESS_NOTIFY  8
+#define PSP_MAX_CREATE_THREAD_NOTIFY   8
+#define PSP_MAX_LOAD_IMAGE_NOTIFY      8
+
+#endif // _WIN64
+
 
 
 typedef enum _eCallbackType
@@ -42,17 +56,23 @@ typedef struct _CM_NOTIFY_ENTRY
 } CM_NOTIFY_ENTRY, *PCM_NOTIFY_ENTRY;
 
 
-UINT_PTR
-APGetPspLoadImageNotifyRoutineAddress();
+UINT_PTR 
+APGetPspCreateProcessNotifyRoutineAddress();
 
-BOOLEAN
-APGetLoadImageCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 NumberOfCallbacks);
+BOOLEAN 
+APGetCreateProcessCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount);
 
 UINT_PTR
 APGetPspCreateThreadNotifyRoutineAddress();
 
 BOOLEAN
 APGetCreateThreadCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 NumberOfCallbacks);
+
+UINT_PTR
+APGetPspLoadImageNotifyRoutineAddress();
+
+BOOLEAN
+APGetLoadImageCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 NumberOfCallbacks);
 
 UINT_PTR
 APGetCallbackListHeadAddress();
