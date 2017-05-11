@@ -1,7 +1,14 @@
 #pragma once
 #include <vector>
 #include "Define.h"
+#include "NtStructs.h"
 
+typedef NTSTATUS
+(NTAPI * pfnZwQuerySystemInformation)(
+	IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
+	OUT PVOID SystemInformation,
+	IN UINT32 SystemInformationLength,
+	OUT PUINT32 ReturnLength OPTIONAL);
 
 namespace ArkProtect
 {
@@ -68,6 +75,8 @@ namespace ArkProtect
 		void QueryProcessThread(CListCtrl * ListCtrl);
 
 		static DWORD CALLBACK QueryProcessThreadCallback(LPARAM lParam);
+
+		BOOL GetThreadIdByProcessId(UINT32 ProcessId, PUINT32 ThreadId);
 
 
 

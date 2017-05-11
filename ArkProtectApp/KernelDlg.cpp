@@ -37,6 +37,13 @@ BEGIN_MESSAGE_MAP(CKernelDlg, CDialogEx)
 	ON_WM_SHOWWINDOW()
 	ON_LBN_SELCHANGE(IDC_KERNEL_LISTBOX, &CKernelDlg::OnLbnSelchangeKernelListbox)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_KERNEL_LISTCTRL, &CKernelDlg::OnNMCustomdrawKernelListctrl)
+	ON_NOTIFY(NM_RCLICK, IDC_KERNEL_LISTCTRL, &CKernelDlg::OnNMRClickKernelListctrl)
+	ON_COMMAND(ID_KERNEL_FRESHEN, &CKernelDlg::OnKernelFreshen)
+	ON_COMMAND(ID_KERNEL_DELETE, &CKernelDlg::OnKernelDelete)
+	ON_COMMAND(ID_KERNEL_PROPERTY, &CKernelDlg::OnKernelProperty)
+	ON_COMMAND(ID_KERNEL_LOCATION, &CKernelDlg::OnKernelLocation)
+	ON_COMMAND(ID_KERNEL_EXPORT_INFORMATION, &CKernelDlg::OnKernelExportInformation)
+	
 END_MESSAGE_MAP()
 
 
@@ -292,6 +299,126 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 }
 
 
+void CKernelDlg::OnNMRClickKernelListctrl(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+
+	CMenu Menu;
+	Menu.LoadMenuW(IDR_KERNEL_MENU);
+	CMenu* SubMenu = Menu.GetSubMenu(0);	// 子菜单
+
+	CPoint Pt;
+	GetCursorPos(&Pt);         // 得到鼠标位置
+
+	int	iCount = SubMenu->GetMenuItemCount();
+
+	// 如果没有选中,除了刷新 其他全部Disable
+	if (m_KernelListCtrl.GetSelectedCount() == 0)
+	{
+		for (int i = 0; i < iCount; i++)
+		{
+			SubMenu->EnableMenuItem(i, MF_BYPOSITION | MF_DISABLED | MF_GRAYED); //菜单全部变灰
+		}
+
+		SubMenu->EnableMenuItem(ID_KERNEL_FRESHEN, MF_BYCOMMAND | MF_ENABLED);
+	}
+
+	SubMenu->TrackPopupMenu(TPM_LEFTALIGN, Pt.x, Pt.y, this);
+
+	*pResult = 0;
+}
+
+
+void CKernelDlg::OnKernelFreshen()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_iCurSel = 65535;
+
+	int iCurSel = m_KernelListBox.GetCurSel();
+
+	switch (iCurSel)
+	{
+	case ArkProtect::ki_SysCallback:
+	{
+		m_KernelListBox.SetCurSel(ArkProtect::ki_SysCallback);
+		break;
+	}
+	case ArkProtect::ki_FilterDriver:
+	{
+		m_KernelListBox.SetCurSel(ArkProtect::ki_FilterDriver);
+		break;
+	}
+	case ArkProtect::ki_IoTimer:
+	{
+		m_KernelListBox.SetCurSel(ArkProtect::ki_IoTimer);
+		break;
+	}
+	case ArkProtect::ki_DpcTimer:
+	{
+		m_KernelListBox.SetCurSel(ArkProtect::ki_DpcTimer);
+		break;
+	}
+	case ArkProtect::ki_SysThread:
+	{
+		m_KernelListBox.SetCurSel(ArkProtect::ki_SysThread);
+		break;
+	}
+
+	default:
+		break;
+	}
+
+	OnLbnSelchangeKernelListbox();
+
+	m_KernelListCtrl.SetFocus();
+}
+
+
+void CKernelDlg::OnKernelDelete()
+{
+	// TODO: 在此添加命令处理程序代码
+}
+
+
+void CKernelDlg::OnKernelProperty()
+{
+	// TODO: 在此添加命令处理程序代码
+	POSITION Pos = m_KernelListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)
+	{
+		int iItem = m_KernelListCtrl.GetNextSelectedItem(Pos);
+
+		CString strFilePath = APGetSelectedFilePath(iItem);
+		
+		m_Global->CheckFileProperty(strFilePath);
+	}
+}
+
+
+void CKernelDlg::OnKernelLocation()
+{
+	// TODO: 在此添加命令处理程序代码
+	POSITION Pos = m_KernelListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)
+	{
+		int iItem = m_KernelListCtrl.GetNextSelectedItem(Pos);
+
+		CString strFilePath = APGetSelectedFilePath(iItem);
+
+		m_Global->LocationInExplorer(strFilePath);
+	}
+}
+
+
+void CKernelDlg::OnKernelExportInformation()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_Global->ExportInformationInText(m_KernelListCtrl);
+}
+
 
 /************************************************************************
 *  Name : APInitializeKernelItemList
@@ -309,6 +436,59 @@ void CKernelDlg::APInitializeKernelItemList()
 
 	m_KernelListBox.SetItemHeight(-1, (UINT)(16 * (m_Global->iDpiy / 96.0)));
 }
+
+
+/************************************************************************
+*  Name : APGetSelectedFilePath
+*  Param: iItem
+*  Ret  : CString
+*  返回选中的文件路径
+************************************************************************/
+CString CKernelDlg::APGetSelectedFilePath(int iItem)
+{
+	int iCurSel = m_KernelListBox.GetCurSel();
+
+	CString strFilePath;
+
+	switch (iCurSel)
+	{
+	case ArkProtect::ki_SysCallback:
+	{
+		strFilePath = m_KernelListCtrl.GetItemText(iItem, ArkProtect::scc_FilePath);
+		break;
+	}
+	case ArkProtect::ki_FilterDriver:
+	{
+		strFilePath = m_KernelListCtrl.GetItemText(iItem, ArkProtect::fdc_FilePath);
+		break;
+	}
+	case ArkProtect::ki_IoTimer:
+	{
+		strFilePath = m_KernelListCtrl.GetItemText(iItem, ArkProtect::itc_FilePath);
+		break;
+	}
+	case ArkProtect::ki_DpcTimer:
+	{
+		strFilePath = m_KernelListCtrl.GetItemText(iItem, ArkProtect::dtc_FilePath);
+		break;
+	}
+	case ArkProtect::ki_SysThread:
+	{
+		//	strFilePath = m_KernelListCtrl.GetItemText(iItem, ArkProtect::stc_FilePath);
+		break;
+	}
+	default:
+		break;
+	}
+
+	return strFilePath;
+}
+
+
+
+
+
+
 
 
 

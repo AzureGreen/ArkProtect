@@ -25,10 +25,11 @@ typedef enum _eCallbackType
 	ct_NotifyCreateProcess,
 	ct_NotifyCreateThread,
 	ct_NotifyLoadImage,
-	ct_NotifyShutdown,
 	ct_NotifyCmpCallBack,
 	ct_NotifyKeBugCheckReason,
-	ct_NotifyKeBugCheck
+	ct_NotifyKeBugCheck,
+	ct_NotifyShutdown,
+	ct_NotifyLastChanceShutdown
 } eCallbackType;
 
 typedef struct _SYS_CALLBACK_ENTRY_INFORMATION
@@ -48,11 +49,11 @@ typedef struct _SYS_CALLBACK_INFORMATION
 typedef struct _CM_NOTIFY_ENTRY
 {
 	LIST_ENTRY		ListEntryHead;
-	ULONG			UnKnown1;
-	ULONG			UnKnown2;
+	UINT32			UnKnown1;
+	UINT32			UnKnown2;
 	LARGE_INTEGER	Cookie;
-	ULONG64			Context;
-	ULONG64			Function;
+	UINT64			Context;
+	UINT64			Function;
 } CM_NOTIFY_ENTRY, *PCM_NOTIFY_ENTRY;
 
 
@@ -101,6 +102,11 @@ APGetShutdownDispatch(IN PDEVICE_OBJECT DeviceObject);
 BOOLEAN
 APGetShutDownCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 NumberOfCallbacks);
 
+UINT_PTR 
+APGetIopNotifyLastChanceShutdownQueueHeadAddress();
+
+BOOLEAN 
+APGetLastChanceShutDownCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount);
 
 NTSTATUS
 APEnumSystemCallback(OUT PVOID OutputBuffer, IN UINT32 OutputLength);

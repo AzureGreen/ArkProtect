@@ -2,8 +2,14 @@
 
 extern DYNAMIC_DATA g_DynamicData;
 
-//////////////////////////////////////////////////////////////////////////
-//
+
+
+/************************************************************************
+*  Name : APGetPspCreateProcessNotifyRoutineAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  获得PspCreateProcessNotifyRoutine
+************************************************************************/
 UINT_PTR
 APGetPspCreateProcessNotifyRoutineAddress()
 {
@@ -17,7 +23,7 @@ APGetPspCreateProcessNotifyRoutineAddress()
 	INT32   iOffset = 0;    // 注意这里的偏移可正可负 不能定UINT型
 
 	APGetNtosExportVariableAddress(L"PsSetCreateProcessNotifyRoutine", (PVOID*)&PsSetCreateProcessNotifyRoutine);
-	DbgPrint("%p\r\n", PsSetCreateThreadNotifyRoutine);
+	DbgPrint("%p\r\n", PsSetCreateProcessNotifyRoutine);
 
 	/*
 	Win7x64
@@ -40,7 +46,7 @@ APGetPspCreateProcessNotifyRoutineAddress()
 	win7x86:里面有直接调用PspSetCreateProcessNotifyRoutine，硬编码寻找
 	*/
 
-	if (PsSetCreateThreadNotifyRoutine)
+	if (PsSetCreateProcessNotifyRoutine)
 	{
 #ifdef _WIN64
 		PspSetCreateProcessNotifyRoutine = (*(INT32*)(PsSetCreateProcessNotifyRoutine + 4) + PsSetCreateProcessNotifyRoutine + 3);
@@ -117,6 +123,13 @@ APGetPspCreateProcessNotifyRoutineAddress()
 }
 
 
+/************************************************************************
+*  Name : APGetCreateProcessCallbackNotify
+*  Param: sci
+*  Param: CallbackCount
+*  Ret  : BOOLEAN
+*  枚举创建进程回调
+************************************************************************/
 BOOLEAN
 APGetCreateProcessCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount)
 {
@@ -167,9 +180,13 @@ APGetCreateProcessCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Ca
 	return TRUE;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
 
+/************************************************************************
+*  Name : APGetPspCreateThreadNotifyRoutineAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  获得PspCreateThreadNotifyRoutine
+************************************************************************/
 UINT_PTR
 APGetPspCreateThreadNotifyRoutineAddress()
 {
@@ -240,6 +257,13 @@ APGetPspCreateThreadNotifyRoutineAddress()
 }
 
 
+/************************************************************************
+*  Name : APGetCreateThreadCallbackNotify
+*  Param: sci
+*  Param: CallbackCount
+*  Ret  : BOOLEAN
+*  枚举创建线程回调
+************************************************************************/
 BOOLEAN
 APGetCreateThreadCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount)
 {
@@ -292,7 +316,12 @@ APGetCreateThreadCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Cal
 }
 
 
-//////////////////////////////////////////////////////////////////////////
+/************************************************************************
+*  Name : APGetPspLoadImageNotifyRoutineAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  获得PspLoadImageNotifyRoutine
+************************************************************************/
 UINT_PTR
 APGetPspLoadImageNotifyRoutineAddress()
 {
@@ -364,6 +393,14 @@ APGetPspLoadImageNotifyRoutineAddress()
 	return PspLoadImageNotifyRoutine;
 }
 
+
+/************************************************************************
+*  Name : APGetLoadImageCallbackNotify
+*  Param: sci
+*  Param: CallbackCount
+*  Ret  : BOOLEAN
+*  枚举加载模块回调
+************************************************************************/
 BOOLEAN
 APGetLoadImageCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount)
 {
@@ -416,28 +453,43 @@ APGetLoadImageCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callba
 }
 
 
-
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
+//
 // Win7之后 都是ListEntry结构 xp之前 都是Vector数组结构
+//
+/************************************************************************
+*  Name : APGetCallbackListHeadAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  获得CallbackListHead
+************************************************************************/
 UINT_PTR
 APGetCallbackListHeadAddress()
 {
 	/*
+	Win7 x64:
 	0: kd> u CmUnRegisterCallback l 30
 	nt!CmUnRegisterCallback:
 	fffff800`042c67d0 48894c2408      mov     qword ptr [rsp+8],rcx
 	......
 	fffff800`042c689e 488d0dcb90dcff  lea     rcx,[nt!CallbackListHead (fffff800`0408f970)]
 
+	Win7 x86:
+	0: kd> u CmUnRegisterCallback l 30
+	nt!CmUnRegisterCallback:
+	840b6881 6a38            push    38h
+	......
+	840b690d 8d4dd4          lea     ecx,[ebp-2Ch]
+	840b6910 bf900ef883      mov     edi,offset nt!CallbackListHead (83f80e90)
+	840b6915 8bc7            mov     eax,edi
 	*/
 
+	UINT_PTR CallbackListHead = 0;
 	UINT_PTR CmUnRegisterCallback = 0;
 
 	APGetNtosExportVariableAddress(L"CmUnRegisterCallback", (PVOID*)&CmUnRegisterCallback);
 	DbgPrint("%p\r\n", CmUnRegisterCallback);
 
-	if (CmUnRegisterCallback != 0)
+	if (CmUnRegisterCallback)
 	{
 		PUINT8	StartSearchAddress = (PUINT8)CmUnRegisterCallback;
 		PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
@@ -447,6 +499,7 @@ APGetCallbackListHeadAddress()
 
 		for (i = StartSearchAddress; i < EndSearchAddress; i++)
 		{
+#ifdef _WIN64
 			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
 			{
 				v1 = *i;
@@ -464,17 +517,39 @@ APGetCallbackListHeadAddress()
 						if (v1 == 0x48 && v2 == 0x8d && v3 == 0x54)		// 硬编码  lea rdx
 						{
 							RtlCopyMemory(&iOffset, i + 3, 4);
-							return (UINT_PTR)(iOffset + (UINT64)i + 7);
+							CallbackListHead = (UINT_PTR)(iOffset + (UINT64)i + 7);
+							break;
 						}
 					}
 				}
 			}
+#else
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 5) && MmIsAddressValid(i + 6))
+			{
+				v1 = *i;
+				v2 = *(i + 5);
+				v3 = *(i + 6);
+				if (v1 == 0xbf && v2 == 0x8b && v3 == 0xc7)		// mov     edi ...
+				{
+					RtlCopyMemory(&CallbackListHead, i + 1, 4);
+					break;
+				}
+			}
+#endif // _WIN64
 		}
 	}
 
-	return 0;
+	return CallbackListHead;
 }
 
+
+/************************************************************************
+*  Name : APGetRegisterCallbackNotify
+*  Param: sci
+*  Param: CallbackCount
+*  Ret  : BOOLEAN
+*  枚举注册表回调
+************************************************************************/
 BOOLEAN
 APGetRegisterCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount)
 {
@@ -490,8 +565,7 @@ APGetRegisterCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callbac
 	else
 	{
 		PCM_NOTIFY_ENTRY	Notify = NULL;
-		PLIST_ENTRY			NotifyListEntry = (PLIST_ENTRY)(*(PUINT_PTR)CallbackListHead);	// Flink
-
+		
 		/*
 		WinDbg调试
 		3: kd> dt _list_entry fffff800`0408f970
@@ -508,7 +582,9 @@ APGetRegisterCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callbac
 		目前系统没有这种回调
 		*/
 
-		do
+		for (PLIST_ENTRY NotifyListEntry = ((PLIST_ENTRY)CallbackListHead)->Flink;
+			NotifyListEntry != (PLIST_ENTRY)CallbackListHead;
+			NotifyListEntry = NotifyListEntry->Flink)
 		{
 			Notify = (PCM_NOTIFY_ENTRY)NotifyListEntry;
 			if (MmIsAddressValid(Notify))
@@ -524,44 +600,58 @@ APGetRegisterCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callbac
 					sci->NumberOfCallbacks++;
 				}
 			}
-			NotifyListEntry = NotifyListEntry->Flink;
-		} while (NotifyListEntry != ((PLIST_ENTRY)(*(PUINT_PTR)CallbackListHead)));
+		}
 	}
 
 	return TRUE;
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-
+/************************************************************************
+*  Name : APGetKeBugCheckCallbackListHeadAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  获得KeBugCheckCallbackListHead
+************************************************************************/
 UINT_PTR
 APGetKeBugCheckCallbackListHeadAddress()
 {
 	/*
+	Win7 x64:
 	0: kd> u KeRegisterBugCheckCallback l 50
 	nt!KeRegisterBugCheckCallback:
 	fffff800`03f390b0 48895c2420      mov     qword ptr [rsp+20h],rbx
 	......
 	fffff800`03f391bc 488d0d7d111500  lea     rcx,[nt!KeBugCheckCallbackListHead (fffff800`0408a340)]
+
+	Win7 x86:
+	2: kd>  u KeRegisterBugCheckCallback l 50
+	nt!KeRegisterBugCheckCallback:
+	83e202c7 8bff            mov     edi,edi
+	......
+	83e20315 c6401c01        mov     byte ptr [eax+1Ch],1
+	83e20319 8b0da0d7f783    mov     ecx,dword ptr [nt!KeBugCheckCallbackListHead (83f7d7a0)]
+	83e2031f 8908            mov     dword ptr [eax],ecx
+
 	*/
 
+	UINT_PTR KeBugCheckCallbackListHead = 0;
 	UINT_PTR KeRegisterBugCheckCallback = 0;
 
 	APGetNtosExportVariableAddress(L"KeRegisterBugCheckCallback", (PVOID*)&KeRegisterBugCheckCallback);
 	DbgPrint("%p\r\n", KeRegisterBugCheckCallback);
 
-	if (KeRegisterBugCheckCallback != 0)
+	if (KeRegisterBugCheckCallback)
 	{
 		PUINT8	StartSearchAddress = (PUINT8)KeRegisterBugCheckCallback;
 		PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
 		PUINT8	i = NULL, j = NULL;
 		UINT8   v1 = 0, v2 = 0, v3 = 0;
-		INT32   iOffset = 0;    // 注意这里的偏移可正可负 不能定UINT型
-		UINT64  VariableAddress = 0;
+		INT32   iOffset = 0;
 
 		for (i = StartSearchAddress; i < EndSearchAddress; i++)
 		{
+#ifdef _WIN64
 			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
 			{
 				v1 = *i;
@@ -578,16 +668,39 @@ APGetKeBugCheckCallbackListHeadAddress()
 						if (v1 == 0x48 && v2 == 0x03 && v3 == 0xc1)		// 硬编码  add rax, rcx
 						{
 							RtlCopyMemory(&iOffset, i + 3, 4);
-							return (UINT_PTR)(iOffset + (UINT64)i + 7);
+							KeBugCheckCallbackListHead = (UINT_PTR)(iOffset + (UINT64)i + 7);
+							break;
 						}
 					}
 				}
 			}
+#else
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 6))
+			{
+				v1 = *i;
+				v2 = *(i + 1);
+				v3 = *(i + 6);
+				if (v1 == 0x8b && v2 == 0x0d && v3 == 0x89)		// 硬编码  lea rcx
+				{
+					RtlCopyMemory(&KeBugCheckCallbackListHead, i + 2, 4);
+					break;
+				}
+			}
+#endif // _WIN64
+
 		}
 	}
-	return 0;
+	return KeBugCheckCallbackListHead;
 }
 
+
+/************************************************************************
+*  Name : APGetBugCheckCallbackNotify
+*  Param: sci
+*  Param: CallbackCount
+*  Ret  : BOOLEAN
+*  枚举错误检测回调
+************************************************************************/
 BOOLEAN
 APGetBugCheckCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount)
 {
@@ -616,35 +729,10 @@ APGetBugCheckCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callbac
 		2: kd> u fffff880`014f1b00
 		fffff880`014f1b00 4883ec28        sub     rsp,28h		; 开堆栈，是函数的标志
 		fffff880`014f1b04 81faa0160000    cmp     edx,16A0h
-		fffff880`014f1b0a 754b            jne     fffff880`014f1b57
-		fffff880`014f1b0c 4c8b81f80c0000  mov     r8,qword ptr [rcx+0CF8h]
-		fffff880`014f1b13 0fba697c18      bts     dword ptr [rcx+7Ch],18h
-		fffff880`014f1b18 4d85c0          test    r8,r8
-		fffff880`014f1b1b 743a            je      fffff880`014f1b57
-		fffff880`014f1b1d 8b818c140000    mov     eax,dword ptr [rcx+148Ch]
-
+		......
 		*/
 
 		UINT_PTR     Dispatch = 0;
-/*		PLIST_ENTRY	 DispatchListEntry = ((PLIST_ENTRY)KeBugCheckCallbackListHead)->Flink;	// Flink
-
-		do
-		{
-			Dispatch = *(PUINT_PTR)((PUINT8)DispatchListEntry + sizeof(LIST_ENTRY));	// 过ListEntry
-			if (Dispatch && MmIsAddressValid((PVOID)Dispatch))
-			{
-				UINT_PTR CurrentCount = sci->NumberOfCallbacks;
-				if (NumberOfCallbacks > CurrentCount)
-				{
-					sci->Callbacks[CurrentCount].Type = NotifyKeBugCheck;
-					sci->Callbacks[CurrentCount].CallbackAddress = Dispatch;
-					sci->Callbacks[CurrentCount].Description = DispatchListEntry;
-				}
-				sci->NumberOfCallbacks++;
-			}
-			DispatchListEntry = DispatchListEntry->Flink;
-		} while (DispatchListEntry != KeBugCheckCallbackListHead);
-		*/
 
 		for (PLIST_ENTRY TravelListEntry = ((PLIST_ENTRY)KeBugCheckCallbackListHead)->Flink;
 			TravelListEntry != (PLIST_ENTRY)KeBugCheckCallbackListHead;
@@ -668,28 +756,47 @@ APGetBugCheckCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callbac
 	return TRUE;
 }
 
-//////////////////////////////////////////////////////////////////////////
+//
 // 发现 KeBugCheckCallbackListHead 刚好就在 KeBugCheckReasonCallbackListHead的后面
-//////////////////////////////////////////////////////////////////////////
+//
 
+
+/************************************************************************
+*  Name : APGetKeBugCheckReasonCallbackListHeadAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  获得KeBugCheckReasonCallbackListHead
+************************************************************************/
 UINT_PTR
 APGetKeBugCheckReasonCallbackListHeadAddress()
 {
 	/*
+	Win7 x64:
 	0: kd> u KeRegisterBugCheckReasonCallback l 50
 	nt!KeRegisterBugCheckReasonCallback:
 	fffff800`03f38da0 48895c2418      mov     qword ptr [rsp+18h],rbx
 	......
 	fffff800`03f38ea8 488b0581141500  mov     rax,qword ptr [nt!KeBugCheckReasonCallbackListHead (fffff800`0408a330)]
 	fffff800`03f38eaf 488d0d7a141500  lea     rcx,[nt!KeBugCheckReasonCallbackListHead (fffff800`0408a330)]
+
+	Win7 x86:
+	2: kd> u KeRegisterBugCheckReasonCallback l 50
+	nt!KeRegisterBugCheckReasonCallback:
+	83e24818 8bff            mov     edi,edi
+	......
+	83e24863 7419            je      nt!KeRegisterBugCheckReasonCallback+0x66 (83e2487e)
+	83e24865 8b0d98d7f783    mov     ecx,dword ptr [nt!KeBugCheckReasonCallbackListHead (83f7d798)]
+	83e2486b 8908            mov     dword ptr [eax],ecx
+
 	*/
 
+	UINT_PTR KeBugCheckReasonCallbackListHead = 0;
 	UINT_PTR KeRegisterBugCheckReasonCallback = 0;
 
 	APGetNtosExportVariableAddress(L"KeRegisterBugCheckReasonCallback", (PVOID*)&KeRegisterBugCheckReasonCallback);
 	DbgPrint("%p\r\n", KeRegisterBugCheckReasonCallback);
 
-	if (KeRegisterBugCheckReasonCallback != 0)
+	if (KeRegisterBugCheckReasonCallback)
 	{
 		PUINT8	StartSearchAddress = (PUINT8)KeRegisterBugCheckReasonCallback;
 		PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
@@ -699,6 +806,7 @@ APGetKeBugCheckReasonCallbackListHeadAddress()
 
 		for (i = StartSearchAddress; i < EndSearchAddress; i++)
 		{
+#ifdef _WIN64
 			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
 			{
 				v1 = *i;
@@ -715,16 +823,39 @@ APGetKeBugCheckReasonCallbackListHeadAddress()
 						if (v1 == 0x48 && v2 == 0x8b && v3 == 0x05)		// 硬编码  mov rax
 						{
 							RtlCopyMemory(&iOffset, i + 3, 4);
-							return (UINT_PTR)(iOffset + (UINT64)i + 7);
+							KeBugCheckReasonCallbackListHead = (UINT_PTR)(iOffset + (UINT64)i + 7);
+							break;
 						}
 					}
 				}
 			}
+#else
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 6))
+			{
+				v1 = *i;
+				v2 = *(i + 1);
+				v3 = *(i + 6);
+				if (v1 == 0x8b && v2 == 0x0d && v3 == 0x89)
+				{
+					RtlCopyMemory(&KeBugCheckReasonCallbackListHead, i + 2, 4);
+					break;
+				}
+			}
+#endif // _WIN64
+
 		}
 	}
-	return 0;
+	return KeBugCheckReasonCallbackListHead;
 }
 
+
+/************************************************************************
+*  Name : APGetBugCheckReasonCallbackNotify
+*  Param: sci
+*  Param: CallbackCount
+*  Ret  : BOOLEAN
+*  枚举带原因的错误检测回调
+************************************************************************/
 BOOLEAN
 APGetBugCheckReasonCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount)
 {
@@ -749,23 +880,11 @@ APGetBugCheckReasonCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 C
 		2: kd> dq 0xfffffa80`18dd07b8
 		fffffa80`18dd07b8  fffffa80`19f71120 fffff800`0407a330
 		fffffa80`18dd07c8  fffff880`00f49054 fffffa80`18dd0800
-		fffffa80`18dd07d8  fffff300`19d19856 00000001`00000002
-		fffffa80`18dd07e8  00000000`00000000 0000057f`e71ee188
-		fffffa80`18dd07f8  696e6f6d`00000000 00726f74`696e6f6d
-		fffffa80`18dd0808  00000000`00000000 00000000`00000000
-		fffffa80`18dd0818  00000000`00000000 00000000`00000001
-		fffffa80`18dd0828  00000000`00000000 206c6148`0225001a
 
 		2: kd> u fffff880`00f49054
 		fffff880`00f49054 48895c2408      mov     qword ptr [rsp+8],rbx
 		fffff880`00f49059 4889742410      mov     qword ptr [rsp+10h],rsi
-		fffff880`00f4905e 57              push    rdi
-		fffff880`00f4905f 4883ec20        sub     rsp,20h
-		fffff880`00f49063 4181780c00100000 cmp     dword ptr [r8+0Ch],1000h
-		fffff880`00f4906b 498bf8          mov     rdi,r8
-		fffff880`00f4906e 727d            jb      fffff880`00f490ed
-		fffff880`00f49070 488d9ae8feffff  lea     rbx,[rdx-118h]
-
+		......
 		*/
 
 		UINT_PTR     Dispatch = 0;
@@ -793,52 +912,12 @@ APGetBugCheckReasonCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 C
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-
-UINT_PTR
-APGetIopNotifyShutdownQueueHeadAddress()
-{
-	/*
-	2: kd> u IoRegisterShutdownNotification l 20
-	nt!IoRegisterShutdownNotification:
-	fffff800`04278f50 48895c2408      mov     qword ptr [rsp+8],rbx
-	......
-	fffff800`04278f8a 488d0dff59e0ff  lea     rcx,[nt!IopNotifyShutdownQueueHead (fffff800`0407e990)]
-	*/
-
-	UINT_PTR IoRegisterShutdownNotification = 0;
-
-	APGetNtosExportVariableAddress(L"IoRegisterShutdownNotification", (PVOID*)&IoRegisterShutdownNotification);
-	DbgPrint("%p\r\n", IoRegisterShutdownNotification);
-
-	if (IoRegisterShutdownNotification != 0)
-	{
-		PUINT8	StartSearchAddress = (PUINT8)IoRegisterShutdownNotification;
-		PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
-		PUINT8	i = NULL;
-		UINT8   v1 = 0, v2 = 0, v3 = 0;
-		INT32   iOffset = 0;    // 注意这里的偏移可正可负 不能定UINT型
-		UINT64  VariableAddress = 0;
-
-		for (i = StartSearchAddress; i < EndSearchAddress; i++)
-		{
-			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
-			{
-				v1 = *i;
-				v2 = *(i + 1);
-				v3 = *(i + 2);
-				if (v1 == 0x48 && v2 == 0x8d && v3 == 0x0d)		// 硬编码  lea rcx
-				{
-					RtlCopyMemory(&iOffset, i + 3, 4);
-					return iOffset + (UINT64)i + 7;
-				}
-			}
-		}
-	}
-	return 0;
-}
-
+/************************************************************************
+*  Name : APGetShutdownDispatch
+*  Param: DeviceObject
+*  Ret  : UINT_PTR
+*  通过设备对象获得关机派遣函数
+************************************************************************/
 UINT_PTR
 APGetShutdownDispatch(IN PDEVICE_OBJECT DeviceObject)
 {
@@ -857,6 +936,88 @@ APGetShutdownDispatch(IN PDEVICE_OBJECT DeviceObject)
 	return ShutdownDispatch;
 }
 
+
+/************************************************************************
+*  Name : APGetIopNotifyShutdownQueueHeadAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  获得IopNotifyShutdownQueueHead
+************************************************************************/
+UINT_PTR
+APGetIopNotifyShutdownQueueHeadAddress()
+{
+	/*
+	Win7 x64:
+	2: kd> u IoRegisterShutdownNotification l 20
+	nt!IoRegisterShutdownNotification:
+	fffff800`04278f50 48895c2408      mov     qword ptr [rsp+8],rbx
+	......
+	fffff800`04278f8a 488d0dff59e0ff  lea     rcx,[nt!IopNotifyShutdownQueueHead (fffff800`0407e990)]
+
+	Win7 x86:
+	2: kd> u IoRegisterShutdownNotification l 20
+	nt!IoRegisterShutdownNotification:
+	83f9d606 8bff            mov     edi,edi
+	......
+	83f9d631 e83e57efff      call    nt!ObfReferenceObject (83e92d74)
+	83f9d636 bf1804f883      mov     edi,offset nt!IopNotifyShutdownQueueHead (83f80418)
+	83f9d63b e8c52ae8ff      call    nt!IopInterlockedInsertHeadList (83e20105)
+	*/
+
+	UINT_PTR IopNotifyShutdownQueueHead = 0;
+	UINT_PTR IoRegisterShutdownNotification = 0;
+
+	APGetNtosExportVariableAddress(L"IoRegisterShutdownNotification", (PVOID*)&IoRegisterShutdownNotification);
+	DbgPrint("%p\r\n", IoRegisterShutdownNotification);
+
+	if (IoRegisterShutdownNotification)
+	{
+		PUINT8	StartSearchAddress = (PUINT8)IoRegisterShutdownNotification;
+		PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
+		PUINT8	i = NULL;
+		UINT8   v1 = 0, v2 = 0, v3 = 0;
+		INT32   iOffset = 0;
+
+		for (i = StartSearchAddress; i < EndSearchAddress; i++)
+		{
+#ifdef _WIN64
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
+			{
+				v1 = *i;
+				v2 = *(i + 1);
+				v3 = *(i + 2);
+				if (v1 == 0x48 && v2 == 0x8d && v3 == 0x0d)		// 硬编码  lea rcx
+				{
+					RtlCopyMemory(&iOffset, i + 3, 4);
+					IopNotifyShutdownQueueHead = iOffset + (UINT64)i + 7;
+					break;
+				}
+			}
+#else
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 5))
+			{
+				v1 = *i;
+				v2 = *(i + 5);
+				if (v1 == 0xbf && v2 == 0xe8)
+				{
+					RtlCopyMemory(&IopNotifyShutdownQueueHead, i + 1, 4);
+					break;
+				}
+			}
+#endif // _WIN64
+		}
+	}
+	return IopNotifyShutdownQueueHead;
+}
+
+
+/************************************************************************
+*  Name : APGetShutDownCallbackNotify
+*  Param: sci
+*  Param: CallbackCount
+*  Ret  : BOOLEAN
+*  枚举关机回调
+************************************************************************/
 BOOLEAN
 APGetShutDownCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount)
 {
@@ -875,22 +1036,17 @@ APGetShutDownCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callbac
 			DispatchListEntry != (PLIST_ENTRY)IopNotifyShutdownQueueHead;
 			DispatchListEntry = DispatchListEntry->Flink)
 		{
-			UINT_PTR Address = (UINT_PTR)((PUINT8)DispatchListEntry + sizeof(LIST_ENTRY));   // 过ListEntry
+			PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)*(PUINT_PTR)((PUINT8)DispatchListEntry + sizeof(LIST_ENTRY));   // 过ListEntry
 
-			if (Address && MmIsAddressValid((PVOID)Address))
+			if (DeviceObject && MmIsAddressValid((PVOID)DeviceObject))
 			{
-				PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)(*(PUINT_PTR)Address);
-
-				if (DeviceObject && MmIsAddressValid((PVOID)DeviceObject))
+				if (CallbackCount > sci->NumberOfCallbacks)
 				{
-					if (CallbackCount > sci->NumberOfCallbacks)
-					{
-						sci->CallbackEntry[sci->NumberOfCallbacks].Type = ct_NotifyShutdown;
-						sci->CallbackEntry[sci->NumberOfCallbacks].CallbackAddress = APGetShutdownDispatch(DeviceObject);		// 通多设备对象找到驱动对象 SHUTDOWN 派遣例程
-						sci->CallbackEntry[sci->NumberOfCallbacks].Description = (UINT_PTR)DeviceObject;
-					}
-					sci->NumberOfCallbacks++;
+					sci->CallbackEntry[sci->NumberOfCallbacks].Type = ct_NotifyShutdown;
+					sci->CallbackEntry[sci->NumberOfCallbacks].CallbackAddress = APGetShutdownDispatch(DeviceObject);		// 通多设备对象找到驱动对象 SHUTDOWN 派遣例程
+					sci->CallbackEntry[sci->NumberOfCallbacks].Description = (UINT_PTR)DeviceObject;
 				}
+				sci->NumberOfCallbacks++;
 			}
 		}
 	}
@@ -898,6 +1054,126 @@ APGetShutDownCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 Callbac
 	return TRUE;
 }
 
+
+/************************************************************************
+*  Name : APGetIopNotifyLastChanceShutdownQueueHeadAddress
+*  Param: void
+*  Ret  : UINT_PTR
+*  获得IopNotifyLastChanceShutdownQueueHead
+************************************************************************/
+UINT_PTR
+APGetIopNotifyLastChanceShutdownQueueHeadAddress()
+{
+	/*
+	Win7 x64:
+	kd> u IoRegisterLastChanceShutdownNotification l 20
+	nt!IoRegisterLastChanceShutdownNotification:
+	fffff800`04290fc0 48895c2408      mov     qword ptr [rsp+8],rbx
+	......
+	fffff800`04290ff1 e8fac6c0ff      call    nt!ObfReferenceObject (fffff800`03e9d6f0)
+	fffff800`04290ff6 488d0d8359e0ff  lea     rcx,[nt!IopNotifyLastChanceShutdownQueueHead (fffff800`04096980)]
+	fffff800`04290ffd 488bd7          mov     rdx,rdi
+
+	Win7 x86:
+	0: kd> u IoRegisterLastChanceShutdownNotification l 20
+	nt!IoRegisterLastChanceShutdownNotification:
+	83f863e1 8bff            mov     edi,edi
+	......
+	83f86409 e866c9f0ff      call    nt!ObfReferenceObject (83e92d74)
+	83f8640e bf1004f883      mov     edi,offset nt!IopNotifyLastChanceShutdownQueueHead (83f80410)
+	83f86413 895e08          mov     dword ptr [esi+8],ebx
+	*/
+
+	UINT_PTR IopNotifyLastChanceShutdownQueueHead = 0;
+	UINT_PTR IoRegisterLastChanceShutdownNotification = 0;
+
+	APGetNtosExportVariableAddress(L"IoRegisterLastChanceShutdownNotification", (PVOID*)&IoRegisterLastChanceShutdownNotification);
+	DbgPrint("%p\r\n", IoRegisterLastChanceShutdownNotification);
+
+	if (IoRegisterLastChanceShutdownNotification)
+	{
+		PUINT8	StartSearchAddress = (PUINT8)IoRegisterLastChanceShutdownNotification;
+		PUINT8	EndSearchAddress = StartSearchAddress + 0x500;
+		PUINT8	i = NULL;
+		UINT8   v1 = 0, v2 = 0, v3 = 0;
+		INT32   iOffset = 0;
+
+		for (i = StartSearchAddress; i < EndSearchAddress; i++)
+		{
+#ifdef _WIN64
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 1) && MmIsAddressValid(i + 2))
+			{
+				v1 = *i;
+				v2 = *(i + 1);
+				v3 = *(i + 2);
+				if (v1 == 0x48 && v2 == 0x8d && v3 == 0x0d)		// 硬编码  lea rcx
+				{
+					RtlCopyMemory(&iOffset, i + 3, 4);
+					IopNotifyLastChanceShutdownQueueHead = iOffset + (UINT64)i + 7;
+					break;
+				}
+			}
+#else
+			if (MmIsAddressValid(i) && MmIsAddressValid(i + 5) && MmIsAddressValid(i + 6))
+			{
+				v1 = *i;
+				v2 = *(i + 5);
+				v3 = *(i + 6);
+				if (v1 == 0xbf && v2 == 0x89 && v3 == 0x5e)
+				{
+					RtlCopyMemory(&IopNotifyLastChanceShutdownQueueHead, i + 1, 4);
+					break;
+				}
+			}
+#endif // _WIN64
+		}
+	}
+	return IopNotifyLastChanceShutdownQueueHead;
+}
+
+
+/************************************************************************
+*  Name : APGetLastChanceShutDownCallbackNotify
+*  Param: sci
+*  Param: CallbackCount
+*  Ret  : BOOLEAN
+*  枚举最后机会的关机回调
+************************************************************************/
+BOOLEAN
+APGetLastChanceShutDownCallbackNotify(OUT PSYS_CALLBACK_INFORMATION sci, IN UINT32 CallbackCount)
+{
+	UINT_PTR IopNotifyLastChanceShutdownQueueHead = APGetIopNotifyLastChanceShutdownQueueHeadAddress();
+
+	DbgPrint("%p\r\n", IopNotifyLastChanceShutdownQueueHead);
+
+	if (!IopNotifyLastChanceShutdownQueueHead)
+	{
+		DbgPrint("IopNotifyLastChanceShutdownQueueHeadAddress NULL\r\n");
+		return FALSE;
+	}
+	else
+	{
+		for (PLIST_ENTRY DispatchListEntry = ((PLIST_ENTRY)IopNotifyLastChanceShutdownQueueHead)->Flink;
+			DispatchListEntry != (PLIST_ENTRY)IopNotifyLastChanceShutdownQueueHead;
+			DispatchListEntry = DispatchListEntry->Flink)
+		{
+			PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)*(PUINT_PTR)((PUINT8)DispatchListEntry + sizeof(LIST_ENTRY));   // 过ListEntry
+
+			if (DeviceObject && MmIsAddressValid((PVOID)DeviceObject))
+			{
+				if (CallbackCount > sci->NumberOfCallbacks)
+				{
+					sci->CallbackEntry[sci->NumberOfCallbacks].Type = ct_NotifyLastChanceShutdown;
+					sci->CallbackEntry[sci->NumberOfCallbacks].CallbackAddress = APGetShutdownDispatch(DeviceObject);		// 通多设备对象找到驱动对象 SHUTDOWN 派遣例程
+					sci->CallbackEntry[sci->NumberOfCallbacks].Description = (UINT_PTR)DeviceObject;
+				}
+				sci->NumberOfCallbacks++;
+			}
+		}
+	}
+
+	return TRUE;
+}
 
 
 /************************************************************************
@@ -921,10 +1197,10 @@ APEnumSystemCallback(OUT PVOID OutputBuffer, IN UINT32 OutputLength)
 	APGetLoadImageCallbackNotify(sci, CallbackCount);		 // 映像加载 卸载回调
 	APGetRegisterCallbackNotify(sci, CallbackCount);       // 注册表回调
 	APGetBugCheckCallbackNotify(sci, CallbackCount);       // 错误检查回调
-	APGetBugCheckReasonCallbackNotify(sci, CallbackCount); // 
+	APGetBugCheckReasonCallbackNotify(sci, CallbackCount); // 同上
 	APGetShutDownCallbackNotify(sci, CallbackCount);       // 关机回调
+	APGetLastChanceShutDownCallbackNotify(sci, CallbackCount);  // 同上
 
-	// 
 	// 注销回调
 	// 文件系统改变回调
 

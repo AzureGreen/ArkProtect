@@ -162,6 +162,9 @@
     <ClInclude Include="SssdtHook.h">
       <Filter>KernelHook\SssdtHook</Filter>
     </ClInclude>
+    <ClInclude Include="NtStructs.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">

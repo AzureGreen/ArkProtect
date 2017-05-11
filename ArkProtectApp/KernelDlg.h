@@ -24,11 +24,19 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnLbnSelchangeKernelListbox();
-	
+	afx_msg void OnNMCustomdrawKernelListctrl(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMRClickKernelListctrl(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnKernelFreshen();
+	afx_msg void OnKernelDelete();
+	afx_msg void OnKernelProperty();
+	afx_msg void OnKernelLocation();
+	afx_msg void OnKernelExportInformation();
 	DECLARE_MESSAGE_MAP()
 public:
 
 	void APInitializeKernelItemList();
+
+	CString APGetSelectedFilePath(int iItem);
 
 
 
@@ -43,5 +51,4 @@ public:
 
 
 	
-	afx_msg void OnNMCustomdrawKernelListctrl(NMHDR *pNMHDR, LRESULT *pResult);
 };

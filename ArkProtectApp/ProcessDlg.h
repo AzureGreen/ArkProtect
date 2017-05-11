@@ -24,6 +24,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
+	afx_msg void OnNMCustomdrawProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnColumnclickProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnProcessFreshen();
@@ -34,6 +35,10 @@ protected:
 	afx_msg void OnProcessMemory();
 	afx_msg void OnProcessTerminate();
 	afx_msg void OnProcessForceTerminate();
+	afx_msg void OnProcessSuspend();
+	afx_msg void OnProcessResume();
+	afx_msg void OnProcessProperty();
+	afx_msg void OnProcessLocation();
 	DECLARE_MESSAGE_MAP()
 public:
 	
@@ -44,17 +49,20 @@ public:
 	void APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind ProcessInfoKind);
 
 
-
 	CImageList          m_ProcessIconList;   // 进程图标
 	CListCtrl           m_ProcessListCtrl;   // ListControl
 
 	ArkProtect::CGlobal *m_Global;
 	
+	BOOL                m_bSuspend = FALSE;
+	HANDLE              m_SuspendThreadHandle = NULL;
+
 	static UINT32       m_SortColumn;
 	static BOOL         m_bSortOrder;  // 记录排序顺序
 	
 	
-	afx_msg void OnNMCustomdrawProcessList(NMHDR *pNMHDR, LRESULT *pResult);
+	
+	afx_msg void OnProcessExportInformation();
 };
 
 

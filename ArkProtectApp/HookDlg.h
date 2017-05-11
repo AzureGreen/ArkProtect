@@ -27,11 +27,18 @@ protected:
 	afx_msg void OnLbnSelchangeHookListbox();
 	afx_msg void OnNMCustomdrawHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
-
+	afx_msg void OnHookFreshen();
+	afx_msg void OnHookResume();
+	afx_msg void OnHookResumeAll();
+	afx_msg void OnHookProperty();
+	afx_msg void OnHookLocation();
+	afx_msg void OnHookExportInformation();
 	DECLARE_MESSAGE_MAP()
 public:
 	
 	void APInitializeHookItemList();
+
+	CString APGetSelectedFilePath(int iItem);
 
 	CListCtrl m_HookListCtrl;
 	CListBox m_HookListBox;
@@ -42,7 +49,4 @@ public:
 	int                  m_iCurSel = 65535;
 
 	
-	afx_msg void OnHookFreshen();
-	afx_msg void OnHookResume();
-	afx_msg void OnHookResumeAll();
 };

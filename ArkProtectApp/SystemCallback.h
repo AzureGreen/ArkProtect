@@ -18,10 +18,11 @@ namespace ArkProtect
 		ct_NotifyCreateProcess,
 		ct_NotifyCreateThread,
 		ct_NotifyLoadImage,
-		ct_NotifyShutdown,
 		ct_NotifyCmpCallBack,
+		ct_NotifyKeBugCheck,
 		ct_NotifyKeBugCheckReason,
-		ct_NotifyKeBugCheck
+		ct_NotifyShutdown,
+		ct_NotifyLastChanceShutdown
 	};
 
 	typedef struct _SYS_CALLBACK_ENTRY_INFORMATION
@@ -65,14 +66,15 @@ namespace ArkProtect
 			{ L"√Ë ˆ",					125 } };
 
 		std::vector<SYS_CALLBACK_ENTRY_INFORMATION> m_CallbackEntryVector;
-
-		UINT32   m_NotifyLoadImage = 0;
-		UINT32   m_NotifyCmpCallback = 0;
+		
 		UINT32   m_NotifyCreateProcess = 0;
 		UINT32   m_NotifyCreateThread = 0;
-		UINT32   m_NotifyShutdown = 0;
-		UINT32   m_NotifyCheckReason = 0;
+		UINT32   m_NotifyLoadImage = 0;
+		UINT32   m_NotifyCmpCallback = 0;
 		UINT32   m_NotifyCheck = 0;
+		UINT32   m_NotifyCheckReason = 0;
+		UINT32   m_NotifyShutdown = 0;
+		UINT32   m_NotifyLastChanceShutdown = 0;
 
 		class CGlobal          *m_Global;
 

@@ -191,6 +191,7 @@
     <ClInclude Include="FilterDriver.h" />
     <ClInclude Include="HookDlg.h" />
     <ClInclude Include="IoTimer.h" />
+    <ClInclude Include="NtStructs.h" />
     <ClInclude Include="SsdtHook.h" />
     <ClInclude Include="SssdtHook.h" />
     <ClInclude Include="SystemCallback.h" />

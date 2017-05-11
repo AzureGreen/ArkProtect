@@ -28,7 +28,9 @@ protected:
 	afx_msg void OnDriverFreshen();
 	afx_msg void OnDriverDelete();
 	afx_msg void OnDriverUnload();
-
+	afx_msg void OnDriverProperty();
+	afx_msg void OnDriverLocation();
+	afx_msg void OnDriverExportInformation();
 	DECLARE_MESSAGE_MAP()
 public:
 	
@@ -46,4 +48,5 @@ public:
 
 
 
+	
 };

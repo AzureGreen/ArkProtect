@@ -117,8 +117,6 @@ namespace ArkProtect
 		UINT	nWidth;
 	} COLUMN_STRUCT;
 
-	
-
 
 }
 

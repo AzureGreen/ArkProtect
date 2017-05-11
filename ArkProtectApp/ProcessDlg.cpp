@@ -51,6 +51,11 @@ BEGIN_MESSAGE_MAP(CProcessDlg, CDialogEx)
 	ON_COMMAND(ID_PROCESS_MEMORY, &CProcessDlg::OnProcessMemory)
 	ON_COMMAND(ID_PROCESS_TERMINATE, &CProcessDlg::OnProcessTerminate)
 	ON_COMMAND(ID_PROCESS_FORCE_TERMINATE, &CProcessDlg::OnProcessForceTerminate)
+	ON_COMMAND(ID_PROCESS_SUSPEND, &CProcessDlg::OnProcessSuspend)
+	ON_COMMAND(ID_PROCESS_RESUME, &CProcessDlg::OnProcessResume)
+	ON_COMMAND(ID_PROCESS_PROPERTY, &CProcessDlg::OnProcessProperty)
+	ON_COMMAND(ID_PROCESS_LOCATION, &CProcessDlg::OnProcessLocation)
+	ON_COMMAND(ID_PROCESS_EXPORT_INFORMATION, &CProcessDlg::OnProcessExportInformation)
 END_MESSAGE_MAP()
 
 
@@ -175,16 +180,16 @@ void CProcessDlg::OnLvnColumnclickProcessList(NMHDR *pNMHDR, LRESULT *pResult)
 		m_bSortOrder = TRUE;
 	}
 
-	/*	for (int i = 0; i < iItemCount; i++)
+	for (int i = 0; i < iItemCount; i++)
 	{
-	if (_wcsnicmp(m_ProcessListCtrl.GetItemText(i, ArkProtect::pc_Company),
-	L"Microsoft Corporation",
-	wcslen(L"Microsoft Corporation")) == 0)
-	{
-	m_ProcessList.SetItemData(i, 1);
+		if (_wcsnicmp(m_ProcessListCtrl.GetItemText(i, ArkProtect::pc_Company),
+			L"Microsoft Corporation",
+			wcslen(L"Microsoft Corporation")) == 0)
+		{
+			m_ProcessListCtrl.SetItemData(i, TRUE);
+		}
 	}
-	}
-	*/
+
 
 	*pResult = 0;
 }
@@ -303,6 +308,99 @@ void CProcessDlg::OnProcessForceTerminate()
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::ForceTerminateProcessCallback, &m_ProcessListCtrl, 0, NULL)
 	);
+}
+
+
+void CProcessDlg::OnProcessSuspend()
+{
+	// TODO: 在此添加命令处理程序代码
+	if (m_bSuspend == FALSE)
+	{
+		// 获得进程id
+		UINT32   ProcessId = 0;
+		POSITION Pos = m_ProcessListCtrl.GetFirstSelectedItemPosition();
+
+		while (Pos)
+		{
+			int iItem = m_ProcessListCtrl.GetNextSelectedItem(Pos);
+			ProcessId = _ttoi(m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_ProcessId).GetBuffer());
+		}
+
+		// 获得一个线程Id
+		UINT32 ThreadId = 0;
+		BOOL bOk = m_Global->ProcessThread().GetThreadIdByProcessId(ProcessId, &ThreadId);
+		if (bOk)
+		{
+			// 挂起该线程
+			m_SuspendThreadHandle = ::OpenThread(THREAD_SUSPEND_RESUME, FALSE, ThreadId);
+
+			::SuspendThread(m_SuspendThreadHandle);
+
+			m_bSuspend = TRUE;
+		}
+	}
+	else
+	{
+		MessageBox(L"已经挂起该进程了！", L"ArkProtect", MB_OK | MB_ICONERROR);
+	}
+}
+
+
+void CProcessDlg::OnProcessResume()
+{
+	// TODO: 在此添加命令处理程序代码
+	if (m_bSuspend == TRUE)
+	{
+		::ResumeThread(m_SuspendThreadHandle);
+		::CloseHandle(m_SuspendThreadHandle);
+		m_SuspendThreadHandle = NULL;
+		m_bSuspend = FALSE;
+	}
+	else
+	{
+		MessageBox(L"该进程处于正常状态！", L"ArkProtect", MB_OK | MB_ICONERROR);
+	}
+}
+
+
+void CProcessDlg::OnProcessProperty()
+{
+	// TODO: 在此添加命令处理程序代码
+	POSITION Pos = m_ProcessListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)
+	{
+		int iItem = m_ProcessListCtrl.GetNextSelectedItem(Pos);
+
+		CString strFilePath = m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_FilePath);
+
+		m_Global->CheckFileProperty(strFilePath);
+	}
+}
+
+
+void CProcessDlg::OnProcessLocation()
+{
+	// TODO: 在此添加命令处理程序代码
+	POSITION Pos = m_ProcessListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)  	// 绕过Idle 
+	{
+		int iItem = m_ProcessListCtrl.GetNextSelectedItem(Pos);
+
+		CString strFilePath = m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_FilePath);
+
+		m_Global->LocationInExplorer(strFilePath);
+	}
+}
+
+
+void CProcessDlg::OnProcessExportInformation()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	m_Global->ExportInformationInText(m_ProcessListCtrl);
+
 }
 
 
@@ -469,6 +567,8 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
+
+
 
 
 

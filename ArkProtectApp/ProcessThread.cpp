@@ -311,4 +311,81 @@ namespace ArkProtect
 		return 0;
 	}
 
+
+	/************************************************************************
+	*  Name : GetThreadIdByProcessId
+	*  Param: ProcessId			进程Id		（IN）
+	*  Param: ThreadId			线程Id		（OUT）
+	*  Ret  : BOOL
+	*  ZwQuerySystemInformation+SystemProcessInformation获得进程相关信息从而得到一个线程Id
+	************************************************************************/
+
+	BOOL CProcessThread::GetThreadIdByProcessId(UINT32 ProcessId, PUINT32 ThreadId)
+	{
+		BOOL						bOk = FALSE;
+		NTSTATUS					Status = 0;
+		PVOID						BufferData = NULL;
+		PSYSTEM_PROCESS_INFO		spi = NULL;
+		pfnZwQuerySystemInformation ZwQuerySystemInformation = NULL;
+
+		ZwQuerySystemInformation = (pfnZwQuerySystemInformation)GetProcAddress(GetModuleHandle(L"ntdll.dll"), "ZwQuerySystemInformation");
+		if (ZwQuerySystemInformation == NULL)
+		{
+			return FALSE;
+		}
+
+		BufferData = malloc(1024 * 1024);
+		if (!BufferData)
+		{
+			return FALSE;
+		}
+
+		// 在QuerySystemInformation系列函数中，查询SystemProcessInformation时，必须提前申请好内存，不能先查询得到长度再重新调用
+		Status = ZwQuerySystemInformation(SystemProcessInformation, BufferData, 1024 * 1024, NULL);
+		if (!NT_SUCCESS(Status))
+		{
+			free(BufferData);
+			return FALSE;
+		}
+
+		spi = (PSYSTEM_PROCESS_INFO)BufferData;
+
+		// 遍历进程
+		while (TRUE)
+		{
+			bOk = FALSE;
+			if (spi->UniqueProcessId == (HANDLE)ProcessId)
+			{
+				bOk = TRUE;
+				break;
+			}
+			else if (spi->NextEntryOffset)
+			{
+				spi = (PSYSTEM_PROCESS_INFO)((PUINT8)spi + spi->NextEntryOffset);
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		if (bOk)
+		{
+			for (INT i = 0; i < spi->NumberOfThreads; i++)
+			{
+				// 执行的不能是当前线程
+				*ThreadId = (UINT32)spi->Threads[i].ClientId.UniqueThread;
+				break;
+			}
+		}
+
+		if (BufferData != NULL)
+		{
+			free(BufferData);
+		}
+
+		return bOk;
+	}
+
+
 }

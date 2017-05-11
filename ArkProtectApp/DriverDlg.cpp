@@ -40,6 +40,9 @@ BEGIN_MESSAGE_MAP(CDriverDlg, CDialogEx)
 	ON_COMMAND(ID_DRIVER_FRESHEN, &CDriverDlg::OnDriverFreshen)
 	ON_COMMAND(ID_DRIVER_DELETE, &CDriverDlg::OnDriverDelete)
 	ON_COMMAND(ID_DRIVER_UNLOAD, &CDriverDlg::OnDriverUnload)
+	ON_COMMAND(ID_DRIVER_PROPERTY, &CDriverDlg::OnDriverProperty)
+	ON_COMMAND(ID_DRIVER_LOCATION, &CDriverDlg::OnDriverLocation)
+	ON_COMMAND(ID_DRIVER_EXPORT_INFORMATION, &CDriverDlg::OnDriverExportInformation)
 END_MESSAGE_MAP()
 
 
@@ -228,6 +231,45 @@ void CDriverDlg::OnDriverUnload()
 
 
 
+void CDriverDlg::OnDriverProperty()
+{
+	// TODO: 在此添加命令处理程序代码
+	POSITION Pos = m_DriverListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)
+	{
+		int iItem = m_DriverListCtrl.GetNextSelectedItem(Pos);
+
+		CString strFilePath = m_DriverListCtrl.GetItemText(iItem, ArkProtect::dc_DriverPath);
+
+		m_Global->CheckFileProperty(strFilePath);
+	}
+}
+
+
+void CDriverDlg::OnDriverLocation()
+{
+	// TODO: 在此添加命令处理程序代码
+	POSITION Pos = m_DriverListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)
+	{
+		int iItem = m_DriverListCtrl.GetNextSelectedItem(Pos);
+
+		CString strFilePath = m_DriverListCtrl.GetItemText(iItem, ArkProtect::dc_DriverPath);
+
+		m_Global->LocationInExplorer(strFilePath);
+	}
+}
+
+
+void CDriverDlg::OnDriverExportInformation()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_Global->ExportInformationInText(m_DriverListCtrl);
+}
+
+
 /************************************************************************
 *  Name : APInitializeDriverList
 *  Param: void
@@ -266,6 +308,7 @@ void CDriverDlg::APLoadDriverList()
 		(LPTHREAD_START_ROUTINE)ArkProtect::CDriverCore::QueryDriverInfoCallback, &m_DriverListCtrl, 0, NULL)
 	);
 }
+
 
 
 

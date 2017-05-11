@@ -43,6 +43,9 @@ BEGIN_MESSAGE_MAP(CHookDlg, CDialogEx)
 	ON_COMMAND(ID_HOOK_FRESHEN, &CHookDlg::OnHookFreshen)
 	ON_COMMAND(ID_HOOK_RESUME, &CHookDlg::OnHookResume)
 	ON_COMMAND(ID_HOOK_RESUME_ALL, &CHookDlg::OnHookResumeAll)
+	ON_COMMAND(ID_HOOK_PROPERTY, &CHookDlg::OnHookProperty)
+	ON_COMMAND(ID_HOOK_LOCATION, &CHookDlg::OnHookLocation)
+	ON_COMMAND(ID_HOOK_EXPORT_INFORMATION, &CHookDlg::OnHookExportInformation)
 END_MESSAGE_MAP()
 
 
@@ -413,6 +416,44 @@ void CHookDlg::OnHookResumeAll()
 }
 
 
+void CHookDlg::OnHookProperty()
+{
+	// TODO: 在此添加命令处理程序代码
+	POSITION Pos = m_HookListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)
+	{
+		int iItem = m_HookListCtrl.GetNextSelectedItem(Pos);
+
+		CString strFilePath = APGetSelectedFilePath(iItem);
+
+		m_Global->CheckFileProperty(strFilePath);
+	}
+}
+
+
+void CHookDlg::OnHookLocation()
+{
+	// TODO: 在此添加命令处理程序代码
+	POSITION Pos = m_HookListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)
+	{
+		int iItem = m_HookListCtrl.GetNextSelectedItem(Pos);
+
+		CString strFilePath = APGetSelectedFilePath(iItem);
+
+		m_Global->LocationInExplorer(strFilePath);
+	}
+}
+
+
+void CHookDlg::OnHookExportInformation()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_Global->ExportInformationInText(m_HookListCtrl);
+}
+
 
 /************************************************************************
 *  Name : APInitializeHookItemList
@@ -433,4 +474,34 @@ void CHookDlg::APInitializeHookItemList()
 }
 
 
+/************************************************************************
+*  Name : APGetSelectedFilePath
+*  Param: iItem
+*  Ret  : CString
+*  返回选中的文件路径
+************************************************************************/
+CString CHookDlg::APGetSelectedFilePath(int iItem)
+{
+	int iCurSel = m_HookListBox.GetCurSel();
 
+	CString strFilePath;
+
+	switch (iCurSel)
+	{
+	case ArkProtect::hi_Ssdt:
+	{
+		strFilePath = m_HookListCtrl.GetItemText(iItem, ArkProtect::shc_FilePath);
+		break;
+	}
+	case ArkProtect::hi_Sssdt:
+	{
+		strFilePath = m_HookListCtrl.GetItemText(iItem, ArkProtect::shc_FilePath);
+		break;
+	}
+	
+	default:
+		break;
+	}
+
+	return strFilePath;
+}

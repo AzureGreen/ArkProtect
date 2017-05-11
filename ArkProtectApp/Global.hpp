@@ -313,6 +313,175 @@ namespace ArkProtect
 			ImageList->Add(hIcon);
 		}
 
+
+		void LocationInExplorer(CString strFilePath)
+		{
+			if (!strFilePath.IsEmpty() && PathFileExists(strFilePath))
+			{
+				CString strCmd;
+				strCmd.Format(L"/select,%s", strFilePath);
+				ShellExecuteW(NULL, L"open", L"explorer.exe", strCmd, NULL, SW_SHOW);
+			}
+			else
+			{
+				MessageBox(NULL, L"文件路径错误", L"ArkProtect", MB_OK | MB_ICONERROR);
+			}
+		}
+
+
+		void CheckFileProperty(CString strFilePath)
+		{
+			if (!strFilePath.IsEmpty())
+			{
+				SHELLEXECUTEINFO ExecInfo = { 0 };
+
+				ExecInfo.fMask = SEE_MASK_INVOKEIDLIST;
+				ExecInfo.cbSize = sizeof(ExecInfo);
+				ExecInfo.hwnd = NULL;
+				ExecInfo.lpVerb = L"properties";
+				ExecInfo.lpFile = strFilePath.GetBuffer();
+				ExecInfo.lpParameters = NULL;
+				ExecInfo.lpDirectory = NULL;
+				ExecInfo.nShow = SW_SHOWNORMAL;
+				ExecInfo.hProcess = NULL;
+				ExecInfo.lpIDList = 0;
+				ExecInfo.hInstApp = 0;
+				ShellExecuteEx(&ExecInfo);
+			}
+			else
+			{
+				MessageBox(NULL, L"文件路径错误", L"ArkProtect", MB_OK | MB_ICONERROR);
+			}
+		}
+
+
+		BOOL GetSaveTextFileName(CString & strFilePath)
+		{
+			CFileDialog FileDlg(
+				FALSE,		// save
+				0,
+				strFilePath,
+				0,
+				L"文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*||",
+				0);
+
+			if (FileDlg.DoModal() == IDOK)
+			{
+				strFilePath = FileDlg.GetFileName();
+
+				CString strTemp = strFilePath.Right((int)wcslen(L".txt"));
+
+				// 没有扩展名，自己给加上
+				if (strTemp.CompareNoCase(L".txt") != 0)
+				{
+					strFilePath += L".txt";
+				}
+
+				if (!PathFileExists(strFilePath))
+				{
+					return TRUE;
+				}
+				else if (PathFileExists(strFilePath) && MessageBox(NULL, L"文件已经存在，是否覆盖？", L"ArkProtect", MB_YESNO | MB_ICONQUESTION) == IDYES)
+				{
+					if (!DeleteFile(strFilePath))
+					{
+						MessageBox(NULL, L"覆盖文件失败。", L"ArkProtect", MB_OK | MB_ICONERROR);
+						return FALSE;
+					}
+
+					return TRUE;
+				}
+			}
+
+			return FALSE;
+		}
+
+		void ExportInformationInText(CListCtrl & ListCtrl)
+		{
+			if (ListCtrl.GetItemCount() > 0)
+			{
+				CString strFilePath;
+				BOOL bOk = GetSaveTextFileName(strFilePath);
+				if (!bOk)
+				{
+					return;
+				}
+
+				CFile File;
+
+				TRY
+				{
+					if (File.Open(strFilePath, CFile::modeCreate | CFile::modeWrite | CFile::modeNoTruncate, NULL))
+					{
+						int i = 0;
+						LVCOLUMN ColumnData;
+						CString  strColumnName;
+						int      ColumnNum = 0;
+						CString  strCloumn;
+						CHAR     szColumn[0x1000] = { 0 };
+						WCHAR    wzColumn[0x1000] = { 0 };
+
+						ColumnData.mask = LVCF_TEXT;
+						ColumnData.cchTextMax = 100;	// 缓冲区大小
+						ColumnData.pszText = strColumnName.GetBuffer(100);		// 关联缓冲区
+
+						for (i = 0; ListCtrl.GetColumn(i, &ColumnData); i++)
+						{
+							strCloumn = strCloumn + ColumnData.pszText + L"      |      ";
+						}
+
+						strCloumn += "\r\n";
+						int  iLength = strCloumn.GetLength();
+						wcsncpy_s(wzColumn, 0x1000, strCloumn.GetBuffer(), iLength);
+						strCloumn.ReleaseBuffer();
+						WideCharToMultiByte(CP_ACP, 0, wzColumn, -1, szColumn, 0x1000, NULL, NULL);		// 双字转单字
+						File.Write(szColumn, (UINT)strlen(szColumn));
+
+						strColumnName.ReleaseBuffer();
+						ColumnNum = i;
+
+						//上面是取出ShowList 的标题
+
+						for (int iItemIndex = 0; iItemIndex < ListCtrl.GetItemCount(); iItemIndex++)		// 遍历每一项
+						{
+							CHAR  szColumn[0x1000] = { 0 };
+							WCHAR wzColumn[0x1000] = { 0 };
+							CString strItem;
+
+							for (i = 0; i < ColumnNum; i++)
+							{
+								strItem = strItem + ListCtrl.GetItemText(iItemIndex, i) + L"      |      ";		// 组合每一栏
+							}
+
+							strItem += "\r\n";
+							iLength = strItem.GetLength();
+							wcsncpy_s(wzColumn, 0x1000, strItem.GetBuffer(), iLength);
+							strItem.ReleaseBuffer();
+							WideCharToMultiByte(CP_ACP, 0, wzColumn, -1, szColumn, 0x1000, NULL, NULL);
+							File.Write(szColumn, (UINT)strlen(szColumn));
+						}
+
+						File.Close();
+					}
+				}
+					CATCH_ALL(e)
+				{
+					File.Abort();
+				}
+				END_CATCH_ALL
+
+				if (PathFileExists(strFilePath))
+				{
+					ShellExecuteW(NULL, L"open", strFilePath, NULL, NULL, SW_SHOW);
+				}
+				else
+				{
+					::MessageBox(NULL, L"导出到文本文件失败。", L"ArkProtect", MB_OK | MB_ICONERROR);
+				}
+			}
+		}
+
+
 		//////////////////////////////////////////////////////////////////////////
 
 		//

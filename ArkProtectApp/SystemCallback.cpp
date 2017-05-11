@@ -122,14 +122,15 @@ namespace ArkProtect
 	************************************************************************/
 	void CSystemCallback::InsertSystemCallbackInfoList(CListCtrl *ListCtrl)
 	{
-		m_NotifyLoadImage = 0;
-		m_NotifyCmpCallback = 0;
 		m_NotifyCreateProcess = 0;
 		m_NotifyCreateThread = 0;
+		m_NotifyLoadImage = 0;
+		m_NotifyCmpCallback = 0;
 		m_NotifyShutdown = 0;
+		m_NotifyLastChanceShutdown = 0;
+		m_NotifyCheck = 0;
 		m_NotifyCheckReason = 0;
-	    m_NotifyCheck = 0;
-
+	    
 		size_t Size = m_CallbackEntryVector.size();
 		for (size_t i = 0; i < Size; i++)
 		{
@@ -142,20 +143,6 @@ namespace ArkProtect
 
 			switch (CallbackEntry.Type)
 			{
-			case ct_NotifyLoadImage:
-			{
-				strType = L"LoadImage";
-
-				m_NotifyLoadImage++;
-				break;
-			}
-			case ct_NotifyCmpCallBack:
-			{
-				strType = L"CmpCallBack";
-
-				m_NotifyCmpCallback++;
-				break;
-			}
 			case ct_NotifyCreateProcess:
 			{
 				strType = L"CreateProcess";
@@ -170,18 +157,18 @@ namespace ArkProtect
 				m_NotifyCreateThread++;
 				break;
 			}
-			case ct_NotifyShutdown:
+			case ct_NotifyLoadImage:
 			{
-				strType = L"Shutdown";
+				strType = L"LoadImage";
 
-				m_NotifyShutdown++;
+				m_NotifyLoadImage++;
 				break;
 			}
-			case ct_NotifyKeBugCheckReason:
+			case ct_NotifyCmpCallBack:
 			{
-				strType = L"BugCheckReason";
+				strType = L"CmpCallBack";
 
-				m_NotifyCheckReason++;
+				m_NotifyCmpCallback++;
 				break;
 			}
 			case ct_NotifyKeBugCheck:
@@ -191,6 +178,28 @@ namespace ArkProtect
 				m_NotifyCheck++;
 				break;
 			}
+			case ct_NotifyKeBugCheckReason:
+			{
+				strType = L"BugCheckReason";
+
+				m_NotifyCheckReason++;
+				break;
+			}
+			case ct_NotifyShutdown:
+			{
+				strType = L"Shutdown";
+
+				m_NotifyShutdown++;
+				break;
+			}
+			case ct_NotifyLastChanceShutdown:
+			{
+				strType = L"LastChanceShutdown";
+
+				m_NotifyLastChanceShutdown++;
+				break;
+			}
+			
 			default:
 				break;
 			}
@@ -210,25 +219,25 @@ namespace ArkProtect
 			}
 
 			CString strStatusContext;
-			strStatusContext.Format(L"系统回调正在加载  驱动加载：%d，注册表：%d，进程创建：%d，线程创建：%d，关机：%d，错误检测：%d",
-				m_NotifyLoadImage,
-				m_NotifyCmpCallback,
+			strStatusContext.Format(L"系统回调正在加载  进程创建：%d，线程创建：%d，加载模块：%d，注册表：%d，错误检测：%d，关机：%d",
 				m_NotifyCreateProcess,
 				m_NotifyCreateThread,
-				m_NotifyShutdown,
-				m_NotifyCheckReason + m_NotifyCheck);
+				m_NotifyLoadImage,
+				m_NotifyCmpCallback,
+				m_NotifyCheckReason + m_NotifyCheck,
+				m_NotifyShutdown + m_NotifyLastChanceShutdown);
 
 			m_Global->UpdateStatusBarDetail(strStatusContext);
 		}
 
 		CString strStatusContext;
-		strStatusContext.Format(L"系统回调加载完成  驱动加载：%d，注册表：%d，进程创建：%d，线程创建：%d，关机：%d，错误检测：%d",
-			m_NotifyLoadImage,
-			m_NotifyCmpCallback,
+		strStatusContext.Format(L"系统回调加载完成  进程创建：%d，线程创建：%d，加载模块：%d，注册表：%d，错误检测：%d，关机：%d",
 			m_NotifyCreateProcess,
 			m_NotifyCreateThread,
-			m_NotifyShutdown,
-			m_NotifyCheckReason + m_NotifyCheck);
+			m_NotifyLoadImage,
+			m_NotifyCmpCallback,
+			m_NotifyCheckReason + m_NotifyCheck,
+			m_NotifyShutdown + m_NotifyLastChanceShutdown);
 		m_Global->UpdateStatusBarDetail(strStatusContext);
 	}
 
