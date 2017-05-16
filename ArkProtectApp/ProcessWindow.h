@@ -40,6 +40,8 @@ namespace ArkProtect
 
 		BOOL EnumProcessWindow();
 
+		void InsertProcessWindowInfoList(CListCtrl * ListCtrl);
+
 		void QueryProcessWindow(CListCtrl * ListCtrl);
 
 		static DWORD CALLBACK QueryProcessWindowCallback(LPARAM lParam);

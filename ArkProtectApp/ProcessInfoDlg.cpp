@@ -347,3 +347,19 @@ void CProcessInfoDlg::APLoadProcessMemoryList()
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessMemory::QueryProcessMemoryCallback, &m_ProcessInfoListCtrl, 0, NULL)
 	);
 }
+
+
+void CProcessInfoDlg::APUpdateWindowText(LPCWSTR Num)
+{
+	CString strWindowText;
+
+	CString strAppend;
+
+	GetWindowText(strWindowText);
+
+	strAppend.Format(L" (%s)", Num);
+
+	strWindowText += strAppend.GetBuffer();	
+
+	SetWindowText(strWindowText.GetBuffer());
+}

@@ -330,8 +330,8 @@ namespace ArkProtect
 
 		m_Driver->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
 
-		m_Driver->m_Global->UpdateStatusBarTip(L"Process Info");
-		m_Driver->m_Global->UpdateStatusBarDetail(L"Process Info is loading now...");
+		m_Driver->m_Global->UpdateStatusBarTip(L"Driver Info");
+		m_Driver->m_Global->UpdateStatusBarDetail(L"Driver Info is loading now...");
 
 		m_Driver->QueryDriverInfo(ListCtrl);
 

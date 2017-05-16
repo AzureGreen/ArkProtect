@@ -493,8 +493,8 @@ void CProcessDlg::APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind Proces
 
 		m_Global->ProcessCore().ProcessEntry() = &ProcessEntry;
 
-		CProcessInfoDlg *ProcessInfoDlg = new CProcessInfoDlg(this, ProcessInfoKind, m_Global);
-		ProcessInfoDlg->DoModal();
+		m_ProcessInfoDlg = new CProcessInfoDlg(this, ProcessInfoKind, m_Global);
+		m_ProcessInfoDlg->DoModal();
 	}
 }
 

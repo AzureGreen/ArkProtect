@@ -558,7 +558,7 @@ void CArkProtectAppDlg::APShowChildWindow(ArkProtect::eChildDlg TargetChildDlg)
 		if (m_ProcessDlg) m_ProcessDlg->ShowWindow(TRUE);
 		if (m_DriverDlg) m_DriverDlg->ShowWindow(FALSE);
 		if (m_KernelDlg) m_KernelDlg->ShowWindow(FALSE);
-		//if (m_KrnlHookDlg) m_KrnlHookDlg->ShowWindow(FALSE);
+		if (m_HookDlg) m_HookDlg->ShowWindow(FALSE);
 		if (m_RegistryDlg) m_RegistryDlg->ShowWindow(FALSE);
 
 		break;

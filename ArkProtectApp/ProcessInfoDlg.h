@@ -51,6 +51,8 @@ public:
 
 	void APLoadProcessMemoryList();
 
+	void APUpdateWindowText(LPCWSTR Num);
+
 
 
 	CListCtrl m_ProcessInfoListCtrl;

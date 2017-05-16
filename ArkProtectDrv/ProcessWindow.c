@@ -1,39 +1,74 @@
 #include "ProcessWindow.h"
 
+typedef
+NTSTATUS
+(*pfnNtUserBuildHwndList)(
+	IN HDESK hdesk,
+	IN HWND hwndNext,
+	IN BOOL fEnumChildren,
+	IN DWORD idThread,
+	IN UINT cHwndMax,
+	OUT HWND *phwndFirst,
+	OUT PUINT pcHwndNeeded);
+
+typedef
+//W32KAPI
+HANDLE
+(*pfnNtUserQueryWindow)(
+	IN HWND hwnd,
+	IN DWORD WindowInfo);
+
 
 NTSTATUS
 APEnumProcessWindowByNtUserBuildHwndList(IN UINT32 ProcessId, IN PEPROCESS EProcess, OUT PPROCESS_WINDOW_INFORMATION pwi, IN UINT32 WindowCount)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
-	/*
-	Status = NtUserBuildHwndList(NULL, NULL, FALSE, 0, WindowCount, (HWND*)(pwi->WindowEntry), &pwi->NumberOfWindows);
-	if (NT_SUCCESS(Status))
+	
+	// 获得 NtUserBuildHwndList 地址
+	pfnNtUserBuildHwndList NtUserBuildHwndList = (pfnNtUserBuildHwndList)APGetSssdtFunctionAddress(L"NtUserBuildHwndList");
+	pfnNtUserQueryWindow   NtUserQueryWindow = (pfnNtUserQueryWindow)APGetSssdtFunctionAddress(L"NtUserQueryWindow");
+	if (NtUserBuildHwndList && MmIsAddressValid((PVOID)NtUserBuildHwndList) &&
+		NtUserQueryWindow && MmIsAddressValid((PVOID)NtUserQueryWindow))
 	{
-		UINT32 Count = pwi->NumberOfWindows;
-		ULONG i = 0;
-		HWND* WndBuffer = (HWND*)ExAllocatePool(NonPagedPool, sizeof(HWND) * Count);
-		if (WndBuffer)
+		Status = NtUserBuildHwndList(NULL, NULL, FALSE, 0, WindowCount, (HWND*)(pwi->WindowEntry), &pwi->NumberOfWindows);
+		if (NT_SUCCESS(Status))
 		{
-			//	memcpy(WndBuffer, (PVOID)((ULONG)pwi + sizeof(UINT32)), sizeof(HWND) * Count);
-
-			for (i = 0; i < Count; i++)
+			HWND* Wnds = (HWND*)ExAllocatePool(NonPagedPool, sizeof(HWND) * pwi->NumberOfWindows);
+			if (Wnds)
 			{
-				UINT32 ThreadId = 0, ProcessId = 0;
-				HWND hWnd = WndBuffer[i];
+				UINT32 NumberOfWindows = 0;
+				RtlCopyMemory(Wnds, &pwi->WindowEntry, sizeof(HWND) * pwi->NumberOfWindows);
 
-				ProcessId = NtUserQueryWindow(hWnd, 0);
+				RtlZeroMemory(&pwi->WindowEntry, sizeof(HWND) * pwi->NumberOfWindows);
 
-				ThreadId = NtUserQueryWindow(hWnd, 2);
+				for (UINT32 i = 0; i < pwi->NumberOfWindows; i++)
+				{
+					UINT32 ThreadId = 0, WndProcessId = 0;
 
-				pwi->Wnds[i].hWnd = hWnd;
-				pwi->Wnds[i].ProcessId = ProcessId;
-				pwi->Wnds[i].ThreadId = ThreadId;
+					WndProcessId = (UINT32)(UINT_PTR)NtUserQueryWindow(Wnds[i], 0);
+
+					ThreadId = (UINT32)(UINT_PTR)NtUserQueryWindow(Wnds[i], 2);
+					
+					if (WndProcessId == ProcessId)
+					{
+						if (WindowCount >= NumberOfWindows)
+						{
+							pwi->WindowEntry[NumberOfWindows].hWnd = Wnds[i];
+							pwi->WindowEntry[NumberOfWindows].ProcessId = ProcessId;
+							pwi->WindowEntry[NumberOfWindows].ThreadId = ThreadId;
+						}
+						NumberOfWindows++;
+					}			
+				}
+				ExFreePool(Wnds);
+				pwi->NumberOfWindows = NumberOfWindows;
 			}
-			ExFreePool(WndBuffer);
 		}
 	}
-	*/
-
+	else
+	{
+		DbgPrint("Get NtUserBuildHwndList Failed\r\n");
+	}
 	return Status;
 }
 
@@ -66,28 +101,21 @@ APEnumProcessWindow(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 
 	if (NT_SUCCESS(Status) && APIsValidProcess(EProcess))
 	{
-		PPROCESS_WINDOW_INFORMATION pwi = (PPROCESS_WINDOW_INFORMATION)ExAllocatePool(PagedPool, OutputLength);
+		PPROCESS_WINDOW_INFORMATION pwi = (PPROCESS_WINDOW_INFORMATION)OutputBuffer;
 		if (pwi)
 		{
-			RtlZeroMemory(pwi, OutputLength);
-
 			Status = APEnumProcessWindowByNtUserBuildHwndList(ProcessId, EProcess, pwi, WindowCount);
 			if (NT_SUCCESS(Status))
 			{
 				if (WindowCount >= pwi->NumberOfWindows)
 				{
-					RtlCopyMemory(OutputBuffer, pwi, OutputLength);
 					Status = STATUS_SUCCESS;
 				}
 				else
 				{
-					((PPROCESS_WINDOW_INFORMATION)OutputBuffer)->NumberOfWindows = pwi->NumberOfWindows;    // 让Ring3知道需要多少个
 					Status = STATUS_BUFFER_TOO_SMALL;	// 给ring3返回内存不够的信息
 				}
 			}
-
-			ExFreePool(pwi);
-			pwi = NULL;
 		}
 	}
 

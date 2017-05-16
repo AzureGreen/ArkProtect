@@ -4,6 +4,7 @@
 #include <ntifs.h>
 #include "Private.h"
 #include "ProcessCore.h"
+#include "Sssdt.h"
 
 typedef struct _PROCESS_WINDOW_ENTRY_INFORMATION
 {

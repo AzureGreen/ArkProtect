@@ -67,8 +67,8 @@ namespace ArkProtect
 	// 状态栏
 	enum eStatusBar
 	{
-		sb_Tip = WM_USER + 0x101,
-		sb_Detail = WM_USER + 0x102
+		sb_Detail = WM_USER + 0x101,
+		sb_Tip = WM_USER + 0x102
 	};
 
 	// PE文件位数

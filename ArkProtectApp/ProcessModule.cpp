@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ProcessModule.h"
 #include "Global.hpp"
+#include "ProcessDlg.h"
 
 namespace ArkProtect
 {
@@ -50,8 +51,7 @@ namespace ArkProtect
 		// 修剪模块文件路径
 		CString strFullPath = m_Global->TrimPath(ModuleEntry->wzFilePath);
 		StringCchCopyW(ModuleEntry->wzFilePath, strFullPath.GetLength() + 1, strFullPath.GetBuffer());
-		//wcsncpy_s(ModuleEntry.wzFullPath, MAX_PATH, strFullPath.GetBuffer(), strFullPath.GetLength());
-
+		
 		CString strCompanyName = m_Global->GetFileCompanyName(ModuleEntry->wzFilePath);
 		if (strCompanyName.GetLength() == 0)
 		{
@@ -144,7 +144,6 @@ namespace ArkProtect
 	************************************************************************/
 	void CProcessModule::InsertProcessModuleInfoList(CListCtrl *ListCtrl)
 	{
-		UINT32 ProcessModuleNum = 0;
 		size_t Size = m_ProcessModuleEntryVector.size();
 		for (size_t i = 0; i < Size; i++)
 		{
@@ -161,18 +160,11 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, pmc_BaseAddress, strBaseAddress);
 			ListCtrl->SetItemText(iItem, pmc_SizeOfImage, strImageSize);
 			ListCtrl->SetItemText(iItem, pmc_Company, strCompanyName);
-
-			ProcessModuleNum++;
-
-			CString strStatusContext;
-			strStatusContext.Format(L"Process Module Info is loading now, Count:%d", ProcessModuleNum);
-
-			m_Global->UpdateStatusBarDetail(strStatusContext);
 		}
 
-		CString strStatusContext;
-		strStatusContext.Format(L"Process module Info load complete, Count:%d", Size);
-		m_Global->UpdateStatusBarDetail(strStatusContext);
+		CString strNum;
+		strNum.Format(L"%d", Size);
+		((CProcessDlg*)(m_Global->m_ProcessDlg))->m_ProcessInfoDlg->APUpdateWindowText(strNum);
 	}
 
 
@@ -189,7 +181,7 @@ namespace ArkProtect
 
 		if (EnumProcessModule() == FALSE)
 		{
-			m_Global->UpdateStatusBarDetail(L"Process Module Initialize failed");
+			((CProcessDlg*)(m_Global->m_ProcessDlg))->m_ProcessInfoDlg->APUpdateWindowText(L"Process Module Initialize failed");
 			return;
 		}
 
@@ -208,9 +200,6 @@ namespace ArkProtect
 		CListCtrl *ListCtrl = (CListCtrl*)lParam;
 
 		m_ProcessModule->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
-
-		m_ProcessModule->m_Global->UpdateStatusBarTip(L"Process Module");
-		m_ProcessModule->m_Global->UpdateStatusBarDetail(L"Process Module is loading now...");
 
 		m_ProcessModule->QueryProcessModule(ListCtrl);
 

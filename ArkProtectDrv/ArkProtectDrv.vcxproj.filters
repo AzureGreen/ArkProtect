@@ -54,9 +54,6 @@
     <ClInclude Include="ProcessWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ShadowSSDT.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ProcessMemory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -110,9 +107,6 @@
     <ClCompile Include="ProcessWindow.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ShadowSSDT.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ProcessMemory.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -138,6 +132,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sssdt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SssdtFuncName.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

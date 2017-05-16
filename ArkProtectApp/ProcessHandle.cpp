@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ProcessHandle.h"
 #include "Global.hpp"
-
+#include "ProcessDlg.h"
 
 namespace ArkProtect
 {
@@ -121,7 +121,6 @@ namespace ArkProtect
 	************************************************************************/
 	void CProcessHandle::InsertProcessHandleInfoList(CListCtrl *ListCtrl)
 	{
-		UINT32 ProcessHandleNum = 0;
 		size_t Size = m_ProcessHandleEntryVector.size();
 		for (size_t i = 0; i < Size; i++)
 		{
@@ -141,17 +140,11 @@ namespace ArkProtect
 			ListCtrl->SetItemText(iItem, phc_Object, strObject);
 			ListCtrl->SetItemText(iItem, phc_ReferenceCount, strReferenceCount);
 
-			ProcessHandleNum++;
-
-			CString strStatusContext;
-			strStatusContext.Format(L"Process Handle Info is loading now, Count:%d", ProcessHandleNum);
-
-			m_Global->UpdateStatusBarDetail(strStatusContext);
 		}
 
-		CString strStatusContext;
-		strStatusContext.Format(L"Process Handle Info load complete, Count:%d", Size);
-		m_Global->UpdateStatusBarDetail(strStatusContext);
+		CString strNum;
+		strNum.Format(L"%d", Size);
+		((CProcessDlg*)(m_Global->m_ProcessDlg))->m_ProcessInfoDlg->APUpdateWindowText(strNum);
 	}
 
 
@@ -168,7 +161,7 @@ namespace ArkProtect
 
 		if (EnumProcessHandle() == FALSE)
 		{
-			m_Global->UpdateStatusBarDetail(L"Process Handle Initialize failed");
+			((CProcessDlg*)(m_Global->m_ProcessDlg))->m_ProcessInfoDlg->APUpdateWindowText(L"Process Handle Initialize failed");
 			return;
 		}
 
@@ -188,9 +181,6 @@ namespace ArkProtect
 		CListCtrl *ListCtrl = (CListCtrl*)lParam;
 
 		m_ProcessHandle->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
-
-		m_ProcessHandle->m_Global->UpdateStatusBarTip(L"Process Module");
-		m_ProcessHandle->m_Global->UpdateStatusBarDetail(L"Process Module is loading now...");
 
 		m_ProcessHandle->QueryProcessHandle(ListCtrl);
 

@@ -39,6 +39,7 @@ protected:
 	afx_msg void OnProcessResume();
 	afx_msg void OnProcessProperty();
 	afx_msg void OnProcessLocation();
+	afx_msg void OnProcessExportInformation();
 	DECLARE_MESSAGE_MAP()
 public:
 	
@@ -52,6 +53,8 @@ public:
 	CImageList          m_ProcessIconList;   // 进程图标
 	CListCtrl           m_ProcessListCtrl;   // ListControl
 
+	CProcessInfoDlg     *m_ProcessInfoDlg = NULL;
+
 	ArkProtect::CGlobal *m_Global;
 	
 	BOOL                m_bSuspend = FALSE;
@@ -60,9 +63,6 @@ public:
 	static UINT32       m_SortColumn;
 	static BOOL         m_bSortOrder;  // 记录排序顺序
 	
-	
-	
-	afx_msg void OnProcessExportInformation();
 };
 
 

@@ -165,7 +165,7 @@ namespace ArkProtect
 
 		void UpdateStatusBarDetail(LPCWSTR wzBuffer)
 		{
-			::SendMessage(this->AppDlg->m_hWnd, sb_Tip, 0, (LPARAM)wzBuffer);
+			::SendMessage(this->AppDlg->m_hWnd, sb_Detail, 0, (LPARAM)wzBuffer);
 		}
 
 

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ProcessWindow.h"
 #include "Global.hpp"
+#include "ProcessDlg.h"
 
 namespace ArkProtect
 {
@@ -88,8 +89,6 @@ namespace ArkProtect
 		{
 			for (UINT32 i = 0; i < pwi->NumberOfWindows; i++)
 			{
-				// 完善进程信息结构
-				//PerfectProcessModuleInfo(&pwi->ModuleEntry[i]);
 				m_ProcessWindowEntryVector.push_back(pwi->WindowEntry[i]);
 			}
 			bOk = TRUE;
@@ -110,6 +109,55 @@ namespace ArkProtect
 	}
 
 
+	/************************************************************************
+	*  Name : InsertProcessWindowInfoList
+	*  Param: ListCtrl
+	*  Ret  : void
+	*  向ListControl里插入进程信息
+	************************************************************************/
+	void CProcessWindow::InsertProcessWindowInfoList(CListCtrl *ListCtrl)
+	{
+		size_t Size = m_ProcessWindowEntryVector.size();
+		for (size_t i = 0; i < Size; i++)
+		{
+			PROCESS_WINDOW_ENTRY_INFORMATION WindowEntry = m_ProcessWindowEntryVector[i];
+
+			CString strhWnd, strWindowsText, strClassName, strVisable, strProcessId, strThreadId;
+
+			WCHAR wzWindowsText[MAX_PATH] = { 0 };
+			WCHAR wzClassName[MAX_PATH] = { 0 };
+			
+			::GetWindowText(WindowEntry.hWnd, wzWindowsText, MAX_PATH);
+			::GetClassName(WindowEntry.hWnd, wzClassName, MAX_PATH);
+
+			strhWnd.Format(L"0x%08X", WindowEntry.hWnd); 
+			strWindowsText = wzWindowsText;
+			strClassName = wzClassName;
+			strProcessId.Format(L"%d", WindowEntry.ProcessId);
+			strThreadId.Format(L"%d", WindowEntry.ThreadId);
+			
+			if (::IsWindowVisible(WindowEntry.hWnd))
+			{
+				strVisable = L"可见";
+			}
+			else
+			{
+				strVisable = L"-";
+			}
+
+			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strhWnd);
+			ListCtrl->SetItemText(iItem, pwc_WindowText, strWindowsText);
+			ListCtrl->SetItemText(iItem, pwc_WindowClass, strClassName);
+			ListCtrl->SetItemText(iItem, pwc_WindowVisibal, strVisable);
+			ListCtrl->SetItemText(iItem, pwc_ProcessId, strProcessId);
+			ListCtrl->SetItemText(iItem, pwc_ThreadId, strThreadId);
+		}
+
+		CString strNum;
+		strNum.Format(L"%d", Size);
+		((CProcessDlg*)(m_Global->m_ProcessDlg))->m_ProcessInfoDlg->APUpdateWindowText(strNum);
+	}
+
 
 	/************************************************************************
 	*  Name : QueryProcessModule
@@ -124,11 +172,11 @@ namespace ArkProtect
 
 		if (EnumProcessWindow() == FALSE)
 		{
-			m_Global->UpdateStatusBarDetail(L"Process Window Initialize failed");
+			((CProcessDlg*)(m_Global->m_ProcessDlg))->m_ProcessInfoDlg->APUpdateWindowText(L"Process Window Initialize failed");
 			return;
 		}
 
-		//InsertProcessWindowInfoList(ListCtrl);
+		InsertProcessWindowInfoList(ListCtrl);
 	}
 
 
@@ -143,9 +191,6 @@ namespace ArkProtect
 		CListCtrl *ListCtrl = (CListCtrl*)lParam;
 
 		m_ProcessWindow->m_Global->m_bIsRequestNow = TRUE;      // 置TRUE，当驱动还没有返回前，阻止其他与驱动通信的操作
-
-		m_ProcessWindow->m_Global->UpdateStatusBarTip(L"Process Window");
-		m_ProcessWindow->m_Global->UpdateStatusBarDetail(L"Process Window is loading now...");
 
 		m_ProcessWindow->QueryProcessWindow(ListCtrl);
 

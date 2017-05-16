@@ -46,6 +46,9 @@ APEnumSssdtHook(OUT PVOID OutputBuffer, IN UINT32 OutputLength);
 NTSTATUS 
 APResumeSssdtHook(IN UINT32 Ordinal);
 
+UINT_PTR 
+APGetSssdtFunctionAddress(IN PCWCHAR wzFunctionName);
+
 #endif // !CXX_Sssdt_H
 
 
