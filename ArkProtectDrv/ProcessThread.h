@@ -5,6 +5,7 @@
 #include <ntstrsafe.h>
 #include "Private.h"
 #include "ProcessCore.h"
+#include "PspCidTable.h"
 
 
 typedef struct _PROCESS_THREAD_ENTRY_INFORMATION
@@ -37,9 +38,6 @@ APGetThreadStartAddress(IN PETHREAD EThread);
 
 VOID 
 APGetProcessThreadInfo(IN PETHREAD EThread, IN PEPROCESS EProcess, OUT PPROCESS_THREAD_INFORMATION pti, IN UINT32 ThreadCount);
-
-UINT_PTR
-APGetPspCidTableAddress();
 
 VOID
 APEnumProcessThreadByIterateFirstLevelHandleTable(IN UINT_PTR TableCode, IN PEPROCESS EProcess,

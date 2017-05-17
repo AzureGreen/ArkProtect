@@ -5,7 +5,9 @@
 #include "Private.h"
 #include "Imports.h"
 #include "NtStructs.h"
+#include "PspCidTable.h"
 #include "ProcessThread.h"
+
 
 
 #define MAX_PROCESS_COUNT  100000
@@ -47,6 +49,21 @@ APGetParentProcessId(IN PEPROCESS EProcess);
 
 NTSTATUS
 APGetProcessFullPath(IN PEPROCESS EProcess, OUT PWCHAR ProcessFullPath);
+
+VOID 
+APGetProcessInfo(IN PEPROCESS EProcess, OUT PPROCESS_INFORMATION pi, IN UINT32 ProcessCount);
+
+VOID 
+APEnumProcessInfoByIterateFirstLevelHandleTable(IN UINT_PTR TableCode, OUT PPROCESS_INFORMATION pi, IN UINT32 ProcessCount);
+
+VOID 
+APEnumProcessInfoByIterateSecondLevelHandleTable(IN UINT_PTR TableCode, OUT PPROCESS_INFORMATION pi, IN UINT32 ProcessCount);
+
+VOID
+APEnumProcessInfoByIterateThirdLevelHandleTable(IN UINT_PTR TableCode, OUT PPROCESS_INFORMATION pi, IN UINT32 ProcessCount);
+
+NTSTATUS 
+APEnumProcessInfoByIteratePspCidTable(OUT PPROCESS_INFORMATION pi, IN UINT32 ProcessCount);
 
 NTSTATUS
 APEnumProcessInfo(OUT PVOID OutputBuffer, IN UINT32 OutputLength);

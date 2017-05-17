@@ -81,6 +81,9 @@
     <ClInclude Include="Sssdt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PspCidTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -135,6 +138,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SssdtFuncName.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PspCidTable.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
