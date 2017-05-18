@@ -13,9 +13,11 @@
 
 4. Enumerate process's openning handles.
 
-5. Enumerate process's userspace memory.
+5. Enumerate process's openning windows.
 
-6. Terminate a process (by force).
+6. Enumerate process's userspace memory.
+
+7. Terminate a process (by force).
 
 ## driver module:
 

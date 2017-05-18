@@ -5,7 +5,6 @@
 #include "ArkProtectApp.h"
 #include "ProcessDlg.h"
 #include "afxdialogex.h"
-
 #include "ArkProtectAppDlg.h"
 
 // CProcessDlg 对话框
@@ -101,14 +100,8 @@ void CProcessDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 		m_ProcessListCtrl.MoveWindow(0, 0, m_Global->iResizeX, m_Global->iResizeY);
 
 		// 更新父窗口信息 CurrentChildDlg 并 禁用当前子窗口的button
-		((CArkProtectAppDlg*)(m_Global->AppDlg))->m_CurrentChildDlg = ArkProtect::cd_ProcessDialog;
-		((CArkProtectAppDlg*)(m_Global->AppDlg))->m_ProcessButton.EnableWindow(FALSE);
-
-		//// 加载进程信息列表
-		//CloseHandle(
-		//	CreateThread(NULL, 0,
-		//	(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::QueryProcessInfoCallback, &m_ProcessListCtrl, 0, NULL)
-		//);
+		((CArkProtectAppDlg*)m_Global->AppDlg)->m_CurrentChildDlg = ArkProtect::cd_ProcessDialog;
+		((CArkProtectAppDlg*)m_Global->AppDlg)->m_ProcessButton.EnableWindow(FALSE);
 
 		// 加载进程信息列表
 		APLoadProcessList();

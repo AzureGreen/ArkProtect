@@ -46,6 +46,9 @@ BEGIN_MESSAGE_MAP(CHookDlg, CDialogEx)
 	ON_COMMAND(ID_HOOK_PROPERTY, &CHookDlg::OnHookProperty)
 	ON_COMMAND(ID_HOOK_LOCATION, &CHookDlg::OnHookLocation)
 	ON_COMMAND(ID_HOOK_EXPORT_INFORMATION, &CHookDlg::OnHookExportInformation)
+	ON_UPDATE_COMMAND_UI(ID_HOOK_ONLY_SHOW_HOOKED, &CHookDlg::OnUpdateHookOnlyShowHooked)
+	ON_COMMAND(ID_HOOK_ONLY_SHOW_HOOKED, &CHookDlg::OnHookOnlyShowHooked)
+	ON_WM_INITMENUPOPUP()
 END_MESSAGE_MAP()
 
 
@@ -287,11 +290,68 @@ void CHookDlg::OnNMRClickHookListctrl(NMHDR *pNMHDR, LRESULT *pResult)
 		}
 
 		SubMenu->EnableMenuItem(ID_HOOK_FRESHEN, MF_BYCOMMAND | MF_ENABLED);
+		SubMenu->EnableMenuItem(ID_HOOK_ONLY_SHOW_HOOKED, MF_BYCOMMAND | MF_ENABLED);
+		SubMenu->EnableMenuItem(ID_HOOK_EXPORT_INFORMATION, MF_BYCOMMAND | MF_ENABLED);
 	}
 
 	SubMenu->TrackPopupMenu(TPM_LEFTALIGN, Pt.x, Pt.y, this);
 
 	*pResult = 0;
+}
+
+
+void CHookDlg::OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu)
+{
+	CDialogEx::OnInitMenuPopup(pPopupMenu, nIndex, bSysMenu);
+
+	// TODO: 在此处添加消息处理程序代码
+	if (!bSysMenu && pPopupMenu)
+	{
+		CCmdUI CmdUI;
+		CmdUI.m_pOther = NULL;
+		CmdUI.m_pMenu = pPopupMenu;
+		CmdUI.m_pSubMenu = NULL;
+
+		UINT nCount = pPopupMenu->GetMenuItemCount();
+		CmdUI.m_nIndexMax = nCount;
+		for (UINT i = 0; i < nCount; i++)
+		{
+			UINT nID = pPopupMenu->GetMenuItemID(i);
+			if (nID  == -1 || nID ==  0)
+			{
+				continue;
+			}
+			CmdUI.m_nID = nID;
+			CmdUI.m_nIndex = i;
+			CmdUI.DoUpdate(this, FALSE);
+		}
+	}
+}
+
+
+void CHookDlg::OnHookOnlyShowHooked()
+{
+	// TODO: 在此添加命令处理程序代码
+
+	m_bOnlyShowHooked = m_bOnlyShowHooked ? FALSE : TRUE;
+
+	// 重新加载一遍
+	OnHookFreshen();
+}
+
+
+void CHookDlg::OnUpdateHookOnlyShowHooked(CCmdUI *pCmdUI)
+{
+	// TODO: 在此添加命令更新用户界面处理程序代码
+	// 用于控制是否仅显示被挂钩项
+	if (m_bOnlyShowHooked)
+	{
+		pCmdUI->SetCheck(TRUE);
+	}
+	else
+	{
+		pCmdUI->SetCheck(FALSE);
+	}
 }
 
 
@@ -505,3 +565,11 @@ CString CHookDlg::APGetSelectedFilePath(int iItem)
 
 	return strFilePath;
 }
+
+
+
+
+
+
+
+

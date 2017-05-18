@@ -224,7 +224,7 @@ void CDriverDlg::OnDriverUnload()
 	// 加载进程信息列表
 	CloseHandle(
 		CreateThread(NULL, 0,
-		(LPTHREAD_START_ROUTINE)ArkProtect::CDriverCore::UnloadDriverInfoCallback, &m_DriverListCtrl, 0, NULL)
+		(LPTHREAD_START_ROUTINE)ArkProtect::CDriverCore::UnloadDriverCallback, &m_DriverListCtrl, 0, NULL)
 	);
 
 }

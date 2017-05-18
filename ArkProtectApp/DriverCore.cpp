@@ -365,12 +365,12 @@ namespace ArkProtect
 
 
 	/************************************************************************
-	*  Name : UnloadDriverInfoCallback
+	*  Name : UnloadDriverCallback
 	*  Param: lParam （ListCtrl）
 	*  Ret  : DWORD
 	*  查询进程信息的回调
 	************************************************************************/
-	DWORD CALLBACK CDriverCore::UnloadDriverInfoCallback(LPARAM lParam)
+	DWORD CALLBACK CDriverCore::UnloadDriverCallback(LPARAM lParam)
 	{
 		CListCtrl *ListCtrl = (CListCtrl*)lParam;
 

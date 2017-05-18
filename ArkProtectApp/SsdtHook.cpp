@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "SsdtHook.h"
 #include "Global.hpp"
+#include "HookDlg.h"
 
 namespace ArkProtect
 {
@@ -150,18 +151,36 @@ namespace ArkProtect
 				strStatus = L"-";
 			}
 
-			int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strOrdinal);
-			ListCtrl->SetItemText(iItem, shc_FunctionName, strFunctionName);
-			ListCtrl->SetItemText(iItem, shc_CurrentAddress, strCurrentAddress);
-			ListCtrl->SetItemText(iItem, shc_OriginalAddress, strOriginalAddress);
-			ListCtrl->SetItemText(iItem, shc_Status, strStatus);
-			ListCtrl->SetItemText(iItem, shc_FilePath, strFilePath);
-
-			if (SsdtHookEntry.bHooked)
+			// ÅÐ¶ÏÏÔÊ¾
+			if (((CHookDlg*)m_Global->m_HookDlg)->m_bOnlyShowHooked)
 			{
-				ListCtrl->SetItemData(iItem, TRUE);
-			}
+				if (SsdtHookEntry.bHooked)
+				{
+					int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strOrdinal);
+					ListCtrl->SetItemText(iItem, shc_FunctionName, strFunctionName);
+					ListCtrl->SetItemText(iItem, shc_CurrentAddress, strCurrentAddress);
+					ListCtrl->SetItemText(iItem, shc_OriginalAddress, strOriginalAddress);
+					ListCtrl->SetItemText(iItem, shc_Status, strStatus);
+					ListCtrl->SetItemText(iItem, shc_FilePath, strFilePath);
 
+					ListCtrl->SetItemData(iItem, TRUE);
+				}
+			}
+			else
+			{
+				int iItem = ListCtrl->InsertItem(ListCtrl->GetItemCount(), strOrdinal);
+				ListCtrl->SetItemText(iItem, shc_FunctionName, strFunctionName);
+				ListCtrl->SetItemText(iItem, shc_CurrentAddress, strCurrentAddress);
+				ListCtrl->SetItemText(iItem, shc_OriginalAddress, strOriginalAddress);
+				ListCtrl->SetItemText(iItem, shc_Status, strStatus);
+				ListCtrl->SetItemText(iItem, shc_FilePath, strFilePath);
+
+				if (SsdtHookEntry.bHooked)
+				{
+					ListCtrl->SetItemData(iItem, TRUE);
+				}
+			}
+			
 			SsdtFuncNum++;
 
 			CString strStatusContext;

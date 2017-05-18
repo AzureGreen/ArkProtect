@@ -58,7 +58,7 @@ namespace ArkProtect
 
 		static DWORD CALLBACK QueryDriverInfoCallback(LPARAM lParam);
 
-		static DWORD CALLBACK UnloadDriverInfoCallback(LPARAM lParam);
+		static DWORD CALLBACK UnloadDriverCallback(LPARAM lParam);
 
 		CString GetDriverPathByAddress(UINT_PTR Address);
 
