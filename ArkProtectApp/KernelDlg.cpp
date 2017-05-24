@@ -196,7 +196,6 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 		// 初始化ListCtrl
 		m_Global->SystemCallback().InitializeCallbackList(&m_KernelListCtrl);
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CSystemCallback::QuerySystemCallbackCallback, &m_KernelListCtrl, 0, NULL)
@@ -217,7 +216,6 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 		// 初始化ListCtrl
 		m_Global->FilterDriver().InitializeFilterDriverList(&m_KernelListCtrl);
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CFilterDriver::QueryFilterDriverCallback, &m_KernelListCtrl, 0, NULL)
@@ -238,7 +236,6 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 		// 初始化ListCtrl
 		m_Global->IoTimer().InitializeIoTimerList(&m_KernelListCtrl);
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CIoTimer::QueryIoTimerCallback, &m_KernelListCtrl, 0, NULL)
@@ -259,7 +256,6 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 		// 初始化ListCtrl
 		m_Global->DpcTimer().InitializeDpcTimerList(&m_KernelListCtrl);
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CDpcTimer::QueryDpcTimerCallback, &m_KernelListCtrl, 0, NULL)
@@ -282,7 +278,6 @@ void CKernelDlg::OnLbnSelchangeKernelListbox()
 
 		m_Global->ProcessCore().ProcessEntry()->ProcessId = 4;
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CProcessThread::QueryProcessThreadCallback, &m_KernelListCtrl, 0, NULL)

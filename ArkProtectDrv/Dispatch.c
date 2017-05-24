@@ -534,6 +534,39 @@ APIoControlPassThrough(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 			break;
 		}
 
+		// 
+		// File
+		// 
+
+		case IOCTL_ARKPROTECT_DELETEFILE:
+		{
+			DbgPrint("Delete File\r\n");
+
+			if (InputLength >= sizeof(UINT32) && InputBuffer)
+			{
+				__try
+				{
+					ProbeForRead(InputBuffer, InputLength, sizeof(UINT8));
+
+					Status = APDeleteFile(InputBuffer);
+
+					Irp->IoStatus.Status = Status;
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					DbgPrint("Catch Exception\r\n");
+					Status = STATUS_UNSUCCESSFUL;
+				}
+			}
+			else
+			{
+				Irp->IoStatus.Status = STATUS_INFO_LENGTH_MISMATCH;
+			}
+
+			break;
+		}
+
+
 		default:
 			Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
 			break;

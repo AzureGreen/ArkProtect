@@ -73,6 +73,9 @@
     <Filter Include="KernelHook\SssdtHook">
       <UniqueIdentifier>{fc42dc4b-f5b0-4ec3-a0da-f65dc2c3da9f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FileCore">
+      <UniqueIdentifier>{f01e70c6-c338-4fa0-bbff-d1e4e355695d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -165,6 +168,9 @@
     <ClInclude Include="NtStructs.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="FileCore.h">
+      <Filter>FileCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessCore.cpp">
@@ -238,6 +244,9 @@
     </ClCompile>
     <ClCompile Include="SssdtHook.cpp">
       <Filter>KernelHook\SssdtHook</Filter>
+    </ClCompile>
+    <ClCompile Include="FileCore.cpp">
+      <Filter>FileCore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

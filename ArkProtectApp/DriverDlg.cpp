@@ -203,7 +203,19 @@ void CDriverDlg::OnDriverDelete()
 {
 	// TODO: 在此添加命令处理程序代码
 	// 删除文件
+	POSITION Pos = m_DriverListCtrl.GetFirstSelectedItemPosition();
 
+	while (Pos)
+	{
+		int iItem = m_DriverListCtrl.GetNextSelectedItem(Pos);
+
+		m_strFilePath = m_DriverListCtrl.GetItemText(iItem, ArkProtect::dc_DriverPath);
+
+		CloseHandle(
+			CreateThread(NULL, 0,
+			(LPTHREAD_START_ROUTINE)ArkProtect::CFileCore::DeleteFileCallback, &m_strFilePath, 0, NULL)
+		);
+	}
 }
 
 
@@ -221,7 +233,6 @@ void CDriverDlg::OnDriverUnload()
 		return;
 	}
 
-	// 加载进程信息列表
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CDriverCore::UnloadDriverCallback, &m_DriverListCtrl, 0, NULL)
@@ -302,7 +313,6 @@ void CDriverDlg::APLoadDriverList()
 
 	m_DriverListCtrl.SetSelectedColumn(-1);
 
-	// 加载进程信息列表
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CDriverCore::QueryDriverInfoCallback, &m_DriverListCtrl, 0, NULL)

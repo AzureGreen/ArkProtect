@@ -39,16 +39,17 @@ BEGIN_MESSAGE_MAP(CHookDlg, CDialogEx)
 	ON_LBN_SELCHANGE(IDC_HOOK_LISTBOX, &CHookDlg::OnLbnSelchangeHookListbox)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_HOOK_LISTCTRL, &CHookDlg::OnNMCustomdrawHookListctrl)
 	ON_NOTIFY(NM_RCLICK, IDC_HOOK_LISTCTRL, &CHookDlg::OnNMRClickHookListctrl)
-
+	ON_WM_INITMENUPOPUP()
+	ON_COMMAND(ID_HOOK_ONLY_SHOW_HOOKED, &CHookDlg::OnHookOnlyShowHooked)
+	ON_UPDATE_COMMAND_UI(ID_HOOK_ONLY_SHOW_HOOKED, &CHookDlg::OnUpdateHookOnlyShowHooked)
 	ON_COMMAND(ID_HOOK_FRESHEN, &CHookDlg::OnHookFreshen)
 	ON_COMMAND(ID_HOOK_RESUME, &CHookDlg::OnHookResume)
 	ON_COMMAND(ID_HOOK_RESUME_ALL, &CHookDlg::OnHookResumeAll)
 	ON_COMMAND(ID_HOOK_PROPERTY, &CHookDlg::OnHookProperty)
 	ON_COMMAND(ID_HOOK_LOCATION, &CHookDlg::OnHookLocation)
 	ON_COMMAND(ID_HOOK_EXPORT_INFORMATION, &CHookDlg::OnHookExportInformation)
-	ON_UPDATE_COMMAND_UI(ID_HOOK_ONLY_SHOW_HOOKED, &CHookDlg::OnUpdateHookOnlyShowHooked)
-	ON_COMMAND(ID_HOOK_ONLY_SHOW_HOOKED, &CHookDlg::OnHookOnlyShowHooked)
-	ON_WM_INITMENUPOPUP()
+	
+	
 END_MESSAGE_MAP()
 
 
@@ -188,7 +189,6 @@ void CHookDlg::OnLbnSelchangeHookListbox()
 		// 初始化ListCtrl
 		m_Global->SsdtHook().InitializeSsdtList(&m_HookListCtrl);
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CSsdtHook::QuerySsdtHookCallback, &m_HookListCtrl, 0, NULL)
@@ -211,7 +211,6 @@ void CHookDlg::OnLbnSelchangeHookListbox()
 		// 初始化ListCtrl
 		m_Global->SssdtHook().InitializeSssdtList(&m_HookListCtrl);
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CSssdtHook::QuerySssdtHookCallback, &m_HookListCtrl, 0, NULL)
@@ -344,14 +343,7 @@ void CHookDlg::OnUpdateHookOnlyShowHooked(CCmdUI *pCmdUI)
 {
 	// TODO: 在此添加命令更新用户界面处理程序代码
 	// 用于控制是否仅显示被挂钩项
-	if (m_bOnlyShowHooked)
-	{
-		pCmdUI->SetCheck(TRUE);
-	}
-	else
-	{
-		pCmdUI->SetCheck(FALSE);
-	}
+	pCmdUI->SetCheck(m_bOnlyShowHooked);
 }
 
 
@@ -401,7 +393,6 @@ void CHookDlg::OnHookResume()
 			return;
 		}
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CSsdtHook::ResumeSsdtHookCallback, &m_HookListCtrl, 0, NULL)
@@ -416,7 +407,6 @@ void CHookDlg::OnHookResume()
 			return;
 		}
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CSssdtHook::ResumeSssdtHookCallback, &m_HookListCtrl, 0, NULL)
@@ -446,7 +436,6 @@ void CHookDlg::OnHookResumeAll()
 			return;
 		}
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CSsdtHook::ResumeAllSsdtHookCallback, &m_HookListCtrl, 0, NULL)
@@ -461,7 +450,6 @@ void CHookDlg::OnHookResumeAll()
 			return;
 		}
 
-		// 加载进程信息列表
 		CloseHandle(
 			CreateThread(NULL, 0,
 			(LPTHREAD_START_ROUTINE)ArkProtect::CSssdtHook::ResumeAllSssdtHookCallback, &m_HookListCtrl, 0, NULL)

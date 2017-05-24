@@ -6,6 +6,7 @@
 #include "ProcessDlg.h"
 #include "afxdialogex.h"
 #include "ArkProtectAppDlg.h"
+#include "FileCore.h"
 
 // CProcessDlg 对话框
 
@@ -42,6 +43,9 @@ BEGIN_MESSAGE_MAP(CProcessDlg, CDialogEx)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_PROCESS_LIST, &CProcessDlg::OnNMCustomdrawProcessList)
 	ON_NOTIFY(LVN_COLUMNCLICK, IDC_PROCESS_LIST, &CProcessDlg::OnLvnColumnclickProcessList)
 	ON_NOTIFY(NM_RCLICK, IDC_PROCESS_LIST, &CProcessDlg::OnNMRClickProcessList)
+	ON_WM_INITMENUPOPUP()
+	ON_COMMAND(ID_PROCESS_DELETE, &CProcessDlg::OnProcessDelete)
+	ON_UPDATE_COMMAND_UI(ID_PROCESS_DELETE, &CProcessDlg::OnUpdateProcessDelete)
 	ON_COMMAND(ID_PROCESS_FRESHEN, &CProcessDlg::OnProcessFreshen)
 	ON_COMMAND(ID_PROCESS_MODULE, &CProcessDlg::OnProcessModule)
 	ON_COMMAND(ID_PROCESS_THREAD, &CProcessDlg::OnProcessThread)
@@ -177,7 +181,7 @@ void CProcessDlg::OnLvnColumnclickProcessList(NMHDR *pNMHDR, LRESULT *pResult)
 	{
 		if (_wcsnicmp(m_ProcessListCtrl.GetItemText(i, ArkProtect::pc_Company),
 			L"Microsoft Corporation",
-			wcslen(L"Microsoft Corporation")) == 0)
+			wcslen(L"Microsoft Corporation")) != 0)
 		{
 			m_ProcessListCtrl.SetItemData(i, TRUE);
 		}
@@ -216,6 +220,49 @@ void CProcessDlg::OnNMRClickProcessList(NMHDR *pNMHDR, LRESULT *pResult)
 	SubMenu->TrackPopupMenu(TPM_LEFTALIGN, Pt.x, Pt.y, this);
 
 	*pResult = 0;
+}
+
+
+void CProcessDlg::OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu)
+{
+	CDialogEx::OnInitMenuPopup(pPopupMenu, nIndex, bSysMenu);
+
+	// TODO: 在此处添加消息处理程序代码
+	if (!bSysMenu && pPopupMenu)
+	{
+		CCmdUI CmdUI;
+		CmdUI.m_pOther = NULL;
+		CmdUI.m_pMenu = pPopupMenu;
+		CmdUI.m_pSubMenu = NULL;
+
+		UINT nCount = pPopupMenu->GetMenuItemCount();
+		CmdUI.m_nIndexMax = nCount;
+		for (UINT i = 0; i < nCount; i++)
+		{
+			UINT nID = pPopupMenu->GetMenuItemID(i);
+			if (nID == -1 || nID == 0)
+			{
+				continue;
+			}
+			CmdUI.m_nID = nID;
+			CmdUI.m_nIndex = i;
+			CmdUI.DoUpdate(this, FALSE);
+		}
+	}
+}
+
+
+void CProcessDlg::OnProcessDelete()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_bDeleteFile = m_bDeleteFile ? FALSE : TRUE;
+}
+
+
+void CProcessDlg::OnUpdateProcessDelete(CCmdUI *pCmdUI)
+{
+	// TODO: 在此添加命令更新用户界面处理程序代码
+	pCmdUI->SetCheck(m_bDeleteFile);
 }
 
 
@@ -279,11 +326,18 @@ void CProcessDlg::OnProcessTerminate()
 		return;
 	}
 
-	// 加载进程信息列表
-	CloseHandle(
-		CreateThread(NULL, 0,
-		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::TerminateProcessCallback, &m_ProcessListCtrl, 0, NULL)
-	);
+	// 结束进程
+	HANDLE ThreadHandle = CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::TerminateProcessCallback, &m_ProcessListCtrl, 0, NULL);
+
+	// 阻塞操作，等待进程的结束
+	WaitForSingleObject(ThreadHandle, INFINITY);
+	
+	// 判断是否要删除文件
+	if (m_bDeleteFile)
+	{
+		APDeleteFile();
+	}
 }
 
 
@@ -296,11 +350,18 @@ void CProcessDlg::OnProcessForceTerminate()
 		return;
 	}
 
-	// 加载进程信息列表
-	CloseHandle(
-		CreateThread(NULL, 0,
-		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::ForceTerminateProcessCallback, &m_ProcessListCtrl, 0, NULL)
-	);
+	// 暴力结束进程
+	HANDLE ThreadHandle = CreateThread(NULL, 0,
+		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessCore::ForceTerminateProcessCallback, &m_ProcessListCtrl, 0, NULL);
+
+	// 阻塞操作，等待进程的结束
+	WaitForSingleObject(ThreadHandle, INFINITE);
+	
+	// 判断是否要删除文件
+	if (m_bDeleteFile)
+	{
+		APDeleteFile();
+	}
 }
 
 
@@ -437,6 +498,30 @@ void CProcessDlg::APLoadProcessList()
 
 
 /************************************************************************
+*  Name : APDeleteFile
+*  Param: void
+*  Ret  : void
+*  删除文件
+************************************************************************/
+void CProcessDlg::APDeleteFile()
+{
+	POSITION Pos = m_ProcessListCtrl.GetFirstSelectedItemPosition();
+
+	while (Pos)
+	{
+		int iItem = m_ProcessListCtrl.GetNextSelectedItem(Pos);
+
+		m_strFilePath = m_ProcessListCtrl.GetItemText(iItem, ArkProtect::pc_FilePath);
+
+		CloseHandle(
+			CreateThread(NULL, 0,
+			(LPTHREAD_START_ROUTINE)ArkProtect::CFileCore::DeleteFileCallback, &m_strFilePath, 0, NULL)
+		);
+	}
+}
+
+
+/************************************************************************
 *  Name : APInitializeProcessInfoDlg
 *  Param: ProcessInfoKind            想要打开的进程信息类型
 *  Ret  : void
@@ -560,11 +645,4 @@ int CALLBACK APProcessListCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPa
 
 	return 0;
 }
-
-
-
-
-
-
-
 

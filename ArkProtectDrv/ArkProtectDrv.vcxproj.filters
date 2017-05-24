@@ -84,6 +84,9 @@
     <ClInclude Include="PspCidTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FileCore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -141,6 +144,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PspCidTable.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileCore.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

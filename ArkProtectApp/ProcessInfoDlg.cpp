@@ -193,7 +193,6 @@ void CProcessInfoDlg::APLoadProcessModuleList()
 
 	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
 
-	// 加载进程信息列表
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessModule::QueryProcessModuleCallback, &m_ProcessInfoListCtrl, 0, NULL)
@@ -230,7 +229,6 @@ void CProcessInfoDlg::APLoadProcessThreadList()
 
 	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
 
-	// 加载进程信息列表
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessThread::QueryProcessThreadCallback, &m_ProcessInfoListCtrl, 0, NULL)
@@ -267,7 +265,6 @@ void CProcessInfoDlg::APLoadProcessHandleList()
 
 	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
 
-	// 加载进程信息列表
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessHandle::QueryProcessHandleCallback, &m_ProcessInfoListCtrl, 0, NULL)
@@ -304,7 +301,6 @@ void CProcessInfoDlg::APLoadProcessWindowList()
 
 	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
 
-	// 加载进程信息列表
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessWindow::QueryProcessWindowCallback, &m_ProcessInfoListCtrl, 0, NULL)
@@ -341,7 +337,6 @@ void CProcessInfoDlg::APLoadProcessMemoryList()
 
 	m_ProcessInfoListCtrl.SetSelectedColumn(-1);
 
-	// 加载进程信息列表
 	CloseHandle(
 		CreateThread(NULL, 0,
 		(LPTHREAD_START_ROUTINE)ArkProtect::CProcessMemory::QueryProcessMemoryCallback, &m_ProcessInfoListCtrl, 0, NULL)

@@ -28,6 +28,8 @@ protected:
 	afx_msg void OnNMCustomdrawHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickHookListctrl(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnUpdateHookOnlyShowHooked(CCmdUI *pCmdUI);
+	afx_msg void OnHookOnlyShowHooked();
+	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
 	afx_msg void OnHookFreshen();
 	afx_msg void OnHookResume();
 	afx_msg void OnHookResumeAll();
@@ -50,6 +52,5 @@ public:
 	int                  m_iCurSel = 65535;
 	BOOL                 m_bOnlyShowHooked = TRUE;
 
-	afx_msg void OnHookOnlyShowHooked();
-	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
+	
 };

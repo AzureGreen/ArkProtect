@@ -17,7 +17,7 @@
 #include "DpcTimer.h"
 #include "SsdtHook.h"
 #include "SssdtHook.h"
-
+#include "FileCore.h"
 #include "RegistryCore.h"
 
 #pragma comment(lib, "Version.lib")      // GetFileVersionInfo 需要链接此库
@@ -44,6 +44,7 @@ namespace ArkProtect
 		, m_DpcTimer(this)
 		, m_SsdtHook(this)
 		, m_SssdtHook(this)
+		, m_FileCore(this)
 		{};
 		~CGlobal() {};
 
@@ -500,6 +501,7 @@ namespace ArkProtect
 		inline CDpcTimer&        DpcTimer()      { return m_DpcTimer; }
 		inline CSsdtHook&        SsdtHook()      { return m_SsdtHook; }
 		inline CSssdtHook&       SssdtHook()     { return m_SssdtHook; }
+		inline CFileCore&        FileCore()      { return m_FileCore; }
 
 		inline CRegistryCore&    RegistryCore()  { return m_RegistryCore; }
 
@@ -555,6 +557,11 @@ namespace ArkProtect
 		//
 		CSsdtHook          m_SsdtHook;
 		CSssdtHook         m_SssdtHook;
+
+		//
+		// 文件相关
+		//
+		CFileCore          m_FileCore;
 
 		//
 		// 注册表相关

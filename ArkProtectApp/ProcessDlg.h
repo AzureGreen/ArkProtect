@@ -27,6 +27,9 @@ protected:
 	afx_msg void OnNMCustomdrawProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnLvnColumnclickProcessList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickProcessList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnInitMenuPopup(CMenu* pPopupMenu, UINT nIndex, BOOL bSysMenu);
+	afx_msg void OnProcessDelete();
+	afx_msg void OnUpdateProcessDelete(CCmdUI *pCmdUI);
 	afx_msg void OnProcessFreshen();
 	afx_msg void OnProcessModule();
 	afx_msg void OnProcessThread();
@@ -47,6 +50,8 @@ public:
 
 	void APLoadProcessList();
 
+	void APDeleteFile();
+
 	void APInitializeProcessInfoDlg(ArkProtect::eProcessInfoKind ProcessInfoKind);
 
 
@@ -57,6 +62,9 @@ public:
 
 	ArkProtect::CGlobal *m_Global;
 	
+	BOOL                m_bDeleteFile = FALSE;
+	CString             m_strFilePath;
+
 	BOOL                m_bSuspend = FALSE;
 	HANDLE              m_SuspendThreadHandle = NULL;
 

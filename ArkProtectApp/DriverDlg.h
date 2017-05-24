@@ -39,10 +39,12 @@ public:
 	void APLoadDriverList();
 
 
-	CImageList m_DriverIconList;   // 进程图标
-	CListCtrl  m_DriverListCtrl;
+	CImageList          m_DriverIconList;   // 进程图标
+	CListCtrl           m_DriverListCtrl;
 
-	ArkProtect::CGlobal      *m_Global;
+	CString             m_strFilePath;
+
+	ArkProtect::CGlobal *m_Global;
 	
 	
 
