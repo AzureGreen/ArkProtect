@@ -256,17 +256,20 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\about.bmp" />
+    <Image Include="res\app.ico" />
     <Image Include="res\ArkProtectApp.ico" />
     <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bitmap2.bmp" />
     <Image Include="res\driver.bmp" />
     <Image Include="res\hook.bmp" />
+    <Image Include="res\icon.ico" />
     <Image Include="res\icon1.ico" />
     <Image Include="res\kernel.bmp" />
     <Image Include="res\process.bmp" />
     <Image Include="res\registry.bmp" />
     <Image Include="res\Registry\Icon\CloseDir.ico" />
     <Image Include="res\Registry\Icon\Computer.ico" />
+    <Image Include="res\registry\icon\icon1.ico" />
     <Image Include="res\Registry\Icon\OpenDir.ico" />
     <Image Include="res\Registry\Icon\REG_DWORD.ico" />
     <Image Include="res\Registry\Icon\REG_SZ.ico" />

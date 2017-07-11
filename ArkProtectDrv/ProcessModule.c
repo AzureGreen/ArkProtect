@@ -46,7 +46,7 @@ APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MO
 
 	KeStackAttachProcess(EProcess, &ApcState);     // attach到目标进程内,因为要访问的是用户空间地址
 
-	Status = ObOpenObjectByPointer(EProcess, 
+	Status = ObOpenObjectByPointer(EProcess,
 		OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
 		NULL,
 		GENERIC_ALL,
@@ -55,108 +55,119 @@ APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MO
 		&ProcessHandle);
 	if (NT_SUCCESS(Status))
 	{
-		MEMORY_BASIC_INFORMATION mbi = { 0 };
-		PMEMORY_SECTION_NAME msn = (PMEMORY_SECTION_NAME)ExAllocatePool(NonPagedPool, MAX_PATH * sizeof(WCHAR));
-		if (msn)
+		UINT_PTR BaseAddress = 0;
+
+#ifdef _WIN64
+
+		// 处理Wow64程序
+		if (PsGetProcessWow64Process(EProcess))
 		{
-			RtlZeroMemory(msn, MAX_PATH * sizeof(WCHAR));
+			g_DynamicData.MaxUserSpaceAddress = 0x7FFFFFFF;
+		}
 
-			__try
+#endif // _WIN64
+
+		while (BaseAddress < g_DynamicData.MaxUserSpaceAddress)
+		{
+			MEMORY_BASIC_INFORMATION  mbi = { 0 };
+			SIZE_T					  ReturnLength = 0;
+
+			BOOLEAN                   bAlreadyHave = TRUE;    // 是否已经被查询过
+
+			MEMORY_SECTION_NAME       msn[MAX_PATH * sizeof(WCHAR)] = { 0 };   // 模块dos路径
+			WCHAR                     wzNtFullPath[MAX_PATH] = { 0 };          // 接收nt路径
+
+			Status = ZwQueryVirtualMemory(ProcessHandle, (PVOID)BaseAddress, MemoryBasicInformation,
+				&mbi, sizeof(MEMORY_BASIC_INFORMATION), &ReturnLength);
+			// 判断类型，若是Image则查询SectionName
+			if (!NT_SUCCESS(Status))
 			{
-				for (SIZE_T BaseAddress = 0; BaseAddress <= (SIZE_T)g_DynamicData.MaxUserSpaceAddress; BaseAddress += 0x10000)
+				BaseAddress += PAGE_SIZE;
+				continue;
+			}
+			else if (mbi.Type != MEM_IMAGE)
+			{
+				BaseAddress += mbi.RegionSize;
+				continue;
+			}
+
+			Status = ZwQueryVirtualMemory(ProcessHandle, (PVOID)BaseAddress, MemorySectionName,
+				(PVOID)msn, MAX_PATH * sizeof(WCHAR), &ReturnLength);
+			if (!NT_SUCCESS(Status))
+			{
+				BaseAddress += mbi.RegionSize;
+				continue;
+			}
+
+			// 获得模块Nt名称
+			APDosPathToNtPath(msn->NameBuffer, wzNtFullPath);
+
+			// 因为同一个DLL会重复多次，判断与上次插入的是否想同
+			if (pmi->NumberOfModules == 0)  // First Time
+			{
+				bAlreadyHave = FALSE;
+			}
+			else
+			{
+				bAlreadyHave = (_wcsicmp(pmi->ModuleEntry[pmi->NumberOfModules - 1].wzFilePath, wzNtFullPath) == 0) ? TRUE : FALSE;
+			}
+
+			if (bAlreadyHave == FALSE)
+			{
+				if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
 				{
-					SIZE_T ReturnLength = 0;
+					SIZE_T TravelAddress = 0;
 
-					Status = ZwQueryVirtualMemory(ProcessHandle,
-						(PVOID)BaseAddress,
-						MemoryBasicInformation,
-						(PVOID)&mbi,
-						sizeof(MEMORY_BASIC_INFORMATION),
-						&ReturnLength);
-					// 判断类型，若是Image则查询SectionName
-					if (NT_SUCCESS(Status) && mbi.Type == MEM_IMAGE)
+					RtlCopyMemory(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, wzNtFullPath, wcslen(wzNtFullPath) * 2);
+
+					// 模块基地址
+					pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)mbi.BaseAddress;
+
+					// 获得模块大小
+					for (TravelAddress = BaseAddress; TravelAddress <= g_DynamicData.MaxUserSpaceAddress; TravelAddress += mbi.RegionSize)
 					{
-						Status = ZwQueryVirtualMemory(ProcessHandle,
-							(PVOID)BaseAddress,
-							MemorySectionName,
-							(PVOID)msn,
-							MAX_PATH * sizeof(WCHAR),
-							&ReturnLength);
-						if (NT_SUCCESS(Status))
+						Status = ZwQueryVirtualMemory(ProcessHandle, (PVOID)TravelAddress, MemoryBasicInformation,
+							(PVOID)&mbi, sizeof(MEMORY_BASIC_INFORMATION), &ReturnLength);
+						if (NT_SUCCESS(Status) && mbi.Type != MEM_IMAGE)
 						{
-							BOOLEAN bAlreadyHave = TRUE;
-							// 获得模块Nt名称
-							WCHAR  wzNtFullPath[MAX_PATH] = { 0 };
-
-							APDosPathToNtPath(msn->NameBuffer, wzNtFullPath);
-
-							// 因为同一个DLL会重复多次，判断与上次插入的是否想同
-							if (pmi->NumberOfModules == 0)  // First Time
-							{
-								bAlreadyHave = FALSE;
-							}
-							else
-							{
-								bAlreadyHave = (_wcsicmp(pmi->ModuleEntry[pmi->NumberOfModules - 1].wzFilePath, wzNtFullPath) == 0) ? TRUE : FALSE;
-							}
-
-							if (bAlreadyHave == FALSE) 
-							{
-								if (!APIsProcessModuleInList((UINT_PTR)mbi.BaseAddress, (UINT32)mbi.RegionSize, pmi, ModuleCount))
-								{
-									if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
-									{		
-										SIZE_T TravelAddress = 0;
-
-										RtlStringCchCopyW(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, wcslen(wzNtFullPath) + 1, wzNtFullPath);
-
-										// 模块基地址
-										pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)mbi.BaseAddress;
-
-										// 获得模块大小
-										for (SIZE_T TravelAddress = BaseAddress; TravelAddress <= (SIZE_T)g_DynamicData.MaxUserSpaceAddress; TravelAddress += mbi.RegionSize)
-										{
-											Status = ZwQueryVirtualMemory(ProcessHandle,
-												(PVOID)TravelAddress,
-												MemoryBasicInformation,
-												(PVOID)&mbi,
-												sizeof(MEMORY_BASIC_INFORMATION),
-												&ReturnLength);
-											if (NT_SUCCESS(Status) && mbi.Type != MEM_IMAGE)
-											{
-												break;
-											}
-										}
-
-										pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = TravelAddress - BaseAddress;
-									}
-									pmi->NumberOfModules++;
-								}
-							}
+							break;
 						}
 					}
-				}
 
-				// 枚举到了东西
-				if (pmi->NumberOfModules)
-				{
-					Status = STATUS_SUCCESS;
+					pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = TravelAddress - BaseAddress;
+
+					BaseAddress = TravelAddress;   // 直接更新搜索基地址
 				}
+				pmi->NumberOfModules++;
 			}
-			__except (EXCEPTION_EXECUTE_HANDLER)
+			else
 			{
-				DbgPrint("Catch Exception\r\n");
-				Status = STATUS_UNSUCCESSFUL;
+				BaseAddress += mbi.RegionSize;
+				continue;
 			}
 		}
+
+		// 枚举到了东西
+		if (pmi->NumberOfModules)
+		{
+			Status = STATUS_SUCCESS;
+		}
+
 		ZwClose(ProcessHandle);
+
+#ifdef _WIN64
+
+		if (PsGetProcessWow64Process(EProcess))
+		{
+			g_DynamicData.MaxUserSpaceAddress = 0x000007FFFFFFFFFF;
+		}
+
+#endif // _WIN64
+
 	}
-
 	KeUnstackDetachProcess(&ApcState);
-
 	return Status;
 }
-
 
 /************************************************************************
 *  Name : APEnumProcessModuleByPeb
@@ -169,13 +180,11 @@ APEnumProcessModuleByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_MO
 NTSTATUS
 APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION pmi, IN UINT32 ModuleCount)
 {
-	BOOLEAN bAttach = FALSE;
 	KAPC_STATE ApcState;
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 	PPEB Peb = NULL;
 
 	KeStackAttachProcess(EProcess, &ApcState);     // attach到目标进程内,因为要访问的是用户空间地址
-	bAttach = TRUE;
 
 	__try
 	{
@@ -187,100 +196,95 @@ APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION 
 		if (PsGetProcessWow64Process(EProcess))	
 		{
 			PPEB32 Peb32 = (PPEB32)PsGetProcessWow64Process(EProcess);
-			if (Peb32 == NULL)
+			if (Peb32)
 			{
-				return Status;
-			}
-
-			for (INT i = 0; !Peb32->Ldr && i < 10; i++)
-			{
-				// Sleep 等待加载
-				KeDelayExecutionThread(KernelMode, TRUE, &Interval);
-			}
-
-			if (Peb32->Ldr)
-			{
-				ProbeForRead((PVOID)Peb32->Ldr, sizeof(UINT32), sizeof(UINT8));
-
-				// Travel InLoadOrderModuleList
-				for (PLIST_ENTRY32 TravelListEntry = (PLIST_ENTRY32)((PPEB_LDR_DATA32)Peb32->Ldr)->InLoadOrderModuleList.Flink;
-					TravelListEntry != &((PPEB_LDR_DATA32)Peb32->Ldr)->InLoadOrderModuleList;
-					TravelListEntry = (PLIST_ENTRY32)TravelListEntry->Flink)
+				for (INT i = 0; !Peb32->Ldr && i < 10; i++)
 				{
-					PLDR_DATA_TABLE_ENTRY32 LdrDataTableEntry32 = NULL;
-					LdrDataTableEntry32 = CONTAINING_RECORD(TravelListEntry, LDR_DATA_TABLE_ENTRY32, InLoadOrderLinks);
+					// Sleep 等待加载
+					KeDelayExecutionThread(KernelMode, TRUE, &Interval);
+				}
 
-					if ((PUINT8)LdrDataTableEntry32 > 0 && MmIsAddressValid(LdrDataTableEntry32))
+				if (Peb32->Ldr)
+				{
+					ProbeForRead((PVOID)Peb32->Ldr, sizeof(UINT32), sizeof(UINT8));
+
+					// Travel InLoadOrderModuleList
+					for (PLIST_ENTRY32 TravelListEntry = (PLIST_ENTRY32)((PPEB_LDR_DATA32)Peb32->Ldr)->InLoadOrderModuleList.Flink;
+						TravelListEntry != &((PPEB_LDR_DATA32)Peb32->Ldr)->InLoadOrderModuleList;
+						TravelListEntry = (PLIST_ENTRY32)TravelListEntry->Flink)
 					{
-						// 插入
-						if (!APIsProcessModuleInList((UINT_PTR)LdrDataTableEntry32->DllBase, LdrDataTableEntry32->SizeOfImage, pmi, ModuleCount))
+						PLDR_DATA_TABLE_ENTRY32 LdrDataTableEntry32 = NULL;
+						LdrDataTableEntry32 = CONTAINING_RECORD(TravelListEntry, LDR_DATA_TABLE_ENTRY32, InLoadOrderLinks);
+
+						if ((PUINT8)LdrDataTableEntry32 > 0 && MmIsAddressValid(LdrDataTableEntry32))
 						{
-							if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
+							// 插入
+							if (!APIsProcessModuleInList((UINT_PTR)LdrDataTableEntry32->DllBase, LdrDataTableEntry32->SizeOfImage, pmi, ModuleCount))
 							{
-								pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)LdrDataTableEntry32->DllBase;
-								pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = LdrDataTableEntry32->SizeOfImage;
-								RtlStringCchCopyW(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, LdrDataTableEntry32->FullDllName.Length, (LPCWSTR)LdrDataTableEntry32->FullDllName.Buffer);
+								if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
+								{
+									pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)LdrDataTableEntry32->DllBase;
+									pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = LdrDataTableEntry32->SizeOfImage;
+									RtlStringCchCopyW(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, LdrDataTableEntry32->FullDllName.Length, (LPCWSTR)LdrDataTableEntry32->FullDllName.Buffer);
+								}
+								pmi->NumberOfModules++;
 							}
-							pmi->NumberOfModules++;
 						}
 					}
-				}
-				// 枚举到了东西
-				if (pmi->NumberOfModules)
-				{
-					Status = STATUS_SUCCESS;
+					// 枚举到了东西
+					if (pmi->NumberOfModules)
+					{
+						Status = STATUS_SUCCESS;
+					}
 				}
 			}
 		}
 
 #endif // _WIN64
 
-		
 		// Native process
 		Peb = PsGetProcessPeb(EProcess);
-		if (Peb == NULL)
+		if (Peb)
 		{
-			return Status;
-		}
-
-		for (INT i = 0; Peb->Ldr == 0 && i < 10; i++)
-		{
-			// Sleep 等待加载
-			KeDelayExecutionThread(KernelMode, TRUE, &Interval);
-		}
-
-		if (Peb->Ldr > 0)
-		{
-			// 因为peb是用户层数据，可能无法访问
-			ProbeForRead((PVOID)Peb->Ldr, sizeof(PVOID), sizeof(UINT8));
-
-			for (PLIST_ENTRY TravelListEntry = Peb->Ldr->InLoadOrderModuleList.Flink;
-				TravelListEntry != &Peb->Ldr->InLoadOrderModuleList;
-				TravelListEntry = (PLIST_ENTRY)TravelListEntry->Flink)
+			for (INT i = 0; Peb->Ldr == 0 && i < 10; i++)
 			{
-				PLDR_DATA_TABLE_ENTRY LdrDataTableEntry = NULL;
-				LdrDataTableEntry = CONTAINING_RECORD(TravelListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-				if ((PUINT8)LdrDataTableEntry > 0 && MmIsAddressValid(LdrDataTableEntry))
-				{
-					// 插入
-					if (!APIsProcessModuleInList((UINT_PTR)LdrDataTableEntry->DllBase, LdrDataTableEntry->SizeOfImage, pmi, ModuleCount))
-					{
-						if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
-						{
-							pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)LdrDataTableEntry->DllBase;
-							pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = LdrDataTableEntry->SizeOfImage;
-							RtlStringCchCopyW(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, LdrDataTableEntry->FullDllName.Length, LdrDataTableEntry->FullDllName.Buffer);
-						}
-						pmi->NumberOfModules++;
-					}
-				}
+				// Sleep 等待加载
+				KeDelayExecutionThread(KernelMode, TRUE, &Interval);
 			}
 
-			// 枚举到了东西
-			if (pmi->NumberOfModules)
+			if (Peb->Ldr > 0)
 			{
-				Status = STATUS_SUCCESS;
+				// 因为peb是用户层数据，可能无法访问
+				ProbeForRead((PVOID)Peb->Ldr, sizeof(PVOID), sizeof(UINT8));
+
+				for (PLIST_ENTRY TravelListEntry = Peb->Ldr->InLoadOrderModuleList.Flink;
+					TravelListEntry != &Peb->Ldr->InLoadOrderModuleList;
+					TravelListEntry = (PLIST_ENTRY)TravelListEntry->Flink)
+				{
+					PLDR_DATA_TABLE_ENTRY LdrDataTableEntry = NULL;
+					LdrDataTableEntry = CONTAINING_RECORD(TravelListEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+					if ((PUINT8)LdrDataTableEntry > 0 && MmIsAddressValid(LdrDataTableEntry))
+					{
+						// 插入
+						if (!APIsProcessModuleInList((UINT_PTR)LdrDataTableEntry->DllBase, LdrDataTableEntry->SizeOfImage, pmi, ModuleCount))
+						{
+							if (ModuleCount > pmi->NumberOfModules)	// Ring3给的大 就继续插
+							{
+								pmi->ModuleEntry[pmi->NumberOfModules].BaseAddress = (UINT_PTR)LdrDataTableEntry->DllBase;
+								pmi->ModuleEntry[pmi->NumberOfModules].SizeOfImage = LdrDataTableEntry->SizeOfImage;
+								RtlStringCchCopyW(pmi->ModuleEntry[pmi->NumberOfModules].wzFilePath, LdrDataTableEntry->FullDllName.Length, LdrDataTableEntry->FullDllName.Buffer);
+							}
+							pmi->NumberOfModules++;
+						}
+					}
+				}
+
+				// 枚举到了东西
+				if (pmi->NumberOfModules)
+				{
+					Status = STATUS_SUCCESS;
+				}
 			}
 		}
 	}
@@ -290,11 +294,7 @@ APEnumProcessModuleByPeb(IN PEPROCESS EProcess, OUT PPROCESS_MODULE_INFORMATION 
 		Status = STATUS_UNSUCCESSFUL;
 	}
 
-	if (bAttach)
-	{
-		KeUnstackDetachProcess(&ApcState);
-		bAttach = FALSE;
-	}
+	KeUnstackDetachProcess(&ApcState);
 
 	return Status;
 }
@@ -334,7 +334,7 @@ APEnumProcessModule(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 			RtlZeroMemory(pmi, OutputLength);
 
 			// 暴力内存效率太低了
-	/*		Status = APEnumProcessModuleByZwQueryVirtualMemory(EProcess, pmi, ModuleCount);
+			Status = APEnumProcessModuleByZwQueryVirtualMemory(EProcess, pmi, ModuleCount);
 			if (NT_SUCCESS(Status))
 			{
 				if (ModuleCount >= pmi->NumberOfModules)
@@ -365,9 +365,8 @@ APEnumProcessModule(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 					}
 				}
 			}
-			*/
 
-			Status = APEnumProcessModuleByPeb(EProcess, pmi, ModuleCount);
+		/*	Status = APEnumProcessModuleByPeb(EProcess, pmi, ModuleCount);
 			if (NT_SUCCESS(Status))
 			{
 				if (ModuleCount >= pmi->NumberOfModules)
@@ -381,7 +380,7 @@ APEnumProcessModule(IN UINT32 ProcessId, OUT PVOID OutputBuffer, IN UINT32 Outpu
 					Status = STATUS_BUFFER_TOO_SMALL;	// 给ring3返回内存不够的信息
 				}
 			}
-
+*/
 			ExFreePool(pmi);
 			pmi = NULL;
 		}

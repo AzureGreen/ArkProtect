@@ -305,5 +305,14 @@
     <Image Include="res\Registry\Icon\REG_SZ.ico">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\registry\icon\icon1.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\app.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\icon.ico">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

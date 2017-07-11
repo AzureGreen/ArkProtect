@@ -31,7 +31,7 @@ APEnumProcessMemoryByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_ME
 
 #ifdef _WIN64
 
-		// 处理Wow32位程序
+		// 处理Wow64程序
 		if (PsGetProcessWow64Process(EProcess))
 		{
 			g_DynamicData.MaxUserSpaceAddress = 0x7FFFFFFF;
@@ -77,7 +77,6 @@ APEnumProcessMemoryByZwQueryVirtualMemory(IN PEPROCESS EProcess, OUT PPROCESS_ME
 		}
 
 #endif // _WIN64
-
 
 	}
 	return Status;

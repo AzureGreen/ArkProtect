@@ -36,20 +36,20 @@ APGetPsIdleProcess()
 *  Name : APGetObjectType
 *  Param: Object				对象体首地址
 *  Ret  : UINT_PTR				（对象类型）
-*  x64：通过ObGetObjectType获得对象类型/ x86：通过ObjectHeader->TypeIndex获得对象类型
+*  x64：通过ObGetObjectType获得对象类型
 ************************************************************************/
 UINT_PTR
 APGetObjectType(IN PVOID Object)
 {
 	UINT_PTR	ObjectType = 0;
 
-	pfnObGetObjectType	ObGetObjectTypeAddress = NULL;
+	pfnObGetObjectType	ObGetObjectType = NULL;
 	if (MmIsAddressValid && Object && MmIsAddressValid(Object))
 	{
-		APGetNtosExportVariableAddress(L"ObGetObjectType", (PVOID*)&ObGetObjectTypeAddress);
-		if (ObGetObjectTypeAddress)
+		APGetNtosExportVariableAddress(L"ObGetObjectType", (PVOID*)&ObGetObjectType);
+		if (ObGetObjectType)
 		{
-			ObjectType = ObGetObjectTypeAddress(Object);
+			ObjectType = ObGetObjectType(Object);
 		}
 	}
 
